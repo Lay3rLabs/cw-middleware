@@ -1,0 +1,45 @@
+[workspace]
+members = ["packages/*"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = ""
+repository = "https://github.com/Lay3rLabs/cw-middleware"
+version = "0.1.0"
+
+[profile.release]
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+
+[workspace.dependencies]
+cosmwasm-schema = "3.0.1"
+cosmwasm-std = { version = "3.0.1", features = [
+  "cosmwasm_1_4",
+  # Enable this if you only deploy to chains that have CosmWasm 2.0 or higher
+  # "cosmwasm_2_0",
+  # Or this if you only deploy to chains that have CosmWasm 2.1 or higher
+  # "cosmwasm_2_1",
+] }
+cw-storage-plus = "3.0.0"
+cw-utils = "3.0.0"
+cw2 = "3.0.0"
+schemars = "0.8.22"
+serde = { version = "1.0.219", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0.140" }
+thiserror = { version = "2.0.12" }
+cw-multi-test = "3.0.1"
+syn = { version = "1.0", features = ["derive"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+
+# local crates used in the workspace
+cw-wavs-types = { path = "packages/cw-wavs-types" }
+cw-wavs-types-macros = { path = "packages/cw-wavs-types-macros" }
