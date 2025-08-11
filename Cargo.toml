@@ -1,0 +1,63 @@
+[workspace]
+members = [
+  "packages/utils",
+  "packages/contracts/mock/api",
+  "packages/contracts/mock/service-handler",
+  "packages/contracts/mock/service-manager",
+  "packages/components/echo-with-id",
+]
+
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "0.5.3"
+license = "GPL-3.0-or-later"
+authors = ["Layer Labs (Cayman)"]
+repository = "https://github.com/Lay3rLabs/cw-middleware"
+rust-version = "1.88.0"
+
+[workspace.dependencies]
+# Local
+mock-api = { path = "packages/contracts/mock/api" }
+
+# WAVS
+wavs-types = { version = "0.5.3", default-features = false, features = ["cosmwasm"] }
+wavs-wasi-utils = "0.5.1"
+
+# Error handling
+anyhow = "1.0.98"
+thiserror = "2.0.12"
+
+# pool management
+deadpool = "0.12.2"
+
+# hashing
+sha2 = "0.10.9"
+const-hex = "1.14.1"
+ripemd = "0.1.3"
+
+# Serialization
+serde = {version = "1.0.219", features = ["derive"]}
+bincode = {version = "2.0.1", features = ["serde"]}
+
+# Layer-climb
+layer-climb = "0.7.1"
+layer-climb-address = {version = "0.7.1", features = ["cw-storage", "openapi"] }
+layer-climb-config = "0.7.1"
+layer-climb-cli = "0.7.1"
+
+# Cosmos-specific dependencies
+cosmwasm-schema = "3.0.1"
+cosmwasm-std = { version = "3.0.1", features = ["stargate"] }
+cw-storage-plus = "3.0.0"
+cw2 = "3.0.0"
+
+# WASI
+wstd = "0.5.3"
+wit-bindgen-rt = "0.43.0"
+
+# Alloy
+alloy-primitives = "1.3.0"
+alloy-sol-macro = "1.3.0"
+alloy-sol-types = "1.3.0"

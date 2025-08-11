@@ -1,0 +1,13 @@
+# general IDE/OS stuff
+*.vim
+*.swo
+*.swp
+.DS_Store
+.env
+.vscode
+
+# Rust
+target
+
+# Cosmwasm
+artifacts

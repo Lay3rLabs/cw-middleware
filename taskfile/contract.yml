@@ -1,0 +1,63 @@
+version: "3"
+
+includes:
+  config:
+    taskfile: ./config.yml
+    flatten: true
+  docker:
+    taskfile: ./docker.yml
+    flatten: true
+
+vars:
+  MOCK_DEST: "mock/artifacts"
+
+tasks:
+  clean-mocks:
+    cmds:
+      - echo "Cleaning mock contracts" 
+      - rm -rf packages/contracts/mock/artifacts
+
+  build-mocks:
+    deps: [build-mock-service-handler, build-mock-service-manager]
+
+  build-mock-service-handler:
+      - task: inner-build-contract
+        vars:
+          NAME: "mock_service_handler"
+          SRC: "mock/service-handler"
+          DEST: "{{.MOCK_DEST}}" 
+
+  build-mock-service-manager:
+      - task: inner-build-contract
+        vars:
+          NAME: "mock_service_manager"
+          SRC: "mock/service-manager"
+          DEST: "{{.MOCK_DEST}}" 
+
+  test-mocks-off-chain:
+    cmds:
+      - echo "Testing mock contracts off-chain"
+      - cd packages/tests/off-chain/mocks && cargo test
+
+  inner-build-contract:
+    internal: true
+    requires:
+      vars: [NAME, SRC, DEST]
+    vars:
+      CONTRACT_PATH: "packages/contracts/{{.SRC}}"
+      ARTIFACT_PATH: "packages/contracts/{{.DEST}}"
+      CONTRACT_NAME: "{{.NAME}}.wasm"
+    cmds: 
+      - echo "Building contract {{.CONTRACT_NAME}} at {{.CONTRACT_PATH}}"
+      - rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
+      - rm -f "{{.DEST}}/{{.CONTRACT_NAME}}" || true
+      - >
+        {{.DOCKER_SUDO}} docker run --rm
+        -v "{{.REPO_ROOT}}:/code"
+        --mount type=volume,source="layer_wavs_cache",target=/target
+        --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry
+        {{.COSMWASM_OPTIMIZER_IMAGE}} "{{.CONTRACT_PATH}}"
+      - mkdir -p "{{.ARTIFACT_PATH}}"
+      - cp -r "./artifacts/{{.CONTRACT_NAME}}" "{{.ARTIFACT_PATH}}"
+      - rm -rf "./artifacts/{{.CONTRACT_NAME}}"
+      - echo "Built contract at {{.ARTIFACT_PATH}}/{{.CONTRACT_NAME}}"

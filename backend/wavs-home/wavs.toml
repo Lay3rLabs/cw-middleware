@@ -1,0 +1,49 @@
+[default]
+log_level = ["debug"]
+
+# Those configs are global and shared between wavs and aggregator
+jaeger = "http://localhost:4317"
+prometheus = "http://localhost:9090"
+
+
+# ----------------------------
+# Chain configurations
+# ----------------------------
+
+[default.chains.evm.holesky-fork]
+chain_id = "17000"
+ws_endpoint = "ws://localhost:8545"
+http_endpoint = "http://localhost:8545"
+poll_interval_ms = 7000
+
+# ----------------------------
+# WAVS specific settings
+# ----------------------------
+[wavs]
+cors_allowed_origins = [
+    "https://lay3rlabs.github.io/*",
+    "http://localhost:*",
+    "http://127.0.0.1:*",
+]
+
+
+# ----------------------------
+# CLI specific settings
+# ----------------------------
+[cli]
+# The directory to store the data.
+data = "~/wavs/cli"
+
+
+# ----------------------------
+# Aggregator specific settings
+# ----------------------------
+[aggregator]
+# The directory to store the data.
+data = "~/wavs/aggregator"
+
+cors_allowed_origins = [
+    "https://lay3rlabs.github.io/*",
+    "http://localhost:*",
+    "http://127.0.0.1:*",
+]

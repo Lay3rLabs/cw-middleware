@@ -1,0 +1,24 @@
+[package]
+name = "echo-with-id"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[dependencies]
+layer-climb = { workspace = true }
+serde = { workspace = true }
+bincode = { workspace = true }
+anyhow = { workspace = true }
+wstd = { workspace = true }
+wavs-wasi-utils = { workspace = true }
+wit-bindgen-rt = { workspace = true }
+thiserror = { workspace = true }
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.component]
+package = "component:echo-with-id"
+target = "wavs:worker/wavs-world@0.5.1"

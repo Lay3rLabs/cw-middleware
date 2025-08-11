@@ -1,0 +1,15 @@
+# This is mostly just a convenience to start common tasks from the root directory
+version: "3"
+
+silent: true
+
+dotenv: [".env"]
+
+includes:
+  contract: ./taskfile/contract.yml
+  component: ./taskfile/component.yml
+
+tasks:
+  default:
+    cmds:
+      - task --list-all

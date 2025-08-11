@@ -1,0 +1,14 @@
+version: "3"
+
+vars:
+  ARCH: 
+    sh: uname -m
+  DOCKER_SUDO:
+    sh: |
+      if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then 
+        echo ""
+      else 
+        echo "sudo"
+      fi
+  WAVS_DOCKER_IMAGE: "ghcr.io/lay3rlabs/wavs:0.5.3"
+  COSMWASM_OPTIMIZER_IMAGE: 'cosmwasm/optimizer{{if eq .ARCH "arm64"}}-arm64{{end}}:0.17.0'
