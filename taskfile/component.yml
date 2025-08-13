@@ -15,15 +15,21 @@ tasks:
     deps: [bindings-echo-with-id]
 
   build-echo-with-id:
-      - task: inner-build-component
-        vars:
-          NAME: "echo_with_id"
-          SRC: "echo-with-id"
+    - task: inner-build-component
+      vars:
+        NAME: "echo_with_id"
+        SRC: "echo-with-id"
 
   bindings-echo-with-id:
-      - task: inner-bindings-component
-        vars:
-          SRC: "echo-with-id"
+    - task: inner-bindings-component
+      vars:
+        SRC: "echo-with-id"
+
+  test-all:
+    # Building in parallel seems to break things
+    - task: inner-test-component 
+      vars:
+        SRC: "echo-with-id"
 
   exec-echo-with-id:
       - task: inner-exec-component
@@ -70,3 +76,13 @@ tasks:
         -v "{{.WAVS_HOME_DIR}}":/wavs-home 
         {{.WAVS_DOCKER_IMAGE}}
         wavs-cli exec --home /wavs-home --log-level {{.LOG_LEVEL}} --component "/repo/{{.COMPONENT_PATH}}" --input "{{.CLI_ARGS}}"
+
+  inner-test-component:
+    internal: true
+    requires:
+      vars: [SRC]
+    vars:
+      COMPONENT_PATH: "packages/components/{{.SRC}}"
+    cmds: 
+      - echo "Testing {{.COMPONENT_PATH}}"
+      - cd "{{.COMPONENT_PATH}}" && cargo component test 

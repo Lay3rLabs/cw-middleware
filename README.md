@@ -68,7 +68,7 @@ helm delete cw-middleware
 
 ### Components 
 
-Manually run `cargo test`, isolating on a specific package/contract as needed
+Manually run `cargo component test`, isolating on a specific package/contract as needed
 
 For convenience, this will test all the component packages:
 
@@ -97,6 +97,10 @@ If you already have the chains running, then run `task backend:start-wavs` inste
 
 Jaeger UI is at [http://localhost:16686/](http://localhost:16686/)
 Prometheus is at [http://localhost:9090/](http://localhost:9090/)
+
+### Multiple operators
+
+Multiple operators can be launched by passing `OPERATORS=N` to either `backend:start-all` or `backend:start-wavs`, just make sure you have that number of submission wallets in your `.env`
 
 ### CLI
 

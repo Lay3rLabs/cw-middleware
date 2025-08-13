@@ -27,3 +27,6 @@ vars:
   WAVS_DOCKER_IMAGE: 'ghcr.io/lay3rlabs/wavs:0.5.3{{if eq .ARCH "arm64"}}-arm64{{end}}'
   JAEGER_DOCKER_IMAGE: "jaegertracing/jaeger:2.5.0"
   PROMETHEUS_DOCKER_IMAGE: "prom/prometheus:v3.3.0"
+  ACTIVE_WAVS_COUNT:
+    sh: |
+      docker ps --format '{{"{{"}}.Names{{"}}"}}' | grep 'wavs-' | grep -v 'wavs-aggregator' | wc -l | xargs

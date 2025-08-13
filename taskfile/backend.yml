@@ -15,7 +15,17 @@ env:
 
 tasks:
   start-all:
-    deps: [start-wavs, start-chains]
+    vars:
+      OPERATORS: '{{.OPERATORS | default "1"}}'
+    deps: [
+      {
+        task: start-wavs, 
+        vars: {OPERATORS: "{{.OPERATORS}}"}
+      },
+      {
+        task: start-chains
+      }
+    ]
 
   stop-all:
     deps: [stop-wavs, stop-chains]
@@ -163,12 +173,10 @@ tasks:
   stop-wavs-instances:
     internal: true
     desc: "Stop all WAVS operator instances"
-    vars:
-      ACTIVE_WAVS:
-        sh: seq 1 {{.ACTIVE_WAVS_COUNT}}
-    deps:
+    cmds:
       - for: { var: ACTIVE_WAVS }
         task: stop-wavs-{{.ITEM}}
+      - docker ps -a --filter "name=^wavs-" -q | xargs -r docker rm -f
 
   stop-wavs-*:
     internal: true

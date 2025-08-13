@@ -65,5 +65,5 @@ tasks:
       - mkdir -p "{{.DEST}}"
       - cp -r "./artifacts/{{.CONTRACT_NAME}}" "{{.DEST}}/{{.CONTRACT_NAME}}"
       - |
-        {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}"
+        {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
       - echo "Built contract at {{.DEST}}/{{.CONTRACT_NAME}}"
