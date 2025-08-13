@@ -16,7 +16,7 @@ impl Guest for Component {
 
 fn handle_raw(raw: Vec<u8>) -> EchoResult<Option<WasmResponse>> {
     let input = String::from_utf8(raw)?;
-    let response = format!("Echo: {}", input);
+    let response = format!("Echo: {input}");
 
     Ok(Some(WasmResponse {
         payload: response.into_bytes(),

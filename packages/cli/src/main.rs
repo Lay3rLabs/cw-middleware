@@ -70,7 +70,7 @@ async fn main() {
                     .await
                     .unwrap();
                 let uri = client.get_service_uri().await.unwrap();
-                println!("Service URI: {}", uri);
+                println!("Service URI: {uri}");
             }
         },
         Command::ServiceHandler(ServiceHandlerArgs { command, address }) => match command {
@@ -80,7 +80,7 @@ async fn main() {
                     .await
                     .unwrap();
                 let manager = client.get_manager_address().await.unwrap();
-                println!("Service Manager: {}", manager);
+                println!("Service Manager: {manager}");
             }
         },
     }

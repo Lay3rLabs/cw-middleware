@@ -92,18 +92,18 @@ where
     T: WavsQueryClientExt + WavsExecClientExt,
 {
     fn service_handler_querier(&self) -> &<Self as WavsQueryClientExt>::ServiceHandler {
-        <Self as WavsQueryClientExt>::service_handler(&self)
+        <Self as WavsQueryClientExt>::service_handler(self)
     }
 
     fn service_manager_querier(&self) -> &<Self as WavsQueryClientExt>::ServiceManager {
-        <Self as WavsQueryClientExt>::service_manager(&self)
+        <Self as WavsQueryClientExt>::service_manager(self)
     }
 
     fn service_handler_exec(&self) -> &<Self as WavsExecClientExt>::ServiceHandler {
-        <Self as WavsExecClientExt>::service_handler(&self)
+        <Self as WavsExecClientExt>::service_handler(self)
     }
 
     fn service_manager_exec(&self) -> &<Self as WavsExecClientExt>::ServiceManager {
-        <Self as WavsExecClientExt>::service_manager(&self)
+        <Self as WavsExecClientExt>::service_manager(self)
     }
 }

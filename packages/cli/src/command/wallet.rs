@@ -11,8 +11,8 @@ pub async fn handle_wallet_generate_env(ctx: &mut CliContext) {
         let (addr, mnemonic) = create_wallet(ctx.chain_config().unwrap(), &mut ctx.rng)
             .await
             .unwrap();
-        println!("# Address: {}", addr);
-        println!("{}=\"{}\"\n", key, mnemonic);
+        println!("# Address: {addr}");
+        println!("{key}=\"{mnemonic}\"\n");
     }
 }
 
@@ -27,11 +27,11 @@ pub fn handle_wallet_log(log: WalletLog) {
     match log {
         WalletLog::Create { addr, mnemonic } => {
             println!("Wallet created!\n\n");
-            println!("Address: {}", addr);
-            println!("Mnemonic: {}", mnemonic);
+            println!("Address: {addr}");
+            println!("Mnemonic: {mnemonic}");
         }
         WalletLog::Show { addr, balances } => {
-            println!("Wallet address: {}", addr);
+            println!("Wallet address: {addr}");
             println!("Balances:");
             for coin in balances {
                 println!(" - {}: {}", coin.denom, coin.amount);
@@ -44,7 +44,7 @@ pub fn handle_wallet_log(log: WalletLog) {
             );
         }
         WalletLog::AllBalances { addr, balances } => {
-            println!("All balances for {}:", addr);
+            println!("All balances for {addr}:");
             for coin in balances {
                 println!(" - {}: {}", coin.denom, coin.amount);
             }
@@ -56,8 +56,8 @@ pub fn handle_wallet_log(log: WalletLog) {
             tx_resp,
         } => {
             println!("Transfer successful!");
-            println!("To: {}", to);
-            println!("Amount: {} {}", amount, denom);
+            println!("To: {to}");
+            println!("Amount: {amount} {denom}");
             println!("Transaction hash: {}", tx_resp.txhash);
         }
     }

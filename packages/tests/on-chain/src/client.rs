@@ -111,16 +111,14 @@ impl MockDeployer {
 
         let mock_handler_wasm_bytes = tokio::fs::read(&*PATH_TO_MOCK_SERVICE_HANDLER)
             .await
-            .expect(&format!(
-                "Failed to read {}",
-                PATH_TO_MOCK_SERVICE_HANDLER.display()
-            ));
+            .unwrap_or_else(|_| {
+                panic!("Failed to read {}", PATH_TO_MOCK_SERVICE_HANDLER.display())
+            });
         let mock_manager_wasm_bytes = tokio::fs::read(&*PATH_TO_MOCK_SERVICE_MANAGER)
             .await
-            .expect(&format!(
-                "Failed to read {}",
-                PATH_TO_MOCK_SERVICE_MANAGER.display()
-            ));
+            .unwrap_or_else(|_| {
+                panic!("Failed to read {}", PATH_TO_MOCK_SERVICE_MANAGER.display())
+            });
 
         let signer = KeySigner::new_mnemonic_str(&mnemonic, None)
             .expect("Failed to create KeySigner from mnemonic");

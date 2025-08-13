@@ -15,6 +15,12 @@ pub struct TestClient {
     pub admin: Addr,
 }
 
+impl Default for TestClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestClient {
     pub fn new() -> Self {
         let admin = Addr::unchecked("admin");
@@ -157,7 +163,7 @@ impl WavsBasicExecClientExt for TestServiceHandlerClient {
     ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
         self.app
             .borrow_mut()
-            .execute_contract(self.admin.clone(), address.clone(), msg, &funds)
+            .execute_contract(self.admin.clone(), address.clone(), msg, funds)
     }
 }
 
@@ -188,7 +194,7 @@ impl WavsBasicExecClientExt for TestServiceManagerClient {
     ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
         self.app
             .borrow_mut()
-            .execute_contract(self.admin.clone(), address.clone(), msg, &funds)
+            .execute_contract(self.admin.clone(), address.clone(), msg, funds)
     }
 }
 

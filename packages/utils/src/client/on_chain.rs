@@ -491,7 +491,7 @@ async fn pool_contract_exec<MSG: Serialize + std::fmt::Debug>(
         .parse_address(address.as_str())
         .map_err(|e| cosmwasm_std::StdError::msg(e.to_string()))?;
     let funds = funds
-        .into_iter()
+        .iter()
         .map(|c| layer_climb::prelude::Coin {
             denom: c.denom.clone(),
             amount: c.amount.to_string(),
@@ -518,7 +518,7 @@ async fn client_contract_exec<MSG: Serialize + std::fmt::Debug>(
         .parse_address(address.as_str())
         .map_err(|e| cosmwasm_std::StdError::msg(e.to_string()))?;
     let funds = funds
-        .into_iter()
+        .iter()
         .map(|c| layer_climb::prelude::Coin {
             denom: c.denom.clone(),
             amount: c.amount.to_string(),

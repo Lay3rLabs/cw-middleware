@@ -59,7 +59,7 @@ impl CliContext {
                     Ok(m)
                 }
             })
-            .context(format!("Mnemonic not found at CLI_MNEMONIC"))
+            .context("Mnemonic not found at CLI_MNEMONIC".to_string())
     }
 
     pub async fn any_client(&self) -> Result<AnyClient> {

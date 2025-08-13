@@ -443,7 +443,7 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
                     let len91 = vec91.len();
                     ::core::mem::forget(vec91);
                     *ptr89
-                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                        .add(16 + ::core::mem::size_of::<*const u8>())
                         .cast::<usize>() = len91;
                     *ptr89.add(16).cast::<*mut u8>() = ptr91.cast_mut();
                     match ordering90 {
@@ -474,7 +474,7 @@ pub unsafe fn _export_run_cabi<T: Guest>(arg0: *mut u8) -> *mut u8 {
             let len92 = vec92.len();
             ::core::mem::forget(vec92);
             *ptr89
-                .add(8 + 1 * ::core::mem::size_of::<*const u8>())
+                .add(8 + ::core::mem::size_of::<*const u8>())
                 .cast::<usize>() = len92;
             *ptr89.add(8).cast::<*mut u8>() = ptr92.cast_mut();
         }
@@ -493,18 +493,18 @@ pub unsafe fn __post_return_run<T: Guest>(arg0: *mut u8) {
                 _ => {
                     let l2 = *arg0.add(16).cast::<*mut u8>();
                     let l3 = *arg0
-                        .add(16 + 1 * ::core::mem::size_of::<*const u8>())
+                        .add(16 + ::core::mem::size_of::<*const u8>())
                         .cast::<usize>();
                     let base4 = l2;
                     let len4 = l3;
-                    _rt::cabi_dealloc(base4, len4 * 1, 1);
+                    _rt::cabi_dealloc(base4, len4, 1);
                 }
             }
         }
         _ => {
             let l5 = *arg0.add(8).cast::<*mut u8>();
             let l6 = *arg0
-                .add(8 + 1 * ::core::mem::size_of::<*const u8>())
+                .add(8 + ::core::mem::size_of::<*const u8>())
                 .cast::<usize>();
             _rt::cabi_dealloc(l5, l6, 1);
         }
