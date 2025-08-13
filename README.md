@@ -93,6 +93,8 @@ task backend:stop-all
 
 It may take a while for the backend to startup, recommendation is to leave it up while developing
 
+If you already have the chains running, then run `task backend:start-wavs` instead of `task backend:start-all`
+
 ### CLI
 
 Sometimes it's useful to interact with the contracts after they're deployed with ad-hoc commands. Here's some examples:

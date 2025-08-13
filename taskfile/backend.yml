@@ -9,6 +9,13 @@ includes:
     flatten: true
 
 tasks:
+  start-all:
+    deps: [start-wavs, start-chains]
+
+  start-wavs:
+    cmds: 
+      - echo "hello world"
+
   start-chains:
     cmds:
       - starship start --config "{{.STARSHIP_CHAIN_FILE}}"
