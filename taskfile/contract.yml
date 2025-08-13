@@ -18,7 +18,9 @@ tasks:
       - rm -rf packages/contracts/mock/artifacts
 
   build-mocks:
-    deps: [build-mock-service-handler, build-mock-service-manager]
+    # Building in parallel seems to break things
+    - task: build-mock-service-handler
+    - task: build-mock-service-manager
 
   build-mock-service-handler:
       - task: inner-build-contract

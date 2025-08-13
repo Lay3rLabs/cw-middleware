@@ -66,10 +66,10 @@ layer-climb-cli = "0.7.1"
 
 # Cosmos-specific dependencies
 cosmwasm-schema = "3.0.1"
-cosmwasm-std = { version = "3.0.1", features = ["staking", "stargate", "cosmwasm_2_2", "cosmwasm_3_0"] }
+cosmwasm-std = { version = "3.0.1", features = ["staking", "stargate"] }
 cw-storage-plus = "3.0.0"
 cw2 = "3.0.0"
-cw-multi-test = { version = "3.0.1", features = ["staking", "stargate", "cosmwasm_2_2", "cosmwasm_3_0"] }
+cw-multi-test = { version = "3.0.1", features = ["staking", "stargate"] }
 
 # WASI
 wstd = "0.5.3"

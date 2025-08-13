@@ -10,7 +10,8 @@ includes:
 
 tasks:
   build-all:
-    deps: [build-echo-with-id]
+    # Building in parallel seems to break things
+    - task: build-echo-with-id
 
   bindings-all:
     description: "just generate the bindings"

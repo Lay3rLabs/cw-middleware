@@ -59,6 +59,13 @@ task backend:stop-chains
 
 It may take a while for the chain to startup, recommendation is to leave it up while developing
 
+If you run into errors with `Starship` or `helm` namespace being taken, try:
+
+```bash
+helm repo remove starship
+helm delete cw-middleware
+```
+
 ### Components 
 
 Manually run `cargo test`, isolating on a specific package/contract as needed
