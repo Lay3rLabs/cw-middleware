@@ -19,3 +19,4 @@ toml = {workspace = true}
 reqwest = { workspace = true }
 cosmwasm-std = { workspace = true }
 async-trait = { workspace = true }
+cosmwasm-schema = { workspace = true }

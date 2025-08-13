@@ -4,12 +4,7 @@ includes:
   config:
     taskfile: ./config.yml
     flatten: true
-  docker:
-    taskfile: ./docker.yml
-    flatten: true
 
-vars:
-  MOCK_DEST: "mock/artifacts"
 
 tasks:
   clean-mocks:
@@ -27,14 +22,14 @@ tasks:
         vars:
           NAME: "mock_service_handler"
           SRC: "mock/service-handler"
-          DEST: "{{.MOCK_DEST}}" 
+          DEST: "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}" 
 
   build-mock-service-manager:
       - task: inner-build-contract
         vars:
           NAME: "mock_service_manager"
           SRC: "mock/service-manager"
-          DEST: "{{.MOCK_DEST}}" 
+          DEST: "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}" 
 
   test-mocks-off-chain:
     cmds:
@@ -42,6 +37,9 @@ tasks:
       - cd packages/tests/off-chain && cargo test --test mock
 
   test-mocks-on-chain:
+    preconditions:
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
     cmds:
       - echo "Testing mock contracts on-chain"
       - cd packages/tests/on-chain && cargo test --test mock
@@ -52,11 +50,11 @@ tasks:
       vars: [NAME, SRC, DEST]
     vars:
       CONTRACT_PATH: "packages/contracts/{{.SRC}}"
-      ARTIFACT_PATH: "packages/contracts/{{.DEST}}"
       CONTRACT_NAME: "{{.NAME}}.wasm"
     cmds: 
       - echo "Building contract {{.CONTRACT_NAME}} at {{.CONTRACT_PATH}}"
-      - rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
+      - |
+        {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
       - rm -f "{{.DEST}}/{{.CONTRACT_NAME}}" || true
       - >
         {{.DOCKER_SUDO}} docker run --rm
@@ -64,7 +62,8 @@ tasks:
         --mount type=volume,source="layer_wavs_cache",target=/target
         --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry
         {{.COSMWASM_OPTIMIZER_IMAGE}} "{{.CONTRACT_PATH}}"
-      - mkdir -p "{{.ARTIFACT_PATH}}"
-      - cp -r "./artifacts/{{.CONTRACT_NAME}}" "{{.ARTIFACT_PATH}}"
-      - rm -rf "./artifacts/{{.CONTRACT_NAME}}"
-      - echo "Built contract at {{.ARTIFACT_PATH}}/{{.CONTRACT_NAME}}"
+      - mkdir -p "{{.DEST}}"
+      - cp -r "./artifacts/{{.CONTRACT_NAME}}" "{{.DEST}}/{{.CONTRACT_NAME}}"
+      - |
+        {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}"
+      - echo "Built contract at {{.DEST}}/{{.CONTRACT_NAME}}"

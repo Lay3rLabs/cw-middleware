@@ -87,7 +87,7 @@ task component:exec-echo-with-id -- "Hello World"
 
 ```
 task backend:start-all
-task e2e-test
+task e2e:test-mocks
 task backend:stop-all
 ```
 
@@ -95,12 +95,37 @@ It may take a while for the backend to startup, recommendation is to leave it up
 
 If you already have the chains running, then run `task backend:start-wavs` instead of `task backend:start-all`
 
+Jaeger UI is at [http://localhost:16686/](http://localhost:16686/)
+Prometheus is at [http://localhost:9090/](http://localhost:9090/)
+
 ### CLI
 
-Sometimes it's useful to interact with the contracts after they're deployed with ad-hoc commands. Here's some examples:
+Sometimes it's useful to interact with the backend and contracts with ad-hoc commands. For example:
 
-```
-task cli:query-service-handler-manager
+```bash
+# Tap the faucet for CLI wallet
+task cli:tap-faucet
+
+# Upload the mock service manager WASM to get a code id
+task cli:mock-service-manager-upload
+
+# Deploy an instance of the mock service manager to get an address
+task cli:mock-service-manager-deploy CODE_ID={value}
+
+# Upload the mock service handler WASM to get a code id
+task cli:mock-service-handler-upload
+
+# Deploy an instance of the mock service handler to get an address
+task cli:mock-service-handler-deploy CODE_ID={value} SERVICE_MANAGER_ADDR={value}
+
+# Set the service uri on a service manager
+task cli:service-manager-set-service-uri ADDR={value} URI={value}
+
+# Get the service uri for a service manager
+task cli:service-manager-get-service-uri ADDR={value}
+
+# Get the service manager for a service handler
+task cli:service-handler-get-manager ADDR={value}
 ```
 
 ### Architecture

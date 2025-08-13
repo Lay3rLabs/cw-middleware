@@ -7,6 +7,7 @@ members = [
   "packages/components/echo-with-id",
   "packages/tests/off-chain",
   "packages/tests/on-chain",
+  "packages/tests/e2e",
   "packages/tests/shared",
   "packages/cli",
 ]

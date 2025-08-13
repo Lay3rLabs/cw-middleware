@@ -4,9 +4,6 @@ includes:
   config:
     taskfile: ./config.yml
     flatten: true
-  docker:
-    taskfile: ./docker.yml
-    flatten: true
 
 tasks:
   build-all:
@@ -40,14 +37,13 @@ tasks:
     vars:
       COMPONENT_PATH: "packages/components/{{.SRC}}"
       COMPONENT_NAME: "{{.NAME}}.wasm"
-      DEST: "packages/components/artifacts"
     cmds: 
       - echo "Building component {{.COMPONENT_NAME}} at {{.COMPONENT_PATH}}"
       - rm -f "./target/wasm32-wasip1/release/{{.COMPONENT_NAME}}.*" || true
-      - rm -f "{{.DEST}}/{{.COMPONENT_NAME}}" || true
+      - rm -f "{{.COMPONENTS_ARTIFACTS_PATH}}/{{.COMPONENT_NAME}}" || true
       - cd "{{.COMPONENT_PATH}}" && cargo component build --release
-      - mkdir -p "{{.DEST}}"
-      - cp "./target/wasm32-wasip1/release/{{.COMPONENT_NAME}}" "{{.DEST}}/{{.COMPONENT_NAME}}"
+      - mkdir -p "{{.COMPONENTS_ARTIFACTS_PATH}}"
+      - cp "./target/wasm32-wasip1/release/{{.COMPONENT_NAME}}" "{{.COMPONENTS_ARTIFACTS_PATH}}/{{.COMPONENT_NAME}}"
 
   inner-bindings-component:
     internal: true
@@ -65,6 +61,7 @@ tasks:
       vars: [NAME]
     vars:
       COMPONENT_PATH: "packages/components/artifacts/{{.NAME}}.wasm"
+      LOG_LEVEL: "{{.RUST_LOG}}"
     cmds: 
       - echo "Executing component {{.COMPONENT_PATH}} with args of \"{{.CLI_ARGS}}\""
       - >
@@ -72,4 +69,4 @@ tasks:
         -v "{{.REPO_ROOT}}":/repo
         -v "{{.WAVS_HOME_DIR}}":/wavs-home 
         {{.WAVS_DOCKER_IMAGE}}
-        wavs-cli exec --home /wavs-home --log-level {{.COMPONENT_EXEC_LOG_LEVEL}} --component "/repo/{{.COMPONENT_PATH}}" --input "{{.CLI_ARGS}}"
+        wavs-cli exec --home /wavs-home --log-level {{.LOG_LEVEL}} --component "/repo/{{.COMPONENT_PATH}}" --input "{{.CLI_ARGS}}"

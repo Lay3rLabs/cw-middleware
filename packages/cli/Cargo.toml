@@ -17,6 +17,7 @@ layer-climb = {workspace = true}
 layer-climb-cli = {workspace = true}
 async-trait = {workspace = true}
 cosmwasm-std = {workspace = true}
+cosmwasm-schema = {workspace = true}
 serde = {workspace = true}
 deadpool = {workspace = true}
 rustls = {workspace = true}

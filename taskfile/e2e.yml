@@ -1,0 +1,16 @@
+version: "3"
+
+includes:
+  config:
+    taskfile: ./config.yml
+    flatten: true
+
+tasks:
+  test-mocks:
+    preconditions:
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
+      - test -f "{{.COMPONENTS_ARTIFACTS_PATH}}/echo_with_id.wasm"
+    cmds:
+      - echo "Full end-to-end mock tests"
+      - cd packages/tests/e2e && cargo test --test mock

@@ -2,8 +2,16 @@ use layer_climb_cli::command::{create_wallet, WalletLog};
 
 use crate::context::CliContext;
 
-pub async fn handle_wallet_generate_env(ctx: &mut CliContext) {
-    let keys = ["TEST_MNEMONIC", "CLI_MNEMONIC", "WAVS_SUBMISSION_MNEMONIC"];
+pub async fn handle_wallet_generate_env(ctx: &mut CliContext, operator_count: usize) {
+    let mut keys = vec![
+        "TEST_MNEMONIC".to_string(),
+        "CLI_MNEMONIC".to_string(),
+        "WAVS_AGGREGATOR_COSMOS_MNEMONIC".to_string(),
+    ];
+
+    for i in 1..=operator_count {
+        keys.push(format!("WAVS_COSMOS_SUBMISSION_MNEMONIC_{i}"));
+    }
 
     println!("Copy/paste this into your .env:\n");
 

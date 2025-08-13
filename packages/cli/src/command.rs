@@ -24,7 +24,7 @@ pub struct CliArgs {
 #[derive(Clone, Subcommand)]
 pub enum Command {
     /// Generate mnemonics for the .env file
-    GenerateEnv,
+    GenerateEnv { operators: usize },
     /// Wallet subcommands
     Wallet(WalletArgs),
     /// Contract subcommands
@@ -33,6 +33,11 @@ pub enum Command {
     ServiceManager(ServiceManagerArgs),
     /// Service Handler subcommands
     ServiceHandler(ServiceHandlerArgs),
+    /// Tap the faucet for
+    FaucetTap {
+        /// If none, will be CLI wallet
+        addr: Option<String>,
+    },
 }
 
 #[derive(Clone, Args)]
@@ -49,34 +54,55 @@ pub struct ContractArgs {
 
 #[derive(Clone, Args)]
 pub struct ServiceManagerArgs {
-    #[clap(long)]
-    pub address: String,
     #[command(subcommand)]
     pub command: ServiceManagerCommand,
 }
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum ServiceManagerCommand {
+    /// Deploy an instance of the service manager
+    Deploy {
+        #[arg(long)]
+        code_id: u64,
+    },
+
     /// Sets the service URI on the service manager contract
     SetServiceUri {
         #[arg(long)]
         uri: String,
+        /// Service Manager address
+        #[arg(long)]
+        address: String,
     },
 
     /// Gets the service URI from the service manager contract
-    GetServiceUri,
+    GetServiceUri {
+        /// Service Manager address
+        #[arg(long)]
+        address: String,
+    },
 }
 
 #[derive(Clone, Args)]
 pub struct ServiceHandlerArgs {
-    #[clap(long)]
-    pub address: String,
     #[command(subcommand)]
     pub command: ServiceHandlerCommand,
 }
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum ServiceHandlerCommand {
+    /// Deploy an instance of the service handler
+    Deploy {
+        #[arg(long)]
+        code_id: u64,
+        #[arg(long)]
+        service_manager: String,
+    },
+
     /// Gets the service manager address for this service manager
-    GetManager,
+    GetManager {
+        /// Service Handler address
+        #[arg(long)]
+        address: String,
+    },
 }

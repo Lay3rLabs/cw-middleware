@@ -62,7 +62,31 @@ impl CliContext {
             .context("Mnemonic not found at CLI_MNEMONIC".to_string())
     }
 
-    pub async fn any_client(&self) -> Result<AnyClient> {
+    pub async fn query_client(&self) -> Result<QueryClient> {
+        QueryClient::new(self.chain_config()?, None).await
+    }
+
+    pub async fn signing_client(&self) -> Result<SigningClient> {
+        let query_client = self.query_client().await?;
+
+        let signer = KeySigner::new_mnemonic_str(&self.client_mnemonic()?, None)?;
+        let address = self
+            .chain_config()?
+            .address_from_pub_key(&signer.public_key().await?)?;
+
+        let balance = query_client
+            .balance(address.clone(), None)
+            .await?
+            .unwrap_or_default();
+        if balance == 0 {
+            tracing::warn!("Balance is ZERO, maybe tap the faucet!");
+        }
+        let signing_client = SigningClient::new(self.chain_config()?, signer, None).await?;
+
+        Ok(signing_client)
+    }
+
+    pub async fn climb_command_any_client(&self) -> Result<AnyClient> {
         if matches!(
             &self.args.command,
             Command::Wallet(WalletArgs {
@@ -75,19 +99,20 @@ impl CliContext {
         }
         let is_signing = !matches!(&self.args.command, Command::Wallet(_));
 
-        tracing::info!("IS SIGNING: {}", is_signing);
-
-        match (is_signing, self.client_mnemonic()) {
-            (true, Ok(mnemonic)) => {
-                let signer = KeySigner::new_mnemonic_str(&mnemonic, None)?;
-                Ok(AnyClient::Signing(
-                    SigningClient::new(self.chain_config()?, signer, None).await?,
-                ))
-            }
-            _ => Ok(AnyClient::Query(
-                QueryClient::new(self.chain_config()?, None).await?,
-            )),
+        if is_signing && self.client_mnemonic().is_ok() {
+            Ok(AnyClient::Signing(self.signing_client().await?))
+        } else {
+            Ok(AnyClient::Query(self.query_client().await?))
         }
+    }
+
+    pub async fn wallet_addr(&self) -> Result<Address> {
+        let mnemonic = self.client_mnemonic()?;
+        let signer = KeySigner::new_mnemonic_str(&mnemonic, None)?;
+        let address = self
+            .chain_config()?
+            .address_from_pub_key(&signer.public_key().await?)?;
+        Ok(address)
     }
 
     pub async fn wavs_service_handler_query_client(
@@ -95,7 +120,7 @@ impl CliContext {
         addr: &str,
     ) -> Result<WavsServiceHandlerQueryClient> {
         Ok(WavsServiceHandlerQueryClient::new(
-            self.any_client().await?.as_querier().clone(),
+            self.query_client().await?,
             &self.parse_address(addr)?,
         ))
     }
@@ -105,7 +130,7 @@ impl CliContext {
         addr: &str,
     ) -> Result<WavsServiceManagerQueryClient> {
         Ok(WavsServiceManagerQueryClient::new(
-            self.any_client().await?.as_querier().clone(),
+            self.query_client().await?,
             &self.parse_address(addr)?,
         ))
     }
@@ -116,7 +141,7 @@ impl CliContext {
         addr: &str,
     ) -> Result<WavsServiceHandlerSigningClient> {
         Ok(WavsServiceHandlerSigningClient::new(
-            self.any_client().await?.as_signing().clone(),
+            self.signing_client().await?,
             &self.parse_address(addr)?,
         ))
     }
@@ -126,7 +151,7 @@ impl CliContext {
         addr: &str,
     ) -> Result<WavsServiceManagerSigningClient> {
         Ok(WavsServiceManagerSigningClient::new(
-            self.any_client().await?.as_signing().clone(),
+            self.signing_client().await?,
             &self.parse_address(addr)?,
         ))
     }

@@ -1,7 +1,7 @@
 # This is mostly just a convenience to start common tasks from the root directory
 version: "3"
 
-silent: true
+# silent: true
 
 dotenv: [".env"]
 
@@ -10,6 +10,7 @@ includes:
   component: ./taskfile/component.yml
   backend: ./taskfile/backend.yml
   cli: ./taskfile/cli.yml
+  e2e: ./taskfile/e2e.yml
 
 tasks:
   default:

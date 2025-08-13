@@ -2,9 +2,51 @@ version: "3"
 
 tasks:
   generate-env:
+    vars:
+      OPERATOR_COUNT: 3
     cmds:
-      - cd packages/cli && cargo run generate-env
+      - cd packages/cli && cargo run generate-env {{.OPERATOR_COUNT}}
 
-  query-service-handler-manager:
+  tap-faucet:
+    vars:
+      OPERATOR_COUNT: 3
     cmds:
-      - cd packages/cli && cargo run service-handler get-manager
+      - cd packages/cli && cargo run faucet-tap {{.CLI_ARGS}}
+
+  mock-service-manager-upload:
+    cmds:
+      - cd packages/cli && cargo run contract upload --wasm-file "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
+
+  mock-service-manager-deploy:
+    requires: 
+      vars: [CODE_ID]
+    cmds:
+      - cd packages/cli && cargo run service-manager deploy --code-id {{.CODE_ID}}
+
+  mock-service-handler-upload:
+    cmds:
+      - cd packages/cli && cargo run contract upload --wasm-file "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
+
+  mock-service-handler-deploy:
+    requires: 
+      vars: [CODE_ID, SERVICE_MANAGER_ADDR]
+    cmds:
+      - cd packages/cli && cargo run service-handler deploy --code-id {{.CODE_ID}} --service-manager {{.SERVICE_MANAGER_ADDR}}
+  
+  service-manager-set-service-uri:
+    requires: 
+      vars: [ADDR, URI]
+    cmds:
+      - cd packages/cli && cargo run service-manager set-service-uri --address {{.ADDR}} --uri {{.URI}}
+
+  service-manager-get-service-uri:
+    requires: 
+      vars: [ADDR]
+    cmds:
+      - cd packages/cli && cargo run service-manager get-service-uri --address {{.ADDR}}
+
+  service-handler-get-manager:
+    requires: 
+      vars: [ADDR]
+    cmds:
+      - cd packages/cli && cargo run service-handler get-manager --address {{.ADDR}}
