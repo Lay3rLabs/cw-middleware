@@ -31,19 +31,6 @@ tasks:
           SRC: "mock/service-manager"
           DEST: "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}" 
 
-  test-mocks-off-chain:
-    cmds:
-      - echo "Testing mock contracts off-chain"
-      - cd packages/tests/off-chain && cargo test --test mock
-
-  test-mocks-on-chain:
-    preconditions:
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
-    cmds:
-      - echo "Testing mock contracts on-chain"
-      - cd packages/tests/on-chain && cargo test --test mock
-
   inner-build-contract:
     internal: true
     requires:

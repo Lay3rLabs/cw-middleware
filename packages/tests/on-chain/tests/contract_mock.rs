@@ -1,4 +1,4 @@
-use on_chain_tests::client::new_mock_client;
+use on_chain_tests::client::contract::new_mock_client;
 use shared_tests::{sanity, tracing_init::tracing_tests_init};
 
 #[tokio::test]

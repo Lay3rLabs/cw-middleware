@@ -31,6 +31,10 @@ impl WavsQueryClientExt for WavsQueryClient {
 }
 
 pub struct WavsSigningPoolClient {
+    #[allow(dead_code)]
+    querier: QueryClient,
+    #[allow(dead_code)]
+    pool: SigningClientPool,
     service_handler_querier: WavsServiceHandlerQueryClient,
     service_manager_querier: WavsServiceManagerQueryClient,
     service_handler_exec: WavsServiceHandlerSigningPoolClient,
@@ -145,6 +149,8 @@ impl WavsSigningPoolClient {
         service_manager_addr: &Address,
     ) -> Self {
         Self {
+            querier: querier.clone(),
+            pool: pool.clone(),
             service_handler_querier: WavsServiceHandlerQueryClient::new(
                 querier.clone(),
                 service_handler_addr,

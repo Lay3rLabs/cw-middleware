@@ -1,0 +1,39 @@
+version: "3"
+
+includes:
+  config:
+    taskfile: ./config.yml
+    flatten: true
+
+tasks:
+  all:
+    preconditions:
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
+      - test -f "{{.COMPONENTS_ARTIFACTS_PATH}}/echo_with_id.wasm"
+    cmds:
+      - echo "All tests"
+      - cd packages/tests/off-chain && cargo test
+      - cd packages/tests/on-chain && cargo test
+
+  e2e-mocks:
+    preconditions:
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
+      - test -f "{{.COMPONENTS_ARTIFACTS_PATH}}/echo_with_id.wasm"
+    cmds:
+      - echo "Full end-to-end mock tests"
+      - cd packages/tests/on-chain && cargo test --test e2e_mock
+
+  contract-mocks-off-chain:
+    cmds:
+      - echo "Testing mock contracts off-chain"
+      - cd packages/tests/off-chain && cargo test --test mock
+
+  contract-mocks-on-chain:
+    preconditions:
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
+      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
+    cmds:
+      - echo "Testing mock contracts on-chain"
+      - cd packages/tests/on-chain && cargo test --test contract_mock

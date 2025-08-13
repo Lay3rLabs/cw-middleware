@@ -20,3 +20,4 @@ reqwest = { workspace = true }
 cosmwasm-std = { workspace = true }
 async-trait = { workspace = true }
 cosmwasm-schema = { workspace = true }
+deadpool = { workspace = true }

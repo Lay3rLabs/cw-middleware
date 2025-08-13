@@ -39,12 +39,18 @@ task component:bindings-all
 
 ## Testing
 
+### All
+
+```bash
+task test:all
+```
+
 ### Contracts 
 
 *off-chain*
 
 ```
-task contract:test-mocks-off-chain
+task test:contract-mocks-off-chain
 ```
 
 *on-chain*
@@ -53,7 +59,7 @@ This requires spinning up a server, running tests, and then shutting down the se
 
 ```
 task backend:start-chains
-task contract:test-mocks-on-chain
+task test:contract-mocks-on-chain
 task backend:stop-chains
 ```
 
@@ -87,7 +93,7 @@ task component:exec-echo-with-id -- "Hello World"
 
 ```
 task backend:start-all
-task e2e:test-mocks
+task test:e2e-mocks
 task backend:stop-all
 ```
 

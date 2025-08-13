@@ -10,7 +10,7 @@ includes:
   component: ./taskfile/component.yml
   backend: ./taskfile/backend.yml
   cli: ./taskfile/cli.yml
-  e2e: ./taskfile/e2e.yml
+  test: ./taskfile/test.yml
 
 tasks:
   default:
