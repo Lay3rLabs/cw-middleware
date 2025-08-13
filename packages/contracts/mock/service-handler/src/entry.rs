@@ -9,8 +9,8 @@ use wavs_types::contracts::cosmwasm::{
     service_handler::ServiceHandlerExecuteMessages, service_manager::WavsValidateResult,
 };
 
-use mock_api::service_handler::{InstantiateMsg, QueryMsg, ExecuteMsg};
 use crate::state;
+use mock_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");

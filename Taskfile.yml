@@ -8,6 +8,8 @@ dotenv: [".env"]
 includes:
   contract: ./taskfile/contract.yml
   component: ./taskfile/component.yml
+  backend: ./taskfile/backend.yml
+  cli: ./taskfile/cli.yml
 
 tasks:
   default:

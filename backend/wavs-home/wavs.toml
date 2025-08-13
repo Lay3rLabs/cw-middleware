@@ -10,11 +10,14 @@ prometheus = "http://localhost:9090"
 # Chain configurations
 # ----------------------------
 
-[default.chains.evm.holesky-fork]
-chain_id = "17000"
-ws_endpoint = "ws://localhost:8545"
-http_endpoint = "http://localhost:8545"
-poll_interval_ms = 7000
+# Juno testnet: https://github.com/cosmos/chain-registry/blob/master/testnets/junotestnet/chain.json
+[default.chains.cosmos.uni-7]
+chain_id = "uni-7"
+bech32_prefix = "juno"
+rpc_endpoint = "http://localhost:27657"
+grpc_endpoint = "http://localhost:9090"
+gas_price = 0.025
+gas_denom = "ujuno"
 
 # ----------------------------
 # WAVS specific settings

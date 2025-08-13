@@ -1,0 +1,19 @@
+[package]
+name = "off-chain-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mock-api = {workspace = true}
+mock-service-handler = {workspace = true}
+mock-service-manager = {workspace = true}
+wavs-types = {workspace = true}
+shared-tests = {workspace = true}
+cw-multi-test = {workspace = true}
+cosmwasm-std = {workspace = true}
+utils = {workspace = true}
+tokio = {workspace = true}
+tracing = {workspace = true}
+anyhow = {workspace = true}
+serde = {workspace = true}
+async-trait = {workspace = true}

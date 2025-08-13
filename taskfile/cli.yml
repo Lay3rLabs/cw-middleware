@@ -1,0 +1,10 @@
+version: "3"
+
+tasks:
+  generate-env:
+    cmds:
+      - cd packages/cli && cargo run generate-env
+
+  query-service-handler-manager:
+    cmds:
+      - cd packages/cli && cargo run service-handler get-manager

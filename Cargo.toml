@@ -5,6 +5,10 @@ members = [
   "packages/contracts/mock/service-handler",
   "packages/contracts/mock/service-manager",
   "packages/components/echo-with-id",
+  "packages/tests/off-chain",
+  "packages/tests/on-chain",
+  "packages/tests/shared",
+  "packages/cli",
 ]
 
 resolver = "2"
@@ -20,6 +24,10 @@ rust-version = "1.88.0"
 [workspace.dependencies]
 # Local
 mock-api = { path = "packages/contracts/mock/api" }
+utils = { path = "packages/utils" }
+mock-service-handler = { path = "packages/contracts/mock/service-handler" }
+mock-service-manager = { path = "packages/contracts/mock/service-manager" }
+shared-tests = { path = "packages/tests/shared" }
 
 # WAVS
 wavs-types = { version = "0.5.3", default-features = false, features = ["cosmwasm"] }
@@ -29,17 +37,26 @@ wavs-wasi-utils = "0.5.1"
 anyhow = "1.0.98"
 thiserror = "2.0.12"
 
+# Async
+tokio = { version = "1.47.1", features = ["full"] }
+async-trait = "0.1.88"
+
+# http
+reqwest = { version = "0.12", features = ["json"] }
+
 # pool management
 deadpool = "0.12.2"
 
-# hashing
+# hashing / cipher
 sha2 = "0.10.9"
 const-hex = "1.14.1"
 ripemd = "0.1.3"
+rustls = {version = "0.23.31", features = ["aws-lc-rs"]}
 
 # Serialization
 serde = {version = "1.0.219", features = ["derive"]}
 bincode = {version = "2.0.1", features = ["serde"]}
+toml = "0.9.5"
 
 # Layer-climb
 layer-climb = "0.7.1"
@@ -49,15 +66,27 @@ layer-climb-cli = "0.7.1"
 
 # Cosmos-specific dependencies
 cosmwasm-schema = "3.0.1"
-cosmwasm-std = { version = "3.0.1", features = ["stargate"] }
+cosmwasm-std = { version = "3.0.1", features = ["staking", "stargate", "cosmwasm_2_2", "cosmwasm_3_0"] }
 cw-storage-plus = "3.0.0"
 cw2 = "3.0.0"
+cw-multi-test = { version = "3.0.1", features = ["staking", "stargate", "cosmwasm_2_2", "cosmwasm_3_0"] }
 
 # WASI
 wstd = "0.5.3"
 wit-bindgen-rt = "0.43.0"
 
+# CLI
+clap = { version = "4.5.44", features = ["derive", "env", "string"] }
+dotenvy = "0.15.7"
+
+# Randomness
+rand = {version = "0.9.2"}
+
 # Alloy
 alloy-primitives = "1.3.0"
 alloy-sol-macro = "1.3.0"
 alloy-sol-types = "1.3.0"
+
+# Logging
+tracing = "0.1.41"
+tracing-subscriber = {version = "0.3.19", features = ["env-filter"] }

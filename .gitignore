@@ -11,3 +11,6 @@ target
 
 # Cosmwasm
 artifacts
+
+# Interchain test 
+backend/interchain-test/configs

@@ -37,7 +37,12 @@ tasks:
   test-mocks-off-chain:
     cmds:
       - echo "Testing mock contracts off-chain"
-      - cd packages/tests/off-chain/mocks && cargo test
+      - cd packages/tests/off-chain && cargo test --test mock
+
+  test-mocks-on-chain:
+    cmds:
+      - echo "Testing mock contracts on-chain"
+      - cd packages/tests/on-chain && cargo test --test mock
 
   inner-build-contract:
     internal: true

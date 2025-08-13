@@ -6,4 +6,6 @@ vars:
     sh: git rev-parse --show-toplevel
   BACKEND_DIR: '{{joinPath .REPO_ROOT "backend"}}'
   WAVS_HOME_DIR: '{{joinPath .BACKEND_DIR "wavs-home"}}'
+  STARSHIP_DIR: '{{joinPath .BACKEND_DIR "starship"}}'
+  STARSHIP_CHAIN_FILE: '{{joinPath .STARSHIP_DIR "chains.yml"}}'
   COMPONENT_EXEC_LOG_LEVEL: 'info'

@@ -1,7 +1,7 @@
 use cosmwasm_std::{Addr, Binary, Uint64};
 use cw_storage_plus::{Item, Map};
 use mock_api::data_with_id::DataWithId;
-use wavs_types::{contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData}};
+use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 pub const SERVICE_MANAGER: Item<Addr> = Item::new("service-manager");
 
@@ -18,6 +18,6 @@ pub fn save_envelope(
 
     TRIGGER_DATA.save(storage, data_with_id.trigger_id, &data_with_id.data)?;
     SIGNATURE_DATA.save(storage, data_with_id.trigger_id, &signature_data)?;
-    
+
     Ok(())
 }

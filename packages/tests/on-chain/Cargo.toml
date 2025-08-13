@@ -1,0 +1,18 @@
+[package]
+name = "on-chain-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mock-api = {workspace = true}
+tokio = {workspace = true}
+shared-tests = {workspace = true}
+tracing = {workspace = true}
+layer-climb = {workspace = true}
+async-trait = {workspace = true}
+cosmwasm-std = {workspace = true}
+serde = {workspace = true}
+deadpool = {workspace = true}
+rustls = {workspace = true}
+utils = {workspace = true}
+wavs-types = {workspace = true}

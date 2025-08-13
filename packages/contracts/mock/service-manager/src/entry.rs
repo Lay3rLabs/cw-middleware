@@ -8,8 +8,8 @@ use wavs_types::contracts::cosmwasm::service_manager::{
     ServiceManagerQueryMessages, WavsValidateResult,
 };
 
-use mock_api::service_manager::{QueryMsg, ExecuteMsg};
 use crate::state;
+use mock_api::service_manager::{ExecuteMsg, QueryMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
