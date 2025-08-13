@@ -75,7 +75,7 @@ async fn main() {
                     )
                     .await
                     .unwrap();
-                println!("Service Manager deployed at: {}", address);
+                println!("Service Manager deployed at: {address}");
             }
             ServiceManagerCommand::SetServiceUri { uri, address } => {
                 let client = ctx
@@ -118,7 +118,7 @@ async fn main() {
                     )
                     .await
                     .unwrap();
-                println!("Service Handler deployed at: {}", address);
+                println!("Service Handler deployed at: {address}");
             }
             ServiceHandlerCommand::GetManager { address } => {
                 let client = ctx
@@ -151,8 +151,7 @@ async fn main() {
                 .unwrap_or_default();
 
             println!(
-                "Tapped faucet for {} - balance before: {} balance after: {}",
-                addr, balance_before, balance_after
+                "Tapped faucet for {addr} - balance before: {balance_before} balance after: {balance_after}"
             );
         }
     }
