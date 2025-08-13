@@ -81,6 +81,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             to_json_binary(&state::TRIGGER_DATA.has(deps.storage, trigger_id))
         }
 
+        QueryMsg::TriggerMessage { trigger_id } => {
+            let data = &state::TRIGGER_DATA.load(deps.storage, trigger_id)?;
+            let s = String::from_utf8(data.to_vec())?;
+            to_json_binary(&s)
+        }
+
         QueryMsg::SignedData { trigger_id } => {
             to_json_binary(&state::TRIGGER_DATA.load(deps.storage, trigger_id)?)
         }

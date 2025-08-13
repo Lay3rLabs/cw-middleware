@@ -9,6 +9,6 @@ pub fn tracing_tests_init() {
     if !*init {
         *init = true;
 
-        tracing_subscriber::fmt::init();
+        tracing_subscriber::fmt::init()
     }
 }

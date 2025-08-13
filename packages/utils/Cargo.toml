@@ -10,6 +10,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
+mock-api = {workspace = true}
 serde = {workspace = true}
 layer-climb = {workspace = true}
 wavs-types = {workspace = true}
@@ -19,3 +20,6 @@ toml = {workspace = true}
 reqwest = { workspace = true }
 cosmwasm-std = { workspace = true }
 async-trait = { workspace = true }
+cosmwasm-schema = { workspace = true }
+deadpool = { workspace = true }
+cw-multi-test = {workspace = true}

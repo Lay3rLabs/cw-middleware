@@ -6,10 +6,11 @@ silent: true
 dotenv: [".env"]
 
 includes:
-  contract: ./taskfile/contract.yml
-  component: ./taskfile/component.yml
+  contracts: ./taskfile/contracts.yml
+  components: ./taskfile/components.yml
   backend: ./taskfile/backend.yml
   cli: ./taskfile/cli.yml
+  test: ./taskfile/test.yml
 
 tasks:
   default:

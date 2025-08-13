@@ -46,5 +46,8 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Off-chain test mock contracts
+        run: task contracts:test-mocks-off-chain
+
       - name: Build mock contracts
-        run: task cosmwasm:build-mocks
+        run: task contracts:build-mocks
