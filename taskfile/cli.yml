@@ -43,34 +43,34 @@ tasks:
     vars:
       CONTRACT_KIND:
         sh: task contracts:env-kind
-    requires: 
+    requires:
       vars: [CODE_ID]
     cmds:
       - cd packages/cli && cargo run service-manager deploy --code-id {{.CODE_ID}} --contract-kind {{.CONTRACT_KIND}}
 
   service-handler-deploy:
-    requires: 
+    requires:
       vars: [CODE_ID, SERVICE_MANAGER_ADDR]
     vars:
       CONTRACT_KIND:
         sh: task contracts:env-kind
     cmds:
       - cd packages/cli && cargo run service-handler deploy --code-id {{.CODE_ID}} --service-manager {{.SERVICE_MANAGER_ADDR}} --contract-kind {{.CONTRACT_KIND}}
-  
+
   service-manager-set-service-uri:
-    requires: 
+    requires:
       vars: [ADDR, URI]
     cmds:
       - cd packages/cli && cargo run service-manager set-service-uri --address {{.ADDR}} --uri {{.URI}}
 
   service-manager-get-service-uri:
-    requires: 
+    requires:
       vars: [ADDR]
     cmds:
       - cd packages/cli && cargo run service-manager get-service-uri --address {{.ADDR}}
 
   service-handler-get-manager:
-    requires: 
+    requires:
       vars: [ADDR]
     cmds:
       - cd packages/cli && cargo run service-handler get-manager --address {{.ADDR}}
