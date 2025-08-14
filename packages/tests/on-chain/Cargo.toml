@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 mock-api = {workspace = true}
+ecdsa-api = {workspace = true}
+bls-api = {workspace = true}
 tokio = {workspace = true}
 shared-tests = {workspace = true}
 tracing = {workspace = true}

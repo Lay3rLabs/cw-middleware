@@ -1,9 +1,11 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::Uint256;
+use cosmwasm_std::{Empty, Uint256};
 use layer_climb_address::AddrEvm;
 use wavs_types::contracts::cosmwasm::service_manager::{
     ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
 };
+
+pub type InstantiateMsg = Empty;
 
 #[cw_serde]
 #[schemaifier(mute_warnings)]

@@ -1,1 +1,1 @@
-pub use crate::client::{ext::*, functionality::*};
+pub use crate::contract_client::{ext::*, functionality::*};

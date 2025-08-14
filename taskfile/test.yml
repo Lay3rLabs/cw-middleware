@@ -7,33 +7,55 @@ includes:
 
 tasks:
   all:
-    preconditions:
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
-      - test -f "{{.COMPONENTS_ARTIFACTS_PATH}}/echo_with_id.wasm"
     cmds:
       - echo "All tests"
+      - task: all-off-chain 
+      - task: all-on-chain
+
+  all-off-chain:
+    cmds:
+      - echo "All off-chain tests"
       - cd packages/tests/off-chain && cargo test
+
+  all-on-chain:
+    cmds:
+      - echo "All on-chain tests"
       - cd packages/tests/on-chain && cargo test
 
-  e2e-mocks:
-    preconditions:
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
-      - test -f "{{.COMPONENTS_ARTIFACTS_PATH}}/echo_with_id.wasm"
+  e2e:
+    vars:
+      CONTRACT_KIND:
+        sh: task contracts:env-kind
     cmds:
-      - echo "Full end-to-end mock tests"
-      - cd packages/tests/on-chain && cargo test --test e2e_mock
+      - echo "Full {{.CONTRACT_KIND}} end-to-end tests"
+      - cd packages/tests/on-chain && cargo test --test e2e_{{.CONTRACT_KIND}}
 
-  contract-mocks-off-chain:
+  contracts-off-chain:
+    vars:
+      CONTRACT_KIND:
+        sh: task contracts:env-kind
     cmds:
-      - echo "Testing mock contracts off-chain"
-      - cd packages/tests/off-chain && cargo test --test mock
+      - echo "Testing {{.CONTRACT_KIND}} contracts off-chain"
+      - cd packages/tests/off-chain && cargo test --test contracts_{{.CONTRACT_KIND}}
 
-  contract-mocks-on-chain:
-    preconditions:
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
-      - test -f "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
+  contracts-on-chain:
+    vars:
+      CONTRACT_KIND:
+        sh: task contracts:env-kind
     cmds:
-      - echo "Testing mock contracts on-chain"
-      - cd packages/tests/on-chain && cargo test --test contract_mock
+      - echo "Testing {{.CONTRACT_KIND}} contracts on-chain"
+      - cd packages/tests/on-chain && cargo test --test contracts_{{.CONTRACT_KIND}}
+
+  components:
+    cmds:
+      - for: { var: ALL_COMPONENTS}
+        cmd: task test:component-inner SRC={{.ITEM}}
+
+  component-inner:
+    requires:
+      vars: [SRC]
+    vars:
+      COMPONENT_PATH: "packages/components/{{.SRC}}"
+    cmds: 
+      - echo "Testing {{.COMPONENT_PATH}}"
+      - cd "{{.COMPONENT_PATH}}" && cargo component test 

@@ -150,11 +150,14 @@ tasks:
     vars:
       WAVS_INSTANCE: "{{index .MATCH 0}}"
     env:
-      COMPOSE_PROJECT_NAME: "wavs-{{.WAVS_INSTANCE}}"
+      COMPOSE_PROJECT_NAME: "wavs-operator-{{.WAVS_INSTANCE}}"
       COMPOSE_WAVS_PORT:
         sh: task backend:get-wavs-port-{{.WAVS_INSTANCE}}
       WAVS_COSMOS_SUBMISSION_MNEMONIC:
         sh: task backend:get-wavs-cosmos-submission-mnemonic-{{.WAVS_INSTANCE}}
+      WAVS_SUBMISSION_MNEMONIC:
+        sh: task backend:get-wavs-cosmos-submission-mnemonic-{{.WAVS_INSTANCE}}
+      WAVS_LOG_LEVEL: '{{.RUST_LOG | default "info"}}'
     cmds:
       - |
         echo "Starting WAVS #{{.WAVS_INSTANCE}} on port $COMPOSE_WAVS_PORT"
@@ -171,20 +174,19 @@ tasks:
         {{.DOCKER_SUDO}} docker compose --file "{{.DOCKER_DIR}}/wavs-aggregator.yml" down --remove-orphans --volumes
 
   stop-wavs-instances:
-    internal: true
     desc: "Stop all WAVS operator instances"
     cmds:
-      - for: { var: ACTIVE_WAVS }
-        task: stop-wavs-{{.ITEM}}
-      - docker ps -a --filter "name=^wavs-" -q | xargs -r docker rm -f
-
-  stop-wavs-*:
-    internal: true
-    vars:
-      WAVS_INSTANCE: "{{index .MATCH 0}}"
-    cmds:
       - |
-        {{.DOCKER_SUDO}} docker compose --project-name wavs-{{.WAVS_INSTANCE}} --file "{{.DOCKER_DIR}}/wavs-instance.yml" down --remove-orphans --volumes
+        # Get container names - these are also the project names
+        containers=$(docker ps -a --filter "name=^wavs-operator" --format "{{`{{.Names}}`}}")
+        if [ -n "$containers" ]; then
+          for project_name in $containers; do
+            echo "Stopping compose project: $project_name"
+            {{.DOCKER_SUDO}} docker compose --project-name "$project_name" --file "{{.DOCKER_DIR}}/wavs-instance.yml" down --remove-orphans --volumes
+          done
+        else
+          echo "No WAVS operator containers found"
+        fi
 
   # HELPERS
   get-wavs-port-*:

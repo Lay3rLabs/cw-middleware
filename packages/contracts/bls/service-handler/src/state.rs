@@ -1,6 +1,6 @@
 use cosmwasm_std::{Addr, Binary, Uint64};
 use cw_storage_plus::{Item, Map};
-use mock_api::data_with_id::DataWithId;
+use bls_api::data_with_id::DataWithId;
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 pub const SERVICE_MANAGER: Item<Addr> = Item::new("service-manager");

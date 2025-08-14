@@ -5,21 +5,23 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 use crate::{
-    client::ext::{
+    contract_client::ext::{
         WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsServiceHandlerAddrExt,
         WavsServiceManagerAddrExt,
     },
-    prelude::{WavsExecClientExt, WavsQueryClientExt},
+    prelude::{WavsExecClientExt, WavsQueryClientExt, WavsTriggerAddrExt},
 };
 
 pub struct WavsQueryClient {
     service_handler: WavsServiceHandlerQueryClient,
     service_manager: WavsServiceManagerQueryClient,
+    trigger: WavsTriggerQueryClient,
 }
 
 impl WavsQueryClientExt for WavsQueryClient {
     type ServiceHandler = WavsServiceHandlerQueryClient;
     type ServiceManager = WavsServiceManagerQueryClient;
+    type Trigger = WavsTriggerQueryClient;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
         &self.service_handler
@@ -28,8 +30,13 @@ impl WavsQueryClientExt for WavsQueryClient {
     fn service_manager(&self) -> &Self::ServiceManager {
         &self.service_manager
     }
+
+    fn trigger(&self) -> &Self::Trigger {
+        &self.trigger
+    }
 }
 
+#[derive(Clone)]
 pub struct WavsSigningPoolClient {
     #[allow(dead_code)]
     querier: QueryClient,
@@ -37,13 +44,16 @@ pub struct WavsSigningPoolClient {
     pool: SigningClientPool,
     service_handler_querier: WavsServiceHandlerQueryClient,
     service_manager_querier: WavsServiceManagerQueryClient,
+    trigger_querier: WavsTriggerQueryClient,
     service_handler_exec: WavsServiceHandlerSigningPoolClient,
     service_manager_exec: WavsServiceManagerSigningPoolClient,
+    trigger_exec: WavsTriggerSigningPoolClient,
 }
 
 impl WavsQueryClientExt for WavsSigningPoolClient {
     type ServiceHandler = WavsServiceHandlerQueryClient;
     type ServiceManager = WavsServiceManagerQueryClient;
+    type Trigger = WavsTriggerQueryClient;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
         &self.service_handler_querier
@@ -52,10 +62,15 @@ impl WavsQueryClientExt for WavsSigningPoolClient {
     fn service_manager(&self) -> &Self::ServiceManager {
         &self.service_manager_querier
     }
+
+    fn trigger(&self) -> &Self::Trigger {
+        &self.trigger_querier
+    }
 }
 impl WavsExecClientExt for WavsSigningPoolClient {
     type ServiceHandler = WavsServiceHandlerSigningPoolClient;
     type ServiceManager = WavsServiceManagerSigningPoolClient;
+    type Trigger = WavsTriggerSigningPoolClient;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
         &self.service_handler_exec
@@ -63,19 +78,26 @@ impl WavsExecClientExt for WavsSigningPoolClient {
 
     fn service_manager(&self) -> &Self::ServiceManager {
         &self.service_manager_exec
+    }
+
+    fn trigger(&self) -> &Self::Trigger {
+        &self.trigger_exec
     }
 }
 
 pub struct WavsSigningClient {
     service_handler_querier: WavsServiceHandlerQueryClient,
     service_manager_querier: WavsServiceManagerQueryClient,
+    trigger_querier: WavsTriggerQueryClient,
     service_handler_exec: WavsServiceHandlerSigningClient,
     service_manager_exec: WavsServiceManagerSigningClient,
+    trigger_exec: WavsTriggerSigningClient,
 }
 
 impl WavsQueryClientExt for WavsSigningClient {
     type ServiceHandler = WavsServiceHandlerQueryClient;
     type ServiceManager = WavsServiceManagerQueryClient;
+    type Trigger = WavsTriggerQueryClient;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
         &self.service_handler_querier
@@ -84,11 +106,16 @@ impl WavsQueryClientExt for WavsSigningClient {
     fn service_manager(&self) -> &Self::ServiceManager {
         &self.service_manager_querier
     }
+
+    fn trigger(&self) -> &Self::Trigger {
+        &self.trigger_querier
+    }
 }
 
 impl WavsExecClientExt for WavsSigningClient {
     type ServiceHandler = WavsServiceHandlerSigningClient;
     type ServiceManager = WavsServiceManagerSigningClient;
+    type Trigger = WavsTriggerSigningClient;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
         &self.service_handler_exec
@@ -97,31 +124,62 @@ impl WavsExecClientExt for WavsSigningClient {
     fn service_manager(&self) -> &Self::ServiceManager {
         &self.service_manager_exec
     }
+
+    fn trigger(&self) -> &Self::Trigger {
+        &self.trigger_exec
+    }
 }
 
+#[derive(Clone)]
 pub struct WavsServiceManagerQueryClient {
     querier: QueryClient,
     addr: Addr,
 }
+
+#[derive(Clone)]
 pub struct WavsServiceManagerSigningPoolClient {
     pool: SigningClientPool,
     addr: Addr,
 }
 
+#[derive(Clone)]
 pub struct WavsServiceManagerSigningClient {
     client: SigningClient,
     addr: Addr,
 }
 
+#[derive(Clone)]
 pub struct WavsServiceHandlerQueryClient {
     querier: QueryClient,
     addr: Addr,
 }
+
+#[derive(Clone)]
 pub struct WavsServiceHandlerSigningPoolClient {
     pool: SigningClientPool,
     addr: Addr,
 }
+
+#[derive(Clone)]
 pub struct WavsServiceHandlerSigningClient {
+    client: SigningClient,
+    addr: Addr,
+}
+
+#[derive(Clone)]
+pub struct WavsTriggerQueryClient {
+    querier: QueryClient,
+    addr: Addr,
+}
+
+#[derive(Clone)]
+pub struct WavsTriggerSigningPoolClient {
+    pool: SigningClientPool,
+    addr: Addr,
+}
+
+#[derive(Clone)]
+pub struct WavsTriggerSigningClient {
     client: SigningClient,
     addr: Addr,
 }
@@ -131,13 +189,15 @@ impl WavsQueryClient {
         querier: QueryClient,
         service_handler_addr: &Address,
         service_manager_addr: &Address,
+        trigger_addr: &Address,
     ) -> Self {
         Self {
             service_handler: WavsServiceHandlerQueryClient::new(
                 querier.clone(),
                 service_handler_addr,
             ),
-            service_manager: WavsServiceManagerQueryClient::new(querier, service_manager_addr),
+            service_manager: WavsServiceManagerQueryClient::new(querier.clone(), service_manager_addr),
+            trigger: WavsTriggerQueryClient::new(querier, trigger_addr),
         }
     }
 }
@@ -147,6 +207,7 @@ impl WavsSigningPoolClient {
         pool: SigningClientPool,
         service_handler_addr: &Address,
         service_manager_addr: &Address,
+        trigger_addr: &Address,
     ) -> Self {
         Self {
             querier: querier.clone(),
@@ -156,17 +217,19 @@ impl WavsSigningPoolClient {
                 service_handler_addr,
             ),
             service_manager_querier: WavsServiceManagerQueryClient::new(
-                querier,
+                querier.clone(),
                 service_manager_addr,
             ),
+            trigger_querier: WavsTriggerQueryClient::new(querier, trigger_addr),
             service_handler_exec: WavsServiceHandlerSigningPoolClient::new(
                 pool.clone(),
                 service_handler_addr,
             ),
             service_manager_exec: WavsServiceManagerSigningPoolClient::new(
-                pool,
+                pool.clone(),
                 service_manager_addr,
             ),
+            trigger_exec: WavsTriggerSigningPoolClient::new(pool, trigger_addr),
         }
     }
 }
@@ -176,6 +239,7 @@ impl WavsSigningClient {
         client: SigningClient,
         service_handler_addr: &Address,
         service_manager_addr: &Address,
+        trigger_addr: &Address,
     ) -> Self {
         let querier = client.querier.clone();
 
@@ -185,17 +249,23 @@ impl WavsSigningClient {
                 service_handler_addr,
             ),
             service_manager_querier: WavsServiceManagerQueryClient::new(
-                querier,
+                querier.clone(),
                 service_manager_addr,
             ),
+            trigger_querier: WavsTriggerQueryClient::new(querier, trigger_addr),
             service_handler_exec: WavsServiceHandlerSigningClient::new(
                 client.clone(),
                 service_handler_addr,
             ),
             service_manager_exec: WavsServiceManagerSigningClient::new(
+                client.clone(),
+                service_manager_addr,
+            ),
+            trigger_exec: WavsTriggerSigningClient::new(
                 client,
                 service_manager_addr,
             ),
+
         }
     }
 }
@@ -254,6 +324,34 @@ impl WavsServiceHandlerSigningClient {
     }
 }
 
+impl WavsTriggerQueryClient {
+    pub fn new(querier: QueryClient, addr: &Address) -> Self {
+        Self {
+            querier,
+            addr: Addr::unchecked(addr.to_string()),
+        }
+    }
+}
+
+impl WavsTriggerSigningPoolClient {
+    pub fn new(pool: SigningClientPool, addr: &Address) -> Self {
+        Self {
+            pool,
+            addr: Addr::unchecked(addr.to_string()),
+        }
+    }
+}
+
+impl WavsTriggerSigningClient {
+    pub fn new(client: SigningClient, addr: &Address) -> Self {
+        Self {
+            client,
+            addr: Addr::unchecked(addr.to_string()),
+        }
+    }
+}
+
+// service manager
 #[async_trait(?Send)]
 impl WavsBasicQueryClientExt for WavsServiceManagerQueryClient {
     async fn basic_contract_query<
@@ -296,6 +394,54 @@ impl WavsBasicQueryClientExt for WavsServiceManagerSigningClient {
     }
 }
 
+
+#[async_trait(?Send)]
+impl WavsBasicExecClientExt for WavsServiceManagerSigningPoolClient {
+    type TxResponse = TxResponse;
+
+    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+        funds: &[Coin],
+    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
+        pool_contract_exec(&self.pool, address, msg, funds).await
+    }
+}
+
+#[async_trait(?Send)]
+impl WavsBasicExecClientExt for WavsServiceManagerSigningClient {
+    type TxResponse = TxResponse;
+
+    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+        funds: &[Coin],
+    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
+        client_contract_exec(&self.client, address, msg, funds).await
+    }
+}
+
+impl WavsServiceManagerAddrExt for WavsServiceManagerQueryClient {
+    fn addr(&self) -> Addr {
+        self.addr.clone()
+    }
+}
+
+impl WavsServiceManagerAddrExt for WavsServiceManagerSigningClient {
+    fn addr(&self) -> Addr {
+        self.addr.clone()
+    }
+}
+
+impl WavsServiceManagerAddrExt for WavsServiceManagerSigningPoolClient {
+    fn addr(&self) -> Addr {
+        self.addr.clone()
+    }
+}
+
+// Service handler
 #[async_trait(?Send)]
 impl WavsBasicQueryClientExt for WavsServiceHandlerQueryClient {
     async fn basic_contract_query<
@@ -366,52 +512,6 @@ impl WavsBasicExecClientExt for WavsServiceHandlerSigningClient {
     }
 }
 
-#[async_trait(?Send)]
-impl WavsBasicExecClientExt for WavsServiceManagerSigningPoolClient {
-    type TxResponse = TxResponse;
-
-    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
-        &self,
-        address: &Addr,
-        msg: &MSG,
-        funds: &[Coin],
-    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
-        pool_contract_exec(&self.pool, address, msg, funds).await
-    }
-}
-
-#[async_trait(?Send)]
-impl WavsBasicExecClientExt for WavsServiceManagerSigningClient {
-    type TxResponse = TxResponse;
-
-    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
-        &self,
-        address: &Addr,
-        msg: &MSG,
-        funds: &[Coin],
-    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
-        client_contract_exec(&self.client, address, msg, funds).await
-    }
-}
-
-impl WavsServiceManagerAddrExt for WavsServiceManagerQueryClient {
-    fn addr(&self) -> Addr {
-        self.addr.clone()
-    }
-}
-
-impl WavsServiceManagerAddrExt for WavsServiceManagerSigningClient {
-    fn addr(&self) -> Addr {
-        self.addr.clone()
-    }
-}
-
-impl WavsServiceManagerAddrExt for WavsServiceManagerSigningPoolClient {
-    fn addr(&self) -> Addr {
-        self.addr.clone()
-    }
-}
-
 impl WavsServiceHandlerAddrExt for WavsServiceHandlerQueryClient {
     fn addr(&self) -> Addr {
         self.addr.clone()
@@ -429,6 +529,101 @@ impl WavsServiceHandlerAddrExt for WavsServiceHandlerSigningPoolClient {
         self.addr.clone()
     }
 }
+
+
+// Trigger
+#[async_trait(?Send)]
+impl WavsBasicQueryClientExt for WavsTriggerQueryClient {
+    async fn basic_contract_query<
+        RESP: DeserializeOwned + Send + Sync + Debug,
+        MSG: Serialize + Debug,
+    >(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+    ) -> Result<RESP, cosmwasm_std::StdError> {
+        querier_contract_query(&self.querier, address, msg).await
+    }
+}
+
+#[async_trait(?Send)]
+impl WavsBasicQueryClientExt for WavsTriggerSigningPoolClient {
+    async fn basic_contract_query<
+        RESP: DeserializeOwned + Send + Sync + Debug,
+        MSG: Serialize + Debug,
+    >(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+    ) -> Result<RESP, cosmwasm_std::StdError> {
+        pool_contract_query(&self.pool, address, msg).await
+    }
+}
+
+#[async_trait(?Send)]
+impl WavsBasicQueryClientExt for WavsTriggerSigningClient {
+    async fn basic_contract_query<
+        RESP: DeserializeOwned + Send + Sync + Debug,
+        MSG: Serialize + Debug,
+    >(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+    ) -> Result<RESP, cosmwasm_std::StdError> {
+        client_contract_query(&self.client, address, msg).await
+    }
+}
+
+#[async_trait(?Send)]
+impl WavsBasicExecClientExt for WavsTriggerSigningPoolClient {
+    type TxResponse = TxResponse;
+
+    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+        funds: &[Coin],
+    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
+        pool_contract_exec(&self.pool, address, msg, funds).await
+    }
+}
+
+#[async_trait(?Send)]
+impl WavsBasicExecClientExt for WavsTriggerSigningClient {
+    type TxResponse = TxResponse;
+
+    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+        funds: &[Coin],
+    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
+        client_contract_exec(&self.client, address, msg, funds).await
+    }
+}
+
+impl WavsTriggerAddrExt for WavsTriggerQueryClient {
+    fn addr(&self) -> Addr {
+        self.addr.clone()
+    }
+}
+
+impl WavsTriggerAddrExt for WavsTriggerSigningClient {
+    fn addr(&self) -> Addr {
+        self.addr.clone()
+    }
+}
+
+impl WavsTriggerAddrExt for WavsTriggerSigningPoolClient {
+    fn addr(&self) -> Addr {
+        self.addr.clone()
+    }
+}
+
+
+
+
+// common helpers
 
 async fn client_contract_query<
     RESP: DeserializeOwned + Send + Sync + Debug,
@@ -459,6 +654,7 @@ async fn pool_contract_query<
 
     Ok(resp)
 }
+
 
 async fn querier_contract_query<
     RESP: DeserializeOwned + Send + Sync + Debug,

@@ -7,6 +7,13 @@ edition = "2021"
 mock-api = {workspace = true}
 mock-service-handler = {workspace = true}
 mock-service-manager = {workspace = true}
+mock-trigger = {workspace = true}
+ecdsa-api = {workspace = true}
+ecdsa-service-handler = {workspace = true}
+ecdsa-service-manager = {workspace = true}
+bls-api = {workspace = true}
+bls-service-handler = {workspace = true}
+bls-service-manager = {workspace = true}
 wavs-types = {workspace = true}
 shared-tests = {workspace = true}
 cw-multi-test = {workspace = true}

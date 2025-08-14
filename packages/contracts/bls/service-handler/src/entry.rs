@@ -10,7 +10,7 @@ use wavs_types::contracts::cosmwasm::{
 };
 
 use crate::state;
-use mock_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use bls_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");

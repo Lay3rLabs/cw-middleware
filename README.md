@@ -1,3 +1,33 @@
+# What it is 
+
+This repo is for Wavs Cosmwasm middleware
+
+It's constructed so that developing and testing any combination of the following is as smooth as possible
+
+**Contracts**
+
+* Mock
+* ECDSA
+* BLS
+
+**Chains**
+
+* Any cosmos chain (e.g. Neutron, Juno, CosmosHub, etc.)
+
+**Environment**
+
+* Multitest / off-chain
+* Local on-chain
+* Remote on-chain
+
+In other words: test functionality is shared between all these different requirements, making it painless to switch between e.g. mocks on-chain and ecdsa off-chain for common tests, while still supporting specific functionality as needed in isolated parts of the codebase
+
+Additionally, a docker image is provided (TODO!) such that consumers can bring the middleware into their project with ease.
+
+# What it is not
+
+This is not a repo for developing Wavs/Cosmwasm components or non-middleware contracts. While we have components in this repo for testing, it's purely to fulfill that need, not meant for public consumption. Check [wavs-tools](https://github.com/Lay3rLabs/wavs-tools) for that.
+
 # Getting Started
 
 ## Prerequisites
@@ -18,40 +48,49 @@ _the first time the CLI runs it will need to compile the binary, be patient.. su
 
 Copy `.example.env` to `.env` and replace the values
 
+## ContractKind and ChainName
+
+These are set in [.env](.example.env) to support local development workflows without committing to the repo.
+
+* `CONTRACT_KIND` will affect build and test commands
+* `CHAIN_NAME` will affect on-chain test commands
+
 ## Building
 
 #### Contracts
 
+```bash
+task contracts:build
 ```
-task contract:build
-```
-
-The contract `kind` to build is specified in [.env](.example.env) to support local development workflows without committing to the repo.
 
 Some more contract building commands:
 
-* `task contract:build-all`: build all the different kinds of contracts
-* `task contract:build-service-handler`: build just the service handler for the current kind
-* `task contract:build-service-manager`: build just the service handler for the current kind
+* `task contracts:build-all`: build all the different kinds of contracts
+* `task contracts:build-service-handler`: build just the service handler for the current kind
+* `task contracts:build-service-manager`: build just the service handler for the current kind
+* `task contracts:build-mock-trigger`: build just the mock trigger (this is re-used for all kinds of tests) 
 
 
 #### Components
 
+```bash
+task components:build-all
 ```
-task component:build-all
-```
+
+These components are the same regardless of whether we're targetting mock contracts, testnet chain, etc.
 
 Some more component building commands:
 
-* `task component:bindings-all`: generate the bindings for all components
-* `task component:build-echo-with-id`: build just the echo-with-id component
-* `task component:bindings-echo-with-id`: generate bindings for just the echo-with-id component
-
+* `task components:bindings-all`: generate the bindings for all components
+* `task components:build-echo-with-id`: build just the echo-with-id component
+* `task components:bindings-echo-with-id`: generate bindings for just the echo-with-id component
 
 
 ## Testing
 
 ### All
+
+This will literally run all tests, usually it's not what you want... keep reading :)
 
 ```bash
 task test:all
@@ -61,17 +100,20 @@ task test:all
 
 *off-chain*
 
-```
-task test:contract-mocks-off-chain
+```bash
+# Test the currently configured CONTRACT_KIND
+task test:contracts-off-chain
+# Test all contract kinds (mock, bls, ecdsa, etc.)
+task test:all-off-chain
 ```
 
 *on-chain*
 
-This requires spinning up a server, running tests, and then shutting down the server:
+This requires first start the chains, running the tests, and then remembering to shut it down:
 
-```
+```bash
 task backend:start-chains
-task test:contract-mocks-on-chain
+task test:contracts-on-chain
 task backend:stop-chains
 ```
 
@@ -86,26 +128,26 @@ helm delete cw-middleware
 
 ### Components 
 
-Manually run `cargo component test`, isolating on a specific package/contract as needed
+Usually you just `cargo component test` as needed. However, for convenience, this will test all the component packages:
 
-For convenience, this will test all the component packages:
-
-```
-task component:test-all
+```bash
+task test:components
 ```
 
 You can also execute a specific component to test it with some data:
 
-```
-task component:exec-echo-with-id -- "Hello World"
+```bash
+task components:exec-echo-with-id -- "Hello World"
 ```
 
 
 ### End-to-end services 
 
-```
+The flow is similar to on-chain tests, and assumes the contracts are already built
+
+```bash
 task backend:start-all
-task test:e2e-mocks
+task test:e2e
 task backend:stop-all
 ```
 
@@ -118,7 +160,15 @@ Prometheus is at [http://localhost:9090/](http://localhost:9090/)
 
 ### Multiple operators
 
-Multiple operators can be launched by passing `OPERATORS=N` to either `backend:start-all` or `backend:start-wavs`, just make sure you have that number of submission wallets in your `.env`
+```bash
+# When starting the whole backend
+task backend:start-all OPERATORS=N
+
+# If just starting wavs, not chain
+task backend:start-wavs OPERATORS=N
+```
+
+Make sure you have that number of submission wallets in your `.env`
 
 ### CLI
 
@@ -128,17 +178,17 @@ Sometimes it's useful to interact with the backend and contracts with ad-hoc com
 # Tap the faucet for CLI wallet
 task cli:tap-faucet
 
-# Upload the mock service manager WASM to get a code id
-task cli:mock-service-manager-upload
+# Upload the service manager WASM to get a code id
+task cli:service-manager-upload
 
-# Deploy an instance of the mock service manager to get an address
-task cli:mock-service-manager-deploy CODE_ID={value}
+# Deploy an instance of the service manager to get an address
+task cli:service-manager-deploy CODE_ID={value}
 
-# Upload the mock service handler WASM to get a code id
-task cli:mock-service-handler-upload
+# Upload the service handler WASM to get a code id
+task cli:service-handler-upload
 
-# Deploy an instance of the mock service handler to get an address
-task cli:mock-service-handler-deploy CODE_ID={value} SERVICE_MANAGER_ADDR={value}
+# Deploy an instance of the service handler to get an address
+task cli:service-handler-deploy CODE_ID={value} SERVICE_MANAGER_ADDR={value}
 
 # Set the service uri on a service manager
 task cli:service-manager-set-service-uri ADDR={value} URI={value}
@@ -157,10 +207,11 @@ task cli:service-handler-get-manager ADDR={value}
 Contract interaction is the same way everywhere:
 
 1. `use utils::prelude::*`
-2. bring `WavsClientExt` into scope or take it as an argument
-3. call functions on your client
+2. call functions on your client
 
 This works for off-chain and on-chain, whether it's wasi, binary, web, etc. etc.
+
+Reusable functions are written by accepting trait arguments like `WavsClientExt`
 
 For example:
 
@@ -178,7 +229,7 @@ pub async fn run_sanity_tests(client: &impl WavsClientExt) {
 }
 ```
 
-There are more granular traits than `WavsClientExt` for all combinations of service handler/manager and query/exec.
+There are more granular traits than `WavsClientExt` for all combinations of service handler/manager and query/exec, as well as specific to mock, ecdsa, and bls.
 
 As long as you bring in the prelude with `use utils::prelude::*`, you have it available.
 
@@ -210,26 +261,28 @@ Command::ServiceHandler(ServiceHandlerArgs{command, address}) => {
 },
 ```
 
-#### Getting a client
+#### Constructing a client
 
-All on-chain clients use the one(s) from [on-chain utils](packages/utils/src/client/on_chain.rs)
-
-For off-chain, it's local to the [off-chain package](packages/tests/off-chain/src/client.rs)
+Although the core structs and traits are all implemented for you, constructing a client happens per-package. This allows flexibility, for example, in configuring the client on the fly to hit an arbitrary endpoint or wrapping it in a higher-level client that can also talk to the wavs node.
 
 #### Adding functionality
 
-It's all in exactly one place: [packages/utils/src/client/functionality.rs](packages/utils/src/client/functionality.rs). 
+Wavs-types interfaces are in exactly one place: [packages/utils/src/contract_client/functionality.rs](packages/utils/src/contract_client/functionality.rs).
 
-Changes made to that file will propogate to all clients everywhere. 
+Changes made to that file will propogate to all wavs-types-aware clients everywhere.
+
+More specific interfaces (mock, ecdsa, bls) are also in exactly one place: [packages/utils/src/contract_client/functionality/](packages/utils/src/contract_client/functionality/).
+
+Changes made to that file will likewise propogate to all of those clients everywhere.
 
 #### More detail
 
 The way this works is through a trait system. 
 
-Clients must implement a very minimal set of extension traits defined in [packages/utils/src/client/ext.rs](packages/utils/src/client/ext.rs). This is already done for both [on-chain](packages/utils/src/client/on_chain.rs) and [off-chain](packages/tests/off-chain/src/client.rs). Importantly, these requirements are just basic and generic, _and because it's all already setup for you, there's no need to edit anything here_.
+Clients must implement a very minimal set of extension traits defined in [packages/utils/src/contract_client/ext.rs](packages/utils/src/contract_client/ext.rs). This is already done for both [on-chain](packages/utils/src/contract_client/on_chain.rs) and [off-chain](packages/tests/off-chain/src/client.rs). Importantly, these requirements are just basic and generic, _and because it's all already setup for you, there's no need to edit anything here_.
 
 Through blanket implementations, the functionality defined in `functionality.rs` gets mixed in automagically.
 
-The on-chain client is used in multiple scenarios, and so the module actually has several clients and is shared from the `utils` crate - e.g. CLI uses a regular signing client, tests use a signing client pool, sometimes we only need a querier, etc. The off-chain client is just local to multitest.
+The same mechanism happens for the bls, ecdsa, and mock extensions (it's automagically mixed in, and their specific functionality is made available everywhere)
 
-Lastly, the traits are actually split up, and so it's possible to get just a service handler querier (take a `impl WavsServiceHandlerQueryClientExt`) or just a service manager executor (take a `impl WavsServiceManagerExecClientExt`). There are more subdivisions defined in [ext.rs](packages/utils/src/client/ext.rs)
+As mentioned above, the traits are actually split up, and so it's possible to get just a service handler querier (take a `impl WavsServiceHandlerQueryClientExt`) or just a service manager executor (take a `impl WavsServiceManagerExecClientExt`). There are more subdivisions defined in [packages/utils/src/contract_client/ext/](packages/utils/src/contract_client/ext.rs) and further in [packages/utils/src/contract_client/ext/](packages/utils/src/contract_client/ext/) 

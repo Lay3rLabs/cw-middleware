@@ -4,6 +4,7 @@ members = [
   "packages/contracts/mock/api",
   "packages/contracts/mock/service-handler",
   "packages/contracts/mock/service-manager",
+  "packages/contracts/mock/trigger",
   "packages/contracts/ecdsa/api",
   "packages/contracts/ecdsa/service-handler",
   "packages/contracts/ecdsa/service-manager",
@@ -35,6 +36,7 @@ bls-api = { path = "packages/contracts/bls/api" }
 utils = { path = "packages/utils" }
 mock-service-handler = { path = "packages/contracts/mock/service-handler" }
 mock-service-manager = { path = "packages/contracts/mock/service-manager" }
+mock-trigger = { path = "packages/contracts/mock/trigger" }
 ecdsa-service-handler = { path = "packages/contracts/ecdsa/service-handler" }
 ecdsa-service-manager = { path = "packages/contracts/ecdsa/service-manager" }
 bls-service-handler = { path = "packages/contracts/bls/service-handler" }

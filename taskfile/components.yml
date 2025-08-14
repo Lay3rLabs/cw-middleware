@@ -5,24 +5,17 @@ includes:
     taskfile: ./config.yml
     flatten: true
 
-vars:
-  ALL_COMPONENTS: ["echo-with-id"]
 
 tasks:
   build-all:
     cmds:
       - for: { var: ALL_COMPONENTS}
-        cmd: task component:build-{{.ITEM}}
+        cmd: task components:build-{{.ITEM}}
 
   bindings-all:
     cmds:
       - for: { var: ALL_COMPONENTS}
-        cmd: task component:bindings-{{.ITEM}}
-
-  test-all:
-    cmds:
-      - for: { var: ALL_COMPONENTS}
-        cmd: task component:test-{{.ITEM}}
+        cmd: task components:bindings-{{.ITEM}}
 
   build-echo-with-id:
     - task: build-component-inner
@@ -35,15 +28,10 @@ tasks:
       vars:
         SRC: "echo-with-id"
 
-  test-echo-with-id:
-    - task: test-component-inner
-      vars:
-        SRC: "echo-with-id"
-
   exec-echo-with-id:
-      - task: exec-component-inner
-        vars:
-          NAME: "echo_with_id"
+    - task: exec-component-inner
+      vars:
+        NAME: "echo_with_id"
 
   build-component-inner:
     internal: true
@@ -86,12 +74,3 @@ tasks:
         {{.WAVS_DOCKER_IMAGE}}
         wavs-cli exec --home /wavs-home --log-level {{.LOG_LEVEL}} --component "/repo/{{.COMPONENT_PATH}}" --input "{{.CLI_ARGS}}"
 
-  test-component-inner:
-    internal: true
-    requires:
-      vars: [SRC]
-    vars:
-      COMPONENT_PATH: "packages/components/{{.SRC}}"
-    cmds: 
-      - echo "Testing {{.COMPONENT_PATH}}"
-      - cd "{{.COMPONENT_PATH}}" && cargo component test 

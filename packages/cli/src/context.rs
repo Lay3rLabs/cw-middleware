@@ -3,13 +3,7 @@ use clap::Parser;
 use layer_climb::prelude::*;
 use layer_climb_cli::command::WalletCommand;
 use rand::prelude::*;
-use utils::{
-    client::on_chain::{
-        WavsServiceHandlerQueryClient, WavsServiceHandlerSigningClient,
-        WavsServiceManagerQueryClient, WavsServiceManagerSigningClient,
-    },
-    config::ChainConfigs,
-};
+use utils::{config::ChainConfigs, contract_client::on_chain::{WavsServiceHandlerQueryClient, WavsServiceHandlerSigningClient, WavsServiceManagerQueryClient, WavsServiceManagerSigningClient}};
 
 use crate::command::{CliArgs, Command, WalletArgs};
 

@@ -23,6 +23,9 @@ pub enum QueryMsg {
     #[returns(bool)]
     TriggerValidated { trigger_id: Uint64 },
 
+    #[returns(String)]
+    TriggerMessage { trigger_id: Uint64 },
+
     /// Returns the abi-encoded `SignedData` for the given `trigger_id`
     #[returns(cosmwasm_std::Binary)]
     SignedData { trigger_id: Uint64 },

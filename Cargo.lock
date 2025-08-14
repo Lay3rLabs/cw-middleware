@@ -1175,12 +1175,12 @@ dependencies = [
  "alloy-sol-macro",
  "alloy-sol-types",
  "anyhow",
+ "bls-api",
  "const-hex",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "mock-api",
  "wavs-types",
 ]
 
@@ -1189,13 +1189,13 @@ name = "bls-service-manager"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "bls-api",
  "const-hex",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
  "layer-climb-address",
- "mock-api",
  "wavs-types",
 ]
 
@@ -1992,7 +1992,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
- "mock-api",
+ "ecdsa-api",
  "wavs-types",
 ]
 
@@ -2006,8 +2006,8 @@ dependencies = [
  "cosmwasm-std",
  "cw-storage-plus",
  "cw2",
+ "ecdsa-api",
  "layer-climb-address",
- "mock-api",
  "wavs-types",
 ]
 
@@ -2017,9 +2017,12 @@ version = "0.5.3"
 dependencies = [
  "anyhow",
  "bincode",
+ "cosmwasm-std",
  "layer-climb",
+ "mock-api",
  "serde",
  "thiserror 2.0.12",
+ "wavs-types",
  "wavs-wasi-utils",
  "wit-bindgen-rt 0.43.0",
  "wstd",
@@ -3375,6 +3378,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "mock-trigger"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "layer-climb-address",
+ "mock-api",
+ "wavs-types",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3506,11 +3524,18 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bls-api",
+ "bls-service-handler",
+ "bls-service-manager",
  "cosmwasm-std",
  "cw-multi-test",
+ "ecdsa-api",
+ "ecdsa-service-handler",
+ "ecdsa-service-manager",
  "mock-api",
  "mock-service-handler",
  "mock-service-manager",
+ "mock-trigger",
  "serde",
  "shared-tests",
  "tokio",
@@ -3525,8 +3550,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bls-api",
  "cosmwasm-std",
  "deadpool",
+ "ecdsa-api",
  "layer-climb",
  "mock-api",
  "reqwest",
@@ -5733,8 +5760,10 @@ dependencies = [
  "async-trait",
  "cosmwasm-schema",
  "cosmwasm-std",
+ "cw-multi-test",
  "deadpool",
  "layer-climb",
+ "mock-api",
  "reqwest",
  "serde",
  "tokio",
@@ -5960,13 +5989,16 @@ version = "0.5.3"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bls-api",
  "clap 4.5.44",
  "cosmwasm-schema",
  "cosmwasm-std",
  "deadpool",
  "dotenvy",
+ "ecdsa-api",
  "layer-climb",
  "layer-climb-cli",
+ "mock-api",
  "rand 0.9.2",
  "rustls",
  "serde",

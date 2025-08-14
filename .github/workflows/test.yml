@@ -47,7 +47,7 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Off-chain test mock contracts
-        run: task contract:test-mocks-off-chain
+        run: task contracts:test-mocks-off-chain
 
       - name: Build mock contracts
-        run: task contract:build-mocks
+        run: task contracts:build-mocks

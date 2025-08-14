@@ -3,7 +3,7 @@ pub mod wallet;
 
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use layer_climb_cli::command::{ContractCommand, WalletCommand};
 use wavs_types::ChainName;
 
@@ -64,6 +64,8 @@ pub enum ServiceManagerCommand {
     Deploy {
         #[arg(long)]
         code_id: u64,
+        #[arg(long)]
+        contract_kind: ContractKind,
     },
 
     /// Sets the service URI on the service manager contract
@@ -97,6 +99,8 @@ pub enum ServiceHandlerCommand {
         code_id: u64,
         #[arg(long)]
         service_manager: String,
+        #[arg(long)]
+        contract_kind: ContractKind,
     },
 
     /// Gets the service manager address for this service manager
@@ -105,4 +109,13 @@ pub enum ServiceHandlerCommand {
         #[arg(long)]
         address: String,
     },
+}
+
+
+#[derive(Debug, Clone, ValueEnum)]
+#[clap(rename_all = "snake_case")]
+pub enum ContractKind {
+    Mock,
+    Ecdsa,
+    Bls
 }

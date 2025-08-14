@@ -1,4 +1,4 @@
-name: "telemetry"
+name: "wavs-telemetry"
 services:
   jaeger:
     container_name: jaeger

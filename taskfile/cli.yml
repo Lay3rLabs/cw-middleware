@@ -13,25 +13,49 @@ tasks:
     cmds:
       - cd packages/cli && cargo run faucet-tap {{.CLI_ARGS}}
 
-  mock-service-manager-upload:
+  service-manager-upload:
     cmds:
-      - cd packages/cli && cargo run contract upload --wasm-file "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_manager.wasm"
+      - task: contract-upload-inner
+        vars:
+          NAME: "service_manager"
 
-  mock-service-manager-deploy:
+  service-handler-upload:
+    cmds:
+      - task: contract-upload-inner
+        vars:
+          NAME: "service_handler"
+
+  contract-upload-inner:
+    internal: true
+    requires:
+      vars: [NAME]
+    vars:
+      CONTRACT_KIND:
+        sh: task contracts:env-kind
+      CONTRACT_ARTIFACTS_PATH:
+        sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
+      CONTRACT_NAME: "{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
+      CONTRACT_PATH: "{{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"
+    cmds:
+      - cd packages/cli && cargo run contract upload --wasm-file "{{.CONTRACT_PATH}}"
+
+  service-manager-deploy:
+    vars:
+      CONTRACT_KIND:
+        sh: task contracts:env-kind
     requires: 
       vars: [CODE_ID]
     cmds:
-      - cd packages/cli && cargo run service-manager deploy --code-id {{.CODE_ID}}
+      - cd packages/cli && cargo run service-manager deploy --code-id {{.CODE_ID}} --contract-kind {{.CONTRACT_KIND}}
 
-  mock-service-handler-upload:
-    cmds:
-      - cd packages/cli && cargo run contract upload --wasm-file "{{.MOCK_CONTRACTS_ARTIFACTS_PATH}}/mock_service_handler.wasm"
-
-  mock-service-handler-deploy:
+  service-handler-deploy:
     requires: 
       vars: [CODE_ID, SERVICE_MANAGER_ADDR]
+    vars:
+      CONTRACT_KIND:
+        sh: task contracts:env-kind
     cmds:
-      - cd packages/cli && cargo run service-handler deploy --code-id {{.CODE_ID}} --service-manager {{.SERVICE_MANAGER_ADDR}}
+      - cd packages/cli && cargo run service-handler deploy --code-id {{.CODE_ID}} --service-manager {{.SERVICE_MANAGER_ADDR}} --contract-kind {{.CONTRACT_KIND}}
   
   service-manager-set-service-uri:
     requires: 

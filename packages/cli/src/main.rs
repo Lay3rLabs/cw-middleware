@@ -8,10 +8,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::{
     command::{
-        contract::handle_contract_log,
-        wallet::{handle_wallet_generate_env, handle_wallet_generate_single, handle_wallet_log},
-        Command, ContractArgs, ServiceHandlerArgs, ServiceHandlerCommand, ServiceManagerArgs,
-        ServiceManagerCommand, WalletArgs,
+        contract::handle_contract_log, wallet::{handle_wallet_generate_env, handle_wallet_generate_single, handle_wallet_log}, Command, ContractArgs, ContractKind, ServiceHandlerArgs, ServiceHandlerCommand, ServiceManagerArgs, ServiceManagerCommand, WalletArgs
     },
     context::CliContext,
 };
@@ -61,20 +58,51 @@ async fn main() {
         }
 
         Command::ServiceManager(ServiceManagerArgs { command }) => match command {
-            ServiceManagerCommand::Deploy { code_id } => {
+            ServiceManagerCommand::Deploy { code_id, contract_kind } => {
                 let client = ctx.signing_client().await.unwrap();
 
-                let (address, _) = client
-                    .contract_instantiate(
-                        None,
-                        code_id,
-                        "Service Manager",
-                        &cosmwasm_std::Empty {},
-                        Vec::new(),
-                        None,
-                    )
-                    .await
-                    .unwrap();
+                let (address, _) = match contract_kind {
+                    ContractKind::Mock => { 
+                        client
+                            .contract_instantiate(
+                                None,
+                                code_id,
+                                "Mock Service Manager",
+                                &mock_api::service_manager::InstantiateMsg { },
+                                Vec::new(),
+                                None,
+                            )
+                            .await
+                            .unwrap()
+                    },
+                    ContractKind::Ecdsa => { 
+                        client
+                            .contract_instantiate(
+                                None,
+                                code_id,
+                                "Ecdsa Service Manager",
+                                &ecdsa_api::service_manager::InstantiateMsg { },
+                                Vec::new(),
+                                None,
+                            )
+                            .await
+                            .unwrap()
+                    },
+                    ContractKind::Bls => { 
+                        client
+                            .contract_instantiate(
+                                None,
+                                code_id,
+                                "Bls Service Manager",
+                                &bls_api::service_manager::InstantiateMsg { },
+                                Vec::new(),
+                                None,
+                            )
+                            .await
+                            .unwrap()
+                    },
+                };
+
                 println!("Service Manager deployed at: {address}");
             }
             ServiceManagerCommand::SetServiceUri { uri, address } => {
@@ -99,25 +127,51 @@ async fn main() {
             ServiceHandlerCommand::Deploy {
                 code_id,
                 service_manager,
+                contract_kind
             } => {
-                #[cw_serde]
-                pub struct InstantiateMsg {
-                    pub service_manager: String,
-                }
-
                 let client = ctx.signing_client().await.unwrap();
 
-                let (address, _) = client
-                    .contract_instantiate(
-                        None,
-                        code_id,
-                        "Service Handler",
-                        &InstantiateMsg { service_manager },
-                        Vec::new(),
-                        None,
-                    )
-                    .await
-                    .unwrap();
+                let (address, _) = match contract_kind {
+                    ContractKind::Mock => { 
+                        client
+                            .contract_instantiate(
+                                None,
+                                code_id,
+                                "Mock Service Handler",
+                                &mock_api::service_handler::InstantiateMsg { service_manager },
+                                Vec::new(),
+                                None,
+                            )
+                            .await
+                            .unwrap()
+                    },
+                    ContractKind::Ecdsa => { 
+                        client
+                            .contract_instantiate(
+                                None,
+                                code_id,
+                                "Ecdsa Service Handler",
+                                &ecdsa_api::service_handler::InstantiateMsg { service_manager },
+                                Vec::new(),
+                                None,
+                            )
+                            .await
+                            .unwrap()
+                    },
+                    ContractKind::Bls => { 
+                        client
+                            .contract_instantiate(
+                                None,
+                                code_id,
+                                "Bls Service Handler",
+                                &bls_api::service_handler::InstantiateMsg { service_manager },
+                                Vec::new(),
+                                None,
+                            )
+                            .await
+                            .unwrap()
+                    },
+                };
                 println!("Service Handler deployed at: {address}");
             }
             ServiceHandlerCommand::GetManager { address } => {

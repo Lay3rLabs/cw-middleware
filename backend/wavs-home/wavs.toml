@@ -11,7 +11,8 @@ prometheus = "http://localhost:9090"
 # ----------------------------
 
 # Juno testnet: https://github.com/cosmos/chain-registry/blob/master/testnets/junotestnet/chain.json
-[default.chains.cosmos.uni-7]
+# This must match the starship config in `backend/starship/chains.yml`
+[default.chains.cosmos.local]
 chain_id = "uni-7"
 bech32_prefix = "juno"
 rpc_endpoint = "http://localhost:27657"

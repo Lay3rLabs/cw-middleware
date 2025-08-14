@@ -1,35 +1,24 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, sync::LazyLock};
 
-use async_trait::async_trait;
-use cosmwasm_std::{Addr, Coin, Empty};
+use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::{App, ContractWrapper, Executor};
-use serde::{de::DeserializeOwned, Serialize};
-use std::fmt::Debug;
-use utils::prelude::*;
+use utils::{contract_client::off_chain::WavsApp, prelude::*};
+
+static ADMIN:LazyLock<Addr> = LazyLock::new(|| Addr::unchecked("admin"));
 
 #[derive(Clone)]
-pub struct TestClient {
-    pub app: Rc<RefCell<App>>,
-    pub handler: TestServiceHandlerClient,
-    pub manager: TestServiceManagerClient,
-    pub admin: Addr,
+pub struct TestMockClient {
+    pub app: WavsApp, 
 }
 
-impl Default for TestClient {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl TestClient {
+impl TestMockClient {
     pub fn new() -> Self {
-        let admin = Addr::unchecked("admin");
         let app = Rc::new(RefCell::new(App::new(|router, _, storage| {
             router
                 .bank
                 .init_balance(
                     storage,
-                    &admin,
+                    &*ADMIN,
                     vec![Coin {
                         denom: "utoken".to_string(),
                         amount: 1_000_000u128.into(),
@@ -38,69 +27,6 @@ impl TestClient {
                 .unwrap();
         })));
 
-        let manager = TestServiceManagerClient::new(app.clone(), admin.clone());
-        let handler = TestServiceHandlerClient::new(app.clone(), &manager.addr, admin.clone());
-
-        Self {
-            app,
-            handler,
-            manager,
-            admin,
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct TestServiceHandlerClient {
-    pub app: Rc<RefCell<App>>,
-    pub code_id: u64,
-    pub addr: Addr,
-    pub admin: Addr,
-}
-
-impl TestServiceHandlerClient {
-    pub fn new(app: Rc<RefCell<App>>, manager_addr: &Addr, admin: Addr) -> Self {
-        // Create contract wrappers
-        let contract = ContractWrapper::new(
-            mock_service_handler::entry::execute,
-            mock_service_handler::entry::instantiate,
-            mock_service_handler::entry::query,
-        );
-        let code_id = app.borrow_mut().store_code(Box::new(contract));
-
-        let addr = app
-            .borrow_mut()
-            .instantiate_contract(
-                code_id,
-                admin.clone(),
-                &mock_api::service_handler::InstantiateMsg {
-                    service_manager: manager_addr.to_string(),
-                },
-                &[],
-                "Service Handler",
-                None,
-            )
-            .unwrap();
-
-        Self {
-            app,
-            code_id,
-            addr,
-            admin,
-        }
-    }
-}
-
-#[derive(Clone)]
-pub struct TestServiceManagerClient {
-    pub app: Rc<RefCell<App>>,
-    pub code_id: u64,
-    pub addr: Addr,
-    pub admin: Addr,
-}
-
-impl TestServiceManagerClient {
-    pub fn new(app: Rc<RefCell<App>>, admin: Addr) -> Self {
         // Create contract wrappers
         let contract = ContractWrapper::new(
             mock_service_manager::entry::execute,
@@ -109,123 +35,314 @@ impl TestServiceManagerClient {
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 
-        let addr = app
+        let manager_addr = app
             .borrow_mut()
             .instantiate_contract(
                 code_id,
-                admin.clone(),
-                &Empty {},
+                ADMIN.clone(),
+                &mock_api::service_manager::InstantiateMsg {},
                 &[],
-                "Service Manager",
+                "Mock Service Manager",
                 None,
             )
             .unwrap();
 
+
+        let contract = ContractWrapper::new(
+            mock_service_handler::entry::execute,
+            mock_service_handler::entry::instantiate,
+            mock_service_handler::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
+
+        let handler_addr = app
+            .borrow_mut()
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &mock_api::service_handler::InstantiateMsg {
+                    service_manager: manager_addr.to_string(),
+                },
+                &[],
+                "Mock Service Handler",
+                None,
+            )
+            .unwrap();
+
+        let contract = ContractWrapper::new(
+            mock_trigger::entry::execute,
+            mock_trigger::entry::instantiate,
+            mock_trigger::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
+
+        let trigger_addr = app
+            .borrow_mut()
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &mock_api::trigger::InstantiateMsg {},
+                &[],
+                "Mock Trigger",
+                None,
+            )
+            .unwrap();
+
+
+        let app = WavsApp::new(
+            app,
+            Addr::unchecked("admin"),
+            Addr::unchecked(handler_addr),
+            Addr::unchecked(manager_addr),
+            Addr::unchecked(trigger_addr),
+        );
+
         Self {
             app,
-            code_id,
-            addr,
-            admin,
         }
     }
 }
 
-// Service Handler impls
-#[async_trait(?Send)]
-impl WavsBasicQueryClientExt for TestServiceHandlerClient {
-    async fn basic_contract_query<
-        RESP: DeserializeOwned + Send + Sync + Debug,
-        MSG: Serialize + Debug,
-    >(
-        &self,
-        address: &Addr,
-        msg: &MSG,
-    ) -> Result<RESP, cosmwasm_std::StdError> {
-        self.app.borrow().wrap().query_wasm_smart(address, msg)
-    }
+
+#[derive(Clone)]
+pub struct TestEcdsaClient {
+    pub app: WavsApp, 
 }
 
-impl WavsServiceHandlerAddrExt for TestServiceHandlerClient {
-    fn addr(&self) -> Addr {
-        self.addr.clone()
-    }
-}
+impl TestEcdsaClient {
+    pub fn new() -> Self {
+        let app = Rc::new(RefCell::new(App::new(|router, _, storage| {
+            router
+                .bank
+                .init_balance(
+                    storage,
+                    &*ADMIN,
+                    vec![Coin {
+                        denom: "utoken".to_string(),
+                        amount: 1_000_000u128.into(),
+                    }],
+                )
+                .unwrap();
+        })));
 
-#[async_trait(?Send)]
-impl WavsBasicExecClientExt for TestServiceHandlerClient {
-    type TxResponse = cw_multi_test::AppResponse;
+        // Create contract wrappers
+        let contract = ContractWrapper::new(
+            ecdsa_service_manager::entry::execute,
+            ecdsa_service_manager::entry::instantiate,
+            ecdsa_service_manager::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
 
-    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
-        &self,
-        address: &Addr,
-        msg: &MSG,
-        funds: &[Coin],
-    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
-        self.app
+        let manager_addr = app
             .borrow_mut()
-            .execute_contract(self.admin.clone(), address.clone(), msg, funds)
-    }
-}
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &ecdsa_api::service_manager::InstantiateMsg {},
+                &[],
+                "ECDSA Service Manager",
+                None,
+            )
+            .unwrap();
 
-// Service Manager impls
-#[async_trait(?Send)]
-impl WavsBasicQueryClientExt for TestServiceManagerClient {
-    async fn basic_contract_query<
-        RESP: DeserializeOwned + Send + Sync + Debug,
-        MSG: Serialize + Debug,
-    >(
-        &self,
-        address: &Addr,
-        msg: &MSG,
-    ) -> Result<RESP, cosmwasm_std::StdError> {
-        self.app.borrow().wrap().query_wasm_smart(address, msg)
-    }
-}
 
-#[async_trait(?Send)]
-impl WavsBasicExecClientExt for TestServiceManagerClient {
-    type TxResponse = cw_multi_test::AppResponse;
+        let contract = ContractWrapper::new(
+            ecdsa_service_handler::entry::execute,
+            ecdsa_service_handler::entry::instantiate,
+            ecdsa_service_handler::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
 
-    async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
-        &self,
-        address: &Addr,
-        msg: &MSG,
-        funds: &[Coin],
-    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
-        self.app
+        let handler_addr = app
             .borrow_mut()
-            .execute_contract(self.admin.clone(), address.clone(), msg, funds)
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &ecdsa_api::service_handler::InstantiateMsg {
+                    service_manager: manager_addr.to_string(),
+                },
+                &[],
+                "ECDSA Service Handler",
+                None,
+            )
+            .unwrap();
+
+        let contract = ContractWrapper::new(
+            mock_trigger::entry::execute,
+            mock_trigger::entry::instantiate,
+            mock_trigger::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
+
+        let trigger_addr = app
+            .borrow_mut()
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &mock_api::trigger::InstantiateMsg {},
+                &[],
+                "Mock Trigger",
+                None,
+            )
+            .unwrap();
+
+        let app = WavsApp::new(
+            app,
+            Addr::unchecked("admin"),
+            Addr::unchecked(handler_addr),
+            Addr::unchecked(manager_addr),
+            Addr::unchecked(trigger_addr),
+        );
+
+        Self {
+            app,
+        }
     }
 }
 
-impl WavsServiceManagerAddrExt for TestServiceManagerClient {
-    fn addr(&self) -> Addr {
-        self.addr.clone()
+#[derive(Clone)]
+pub struct TestBlsClient {
+    pub app: WavsApp, 
+}
+
+impl TestBlsClient {
+    pub fn new() -> Self {
+        let app = Rc::new(RefCell::new(App::new(|router, _, storage| {
+            router
+                .bank
+                .init_balance(
+                    storage,
+                    &*ADMIN,
+                    vec![Coin {
+                        denom: "utoken".to_string(),
+                        amount: 1_000_000u128.into(),
+                    }],
+                )
+                .unwrap();
+        })));
+
+        // Create contract wrappers
+        let contract = ContractWrapper::new(
+            bls_service_manager::entry::execute,
+            bls_service_manager::entry::instantiate,
+            bls_service_manager::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
+
+        let manager_addr = app
+            .borrow_mut()
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &bls_api::service_manager::InstantiateMsg {},
+                &[],
+                "BLS Service Manager",
+                None,
+            )
+            .unwrap();
+
+
+        let contract = ContractWrapper::new(
+            bls_service_handler::entry::execute,
+            bls_service_handler::entry::instantiate,
+            bls_service_handler::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
+
+        let handler_addr = app
+            .borrow_mut()
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &bls_api::service_handler::InstantiateMsg {
+                    service_manager: manager_addr.to_string(),
+                },
+                &[],
+                "BLS Service Handler",
+                None,
+            )
+            .unwrap();
+
+        let contract = ContractWrapper::new(
+            mock_trigger::entry::execute,
+            mock_trigger::entry::instantiate,
+            mock_trigger::entry::query,
+        );
+        let code_id = app.borrow_mut().store_code(Box::new(contract));
+
+        let trigger_addr = app
+            .borrow_mut()
+            .instantiate_contract(
+                code_id,
+                ADMIN.clone(),
+                &mock_api::trigger::InstantiateMsg {},
+                &[],
+                "Mock Trigger",
+                None,
+            )
+            .unwrap();
+
+
+        let app = WavsApp::new(
+            app,
+            Addr::unchecked("admin"),
+            Addr::unchecked(handler_addr),
+            Addr::unchecked(manager_addr),
+            Addr::unchecked(trigger_addr),
+        );
+
+        Self {
+            app,
+        }
     }
 }
 
-// Combined impls
-impl WavsQueryClientExt for TestClient {
-    type ServiceHandler = TestServiceHandlerClient;
-    type ServiceManager = TestServiceManagerClient;
 
-    fn service_handler(&self) -> &Self::ServiceHandler {
-        &self.handler
-    }
-    fn service_manager(&self) -> &Self::ServiceManager {
-        &self.manager
+impl HasWavsQueryClient for TestMockClient {
+    type QueryClient = WavsApp;
+
+    fn query_client(&self) -> &Self::QueryClient {
+        &self.app
     }
 }
 
-impl WavsExecClientExt for TestClient {
-    type ServiceHandler = TestServiceHandlerClient;
-    type ServiceManager = TestServiceManagerClient;
+impl HasWavsExecClient for TestMockClient {
+    type ExecClient = WavsApp;
 
-    fn service_handler(&self) -> &Self::ServiceHandler {
-        &self.handler
+    fn exec_client(&self) -> &Self::ExecClient {
+        &self.app
     }
+}
 
-    fn service_manager(&self) -> &Self::ServiceManager {
-        &self.manager
+
+impl HasWavsQueryClient for TestEcdsaClient {
+    type QueryClient = WavsApp;
+
+    fn query_client(&self) -> &Self::QueryClient {
+        &self.app
+    }
+}
+
+impl HasWavsExecClient for TestEcdsaClient {
+    type ExecClient = WavsApp;
+
+    fn exec_client(&self) -> &Self::ExecClient {
+        &self.app
+    }
+}
+
+impl HasWavsQueryClient for TestBlsClient {
+    type QueryClient = WavsApp;
+
+    fn query_client(&self) -> &Self::QueryClient {
+        &self.app
+    }
+}
+
+impl HasWavsExecClient for TestBlsClient {
+    type ExecClient = WavsApp;
+
+    fn exec_client(&self) -> &Self::ExecClient {
+        &self.app
     }
 }
