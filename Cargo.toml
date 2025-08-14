@@ -4,6 +4,12 @@ members = [
   "packages/contracts/mock/api",
   "packages/contracts/mock/service-handler",
   "packages/contracts/mock/service-manager",
+  "packages/contracts/ecdsa/api",
+  "packages/contracts/ecdsa/service-handler",
+  "packages/contracts/ecdsa/service-manager",
+  "packages/contracts/bls/api",
+  "packages/contracts/bls/service-handler",
+  "packages/contracts/bls/service-manager",
   "packages/components/echo-with-id",
   "packages/tests/off-chain",
   "packages/tests/on-chain",
@@ -24,9 +30,15 @@ rust-version = "1.88.0"
 [workspace.dependencies]
 # Local
 mock-api = { path = "packages/contracts/mock/api" }
+ecdsa-api = { path = "packages/contracts/ecdsa/api" }
+bls-api = { path = "packages/contracts/bls/api" }
 utils = { path = "packages/utils" }
 mock-service-handler = { path = "packages/contracts/mock/service-handler" }
 mock-service-manager = { path = "packages/contracts/mock/service-manager" }
+ecdsa-service-handler = { path = "packages/contracts/ecdsa/service-handler" }
+ecdsa-service-manager = { path = "packages/contracts/ecdsa/service-manager" }
+bls-service-handler = { path = "packages/contracts/bls/service-handler" }
+bls-service-manager = { path = "packages/contracts/bls/service-manager" }
 shared-tests = { path = "packages/tests/shared" }
 
 # WAVS

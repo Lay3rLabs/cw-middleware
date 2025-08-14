@@ -14,16 +14,26 @@ You'll need wallets and signing keys along with their chain-specific addresses:
 task cli:generate-env
 ```
 
-_the first time this runs it will need to compile the binary, be patient_
+_the first time the CLI runs it will need to compile the binary, be patient.. subsequent runs will be faster_
 
 Copy `.example.env` to `.env` and replace the values
 
 ## Building
 
 #### Contracts
+
 ```
-task contract:build-mocks
+task contract:build
 ```
+
+The contract `kind` to build is specified in [.env](.example.env) to support local development workflows without committing to the repo.
+
+Some more contract building commands:
+
+* `task contract:build-all`: build all the different kinds of contracts
+* `task contract:build-service-handler`: build just the service handler for the current kind
+* `task contract:build-service-manager`: build just the service handler for the current kind
+
 
 #### Components
 
@@ -31,11 +41,13 @@ task contract:build-mocks
 task component:build-all
 ```
 
-You can also just generate the bindings, to get errors in the IDE before building:
+Some more component building commands:
 
-```
-task component:bindings-all
-```
+* `task component:bindings-all`: generate the bindings for all components
+* `task component:build-echo-with-id`: build just the echo-with-id component
+* `task component:bindings-echo-with-id`: generate bindings for just the echo-with-id component
+
+
 
 ## Testing
 

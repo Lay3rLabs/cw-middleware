@@ -5,38 +5,47 @@ includes:
     taskfile: ./config.yml
     flatten: true
 
+vars:
+  ALL_COMPONENTS: ["echo-with-id"]
+
 tasks:
   build-all:
-    # Building in parallel seems to break things
-    - task: build-echo-with-id
+    cmds:
+      - for: { var: ALL_COMPONENTS}
+        cmd: task component:build-{{.ITEM}}
 
   bindings-all:
-    description: "just generate the bindings"
-    deps: [bindings-echo-with-id]
+    cmds:
+      - for: { var: ALL_COMPONENTS}
+        cmd: task component:bindings-{{.ITEM}}
+
+  test-all:
+    cmds:
+      - for: { var: ALL_COMPONENTS}
+        cmd: task component:test-{{.ITEM}}
 
   build-echo-with-id:
-    - task: inner-build-component
+    - task: build-component-inner
       vars:
         NAME: "echo_with_id"
         SRC: "echo-with-id"
 
   bindings-echo-with-id:
-    - task: inner-bindings-component
+    - task: bindings-component-inner
       vars:
         SRC: "echo-with-id"
 
-  test-all:
-    # Building in parallel seems to break things
-    - task: inner-test-component 
+  test-echo-with-id:
+    - task: test-component-inner
       vars:
         SRC: "echo-with-id"
 
   exec-echo-with-id:
-      - task: inner-exec-component
+      - task: exec-component-inner
         vars:
           NAME: "echo_with_id"
 
-  inner-build-component:
+  build-component-inner:
     internal: true
     requires:
       vars: [NAME, SRC]
@@ -51,7 +60,7 @@ tasks:
       - mkdir -p "{{.COMPONENTS_ARTIFACTS_PATH}}"
       - cp "./target/wasm32-wasip1/release/{{.COMPONENT_NAME}}" "{{.COMPONENTS_ARTIFACTS_PATH}}/{{.COMPONENT_NAME}}"
 
-  inner-bindings-component:
+  bindings-component-inner:
     internal: true
     requires:
       vars: [SRC]
@@ -61,7 +70,7 @@ tasks:
       - echo "Generating bindings at {{.COMPONENT_PATH}}"
       - cd "{{.COMPONENT_PATH}}" && cargo component bindings 
 
-  inner-exec-component:
+  exec-component-inner:
     internal: true
     requires:
       vars: [NAME]
@@ -77,7 +86,7 @@ tasks:
         {{.WAVS_DOCKER_IMAGE}}
         wavs-cli exec --home /wavs-home --log-level {{.LOG_LEVEL}} --component "/repo/{{.COMPONENT_PATH}}" --input "{{.CLI_ARGS}}"
 
-  inner-test-component:
+  test-component-inner:
     internal: true
     requires:
       vars: [SRC]

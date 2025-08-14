@@ -1,8 +1,9 @@
 use wavs_types::{SaveServiceResponse, Service};
 use anyhow::{Context, Result};
 
-const WAVS_BASE_PORT:u32 = 8123;
-const WAVS_AGGREGATOR_PORT:u32 =  8200;
+use crate::client::config::WAVS_AGGREGATOR_PORT;
+
+
 
 pub struct WavsNodeClient {
     pub endpoint: String,

@@ -1155,6 +1155,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "bls-api"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "layer-climb-address",
+ "serde",
+ "wavs-types",
+]
+
+[[package]]
+name = "bls-service-handler"
+version = "0.0.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "mock-api",
+ "wavs-types",
+]
+
+[[package]]
+name = "bls-service-manager"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "layer-climb-address",
+ "mock-api",
+ "wavs-types",
+]
+
+[[package]]
 name = "blst"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1919,6 +1964,51 @@ dependencies = [
  "serdect",
  "signature",
  "spki",
+]
+
+[[package]]
+name = "ecdsa-api"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "layer-climb-address",
+ "serde",
+ "wavs-types",
+]
+
+[[package]]
+name = "ecdsa-service-handler"
+version = "0.0.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "mock-api",
+ "wavs-types",
+]
+
+[[package]]
+name = "ecdsa-service-manager"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "layer-climb-address",
+ "mock-api",
+ "wavs-types",
 ]
 
 [[package]]
