@@ -9,7 +9,7 @@ tasks:
   all:
     cmds:
       - echo "All tests"
-      - task: all-off-chain 
+      - task: all-off-chain
       - task: all-on-chain
 
   all-off-chain:
@@ -48,7 +48,7 @@ tasks:
 
   components:
     cmds:
-      - for: { var: ALL_COMPONENTS}
+      - for: { var: ALL_COMPONENTS }
         cmd: task test:component-inner SRC={{.ITEM}}
 
   component-inner:
@@ -56,6 +56,6 @@ tasks:
       vars: [SRC]
     vars:
       COMPONENT_PATH: "packages/components/{{.SRC}}"
-    cmds: 
+    cmds:
       - echo "Testing {{.COMPONENT_PATH}}"
-      - cd "{{.COMPONENT_PATH}}" && cargo component test 
+      - cd "{{.COMPONENT_PATH}}" && cargo component test

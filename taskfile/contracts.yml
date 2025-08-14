@@ -5,22 +5,20 @@ includes:
     taskfile: ./config.yml
     flatten: true
 
-
-
 tasks:
   # Validate CONTRACT_KIND env var before returning it
   env-kind:
     silent: true
     vars:
       VALID_KINDS_PATTERN: '{{range $i, $v := .ALL_CONTRACT_KINDS}}{{if $i}}|{{end}}"{{$v}}"{{end}}'
-      VALID_KINDS_LIST: '{{range $i, $v := .ALL_CONTRACT_KINDS}}{{if $i}}, {{end}}{{$v}}{{end}}'
+      VALID_KINDS_LIST: "{{range $i, $v := .ALL_CONTRACT_KINDS}}{{if $i}}, {{end}}{{$v}}{{end}}"
     cmds:
       - |
         if [ -z "{{.CONTRACT_KIND}}" ]; then
           echo "❌ CONTRACT_KIND environment variable is not set. Please set it in .env file." >&2
           exit 1
         fi
-        
+
         case "{{.CONTRACT_KIND}}" in
           {{.VALID_KINDS_PATTERN}})
             echo "{{.CONTRACT_KIND}}"
@@ -41,7 +39,6 @@ tasks:
     cmds:
       - echo "{{.CONTRACT_ARTIFACTS_PATH}}"
 
-
   clean:
     cmds:
       - task: clean-inner
@@ -61,7 +58,7 @@ tasks:
       CONTRACT_ARTIFACTS_PATH:
         sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
     cmds:
-      - echo "Cleaning {{.CONTRACT_KIND}} contracts" 
+      - echo "Cleaning {{.CONTRACT_KIND}} contracts"
       - rm -rf "{{.CONTRACT_ARTIFACTS_PATH}}"
 
   build:
@@ -77,39 +74,39 @@ tasks:
       - for: { var: ALL_CONTRACT_KINDS }
         cmd: task contracts:build-inner CONTRACT_KIND={{.ITEM}}
       - task: build-mock-trigger
-  
+
   build-inner:
     requires:
       vars: [CONTRACT_KIND]
     cmds:
       # Building in parallel seems to break things
       - task: build-service-handler
-        vars: 
+        vars:
           CONTRACT_KIND: "{{.CONTRACT_KIND}}"
       - task: build-service-manager
-        vars: 
+        vars:
           CONTRACT_KIND: "{{.CONTRACT_KIND}}"
 
   build-service-handler:
-      - task: inner-build-contract
-        vars:
-          NAME: "service_handler"
-          SRC: "service-handler"
-          CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+    - task: inner-build-contract
+      vars:
+        NAME: "service_handler"
+        SRC: "service-handler"
+        CONTRACT_KIND: "{{.CONTRACT_KIND}}"
 
   build-service-manager:
-      - task: inner-build-contract
-        vars:
-          NAME: "service_manager"
-          SRC: "service-manager"
-          CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+    - task: inner-build-contract
+      vars:
+        NAME: "service_manager"
+        SRC: "service-manager"
+        CONTRACT_KIND: "{{.CONTRACT_KIND}}"
 
   build-mock-trigger:
-      - task: inner-build-contract
-        vars:
-          NAME: "trigger"
-          SRC: "trigger"
-          CONTRACT_KIND: "mock"
+    - task: inner-build-contract
+      vars:
+        NAME: "trigger"
+        SRC: "trigger"
+        CONTRACT_KIND: "mock"
 
   inner-build-contract:
     internal: true
@@ -120,7 +117,7 @@ tasks:
         sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
       CONTRACT_PATH: "packages/contracts/{{.CONTRACT_KIND}}/{{.SRC}}"
       CONTRACT_NAME: "{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
-    cmds: 
+    cmds:
       - echo "Building contract {{.CONTRACT_NAME}} at {{.CONTRACT_PATH}}"
       - |
         {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
