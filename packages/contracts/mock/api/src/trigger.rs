@@ -6,9 +6,7 @@ pub type InstantiateMsg = Empty;
 #[cw_serde]
 #[schemaifier(mute_warnings)]
 pub enum ExecuteMsg {
-    Push {
-        message: String
-    }
+    Push { message: String },
 }
 
 #[cw_serde]
@@ -16,9 +14,7 @@ pub enum ExecuteMsg {
 #[derive(QueryResponses)]
 pub enum QueryMsg {
     #[returns(String)]
-    TriggerMessage {
-        trigger_id: Uint64 
-    }
+    TriggerMessage { trigger_id: Uint64 },
 }
 
 pub struct PushMessageEvent {
@@ -44,7 +40,11 @@ impl TryFrom<&cosmwasm_std::Event> for PushMessageEvent {
 
     fn try_from(event: &cosmwasm_std::Event) -> Result<Self, Self::Error> {
         if event.ty != Self::EVENT_TYPE && event.ty != format!("wasm-{}", Self::EVENT_TYPE) {
-            return Err(anyhow::anyhow!("Expected event type {}, found {}", Self::EVENT_TYPE.to_string(), event.ty.to_string()));
+            return Err(anyhow::anyhow!(
+                "Expected event type {}, found {}",
+                Self::EVENT_TYPE.to_string(),
+                event.ty.to_string()
+            ));
         }
 
         let trigger_id = event
@@ -52,11 +52,20 @@ impl TryFrom<&cosmwasm_std::Event> for PushMessageEvent {
             .iter()
             .find(|attr| attr.key == Self::EVENT_ATTR_KEY_TRIGGER_ID)
             .map(|attr| attr.value.to_string())
-            .ok_or_else(|| anyhow::anyhow!("Missing attribute {}", Self::EVENT_ATTR_KEY_TRIGGER_ID))?;
+            .ok_or_else(|| {
+                anyhow::anyhow!("Missing attribute {}", Self::EVENT_ATTR_KEY_TRIGGER_ID)
+            })?;
 
-        let trigger_id = trigger_id.parse::<u64>()
-            .map_err(|_| anyhow::anyhow!("Invalid attribute {}: {}", Self::EVENT_ATTR_KEY_TRIGGER_ID, trigger_id))?;
+        let trigger_id = trigger_id.parse::<u64>().map_err(|_| {
+            anyhow::anyhow!(
+                "Invalid attribute {}: {}",
+                Self::EVENT_ATTR_KEY_TRIGGER_ID,
+                trigger_id
+            )
+        })?;
 
-        Ok(Self { trigger_id: trigger_id.into() })
+        Ok(Self {
+            trigger_id: trigger_id.into(),
+        })
     }
 }

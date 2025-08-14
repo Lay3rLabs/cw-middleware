@@ -1,7 +1,10 @@
+use anyhow::{Context, Result};
 use tokio::sync::OnceCell;
 use utils::path::repo_root;
-use wavs_types::{aggregator::RegisterServiceRequest, AddServiceRequest, ComponentDigest, SaveServiceResponse, Service, ServiceManager, UploadComponentResponse};
-use anyhow::{Context, Result};
+use wavs_types::{
+    aggregator::RegisterServiceRequest, AddServiceRequest, ComponentDigest, SaveServiceResponse,
+    Service, ServiceManager, UploadComponentResponse,
+};
 
 use crate::client::config::TestConfig;
 
@@ -22,7 +25,10 @@ impl WavsNodeClient {
     }
 
     pub async fn component_digest() -> ComponentDigest {
-        COMPONENT_DIGEST.get_or_init(upload_component_digest).await.clone()
+        COMPONENT_DIGEST
+            .get_or_init(upload_component_digest)
+            .await
+            .clone()
     }
 
     pub async fn save_service_url(&self, service: &Service) -> Result<String> {
@@ -43,7 +49,8 @@ impl WavsNodeClient {
 
         Ok(format!(
             "{}/service-by-hash/{}",
-            TestConfig::wavs_endpoint(None), response.hash
+            TestConfig::wavs_endpoint(None),
+            response.hash
         ))
     }
 
@@ -73,13 +80,9 @@ impl WavsNodeClient {
         }
 
         Ok(())
-
     }
 
-    pub async fn register_aggregator_service(
-        &self,
-        service: &Service,
-    ) -> anyhow::Result<()> {
+    pub async fn register_aggregator_service(&self, service: &Service) -> anyhow::Result<()> {
         let endpoint = format!("{}/register-service", TestConfig::aggregator_endpoint());
         let payload = RegisterServiceRequest {
             service_manager: service.manager.clone(),
@@ -113,9 +116,7 @@ async fn upload_component_digest() -> ComponentDigest {
 
     let wasm_bytes = tokio::fs::read(&wasm_path)
         .await
-        .unwrap_or_else(|_| {
-            panic!("Failed to read {}", wasm_path.display())
-        });
+        .unwrap_or_else(|_| panic!("Failed to read {}", wasm_path.display()));
 
     let response: UploadComponentResponse = reqwest::Client::new()
         .post(format!("{}/upload", TestConfig::wavs_endpoint(None)))

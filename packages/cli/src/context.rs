@@ -3,7 +3,13 @@ use clap::Parser;
 use layer_climb::prelude::*;
 use layer_climb_cli::command::WalletCommand;
 use rand::prelude::*;
-use utils::{config::ChainConfigs, contract_client::on_chain::{WavsServiceHandlerQueryClient, WavsServiceHandlerSigningClient, WavsServiceManagerQueryClient, WavsServiceManagerSigningClient}};
+use utils::{
+    config::ChainConfigs,
+    contract_client::on_chain::{
+        WavsServiceHandlerQueryClient, WavsServiceHandlerSigningClient,
+        WavsServiceManagerQueryClient, WavsServiceManagerSigningClient,
+    },
+};
 
 use crate::command::{CliArgs, Command, WalletArgs};
 
@@ -16,7 +22,7 @@ pub struct CliContext {
 impl CliContext {
     pub async fn new() -> Self {
         if dotenvy::dotenv().is_err() {
-            eprintln!("Failed to load .env file");
+            tracing::debug!("Failed to load .env file");
         }
         let args = CliArgs::parse();
 

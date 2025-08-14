@@ -196,7 +196,10 @@ impl WavsQueryClient {
                 querier.clone(),
                 service_handler_addr,
             ),
-            service_manager: WavsServiceManagerQueryClient::new(querier.clone(), service_manager_addr),
+            service_manager: WavsServiceManagerQueryClient::new(
+                querier.clone(),
+                service_manager_addr,
+            ),
             trigger: WavsTriggerQueryClient::new(querier, trigger_addr),
         }
     }
@@ -261,11 +264,7 @@ impl WavsSigningClient {
                 client.clone(),
                 service_manager_addr,
             ),
-            trigger_exec: WavsTriggerSigningClient::new(
-                client,
-                service_manager_addr,
-            ),
-
+            trigger_exec: WavsTriggerSigningClient::new(client, service_manager_addr),
         }
     }
 }
@@ -393,7 +392,6 @@ impl WavsBasicQueryClientExt for WavsServiceManagerSigningClient {
         client_contract_query(&self.client, address, msg).await
     }
 }
-
 
 #[async_trait(?Send)]
 impl WavsBasicExecClientExt for WavsServiceManagerSigningPoolClient {
@@ -530,7 +528,6 @@ impl WavsServiceHandlerAddrExt for WavsServiceHandlerSigningPoolClient {
     }
 }
 
-
 // Trigger
 #[async_trait(?Send)]
 impl WavsBasicQueryClientExt for WavsTriggerQueryClient {
@@ -620,9 +617,6 @@ impl WavsTriggerAddrExt for WavsTriggerSigningPoolClient {
     }
 }
 
-
-
-
 // common helpers
 
 async fn client_contract_query<
@@ -654,7 +648,6 @@ async fn pool_contract_query<
 
     Ok(resp)
 }
-
 
 async fn querier_contract_query<
     RESP: DeserializeOwned + Send + Sync + Debug,

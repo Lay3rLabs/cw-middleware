@@ -1,7 +1,7 @@
 use super::functionality::{
     WavsServiceHandlerExecClientExt, WavsServiceHandlerQueryClientExt,
-    WavsServiceManagerExecClientExt, WavsServiceManagerQueryClientExt,
-    WavsTriggerExecClientExt, WavsTriggerQueryClientExt,
+    WavsServiceManagerExecClientExt, WavsServiceManagerQueryClientExt, WavsTriggerExecClientExt,
+    WavsTriggerQueryClientExt,
 };
 use async_trait::async_trait;
 use cosmwasm_std::{Addr, Coin};
@@ -24,7 +24,7 @@ pub trait WavsBasicQueryClientExt {
 
 #[async_trait(?Send)]
 pub trait WavsBasicExecClientExt: WavsBasicQueryClientExt {
-    type TxResponse: TxResponseExt; 
+    type TxResponse: TxResponseExt;
 
     async fn basic_contract_exec<MSG: Serialize + std::fmt::Debug>(
         &self,
@@ -92,7 +92,6 @@ pub trait HasWavsQueryClient {
     fn query_client(&self) -> &Self::QueryClient;
 }
 
-
 pub trait HasWavsExecClient {
     type ExecClient: WavsExecClientExt;
 
@@ -131,14 +130,8 @@ impl<T> WavsServiceManagerExecClientExt for T where
 {
 }
 
-impl<T> WavsTriggerQueryClientExt for T where
-    T: WavsBasicQueryClientExt + WavsTriggerAddrExt
-{
-}
-impl<T> WavsTriggerExecClientExt for T where
-    T: WavsBasicExecClientExt + WavsTriggerQueryClientExt
-{
-}
+impl<T> WavsTriggerQueryClientExt for T where T: WavsBasicQueryClientExt + WavsTriggerAddrExt {}
+impl<T> WavsTriggerExecClientExt for T where T: WavsBasicExecClientExt + WavsTriggerQueryClientExt {}
 
 impl<T> WavsClientExt for T
 where
@@ -152,7 +145,7 @@ where
         <Self as WavsQueryClientExt>::service_manager(self)
     }
 
-    fn trigger_querier(&self) -> &<Self as WavsQueryClientExt>::Trigger{
+    fn trigger_querier(&self) -> &<Self as WavsQueryClientExt>::Trigger {
         <Self as WavsQueryClientExt>::trigger(self)
     }
 
@@ -169,11 +162,14 @@ where
     }
 }
 
-impl <T> WavsQueryClientExt for T where
-    T: HasWavsQueryClient
+impl<T> WavsQueryClientExt for T
+where
+    T: HasWavsQueryClient,
 {
-    type ServiceHandler = <<T as HasWavsQueryClient>::QueryClient as WavsQueryClientExt>::ServiceHandler;
-    type ServiceManager = <<T as HasWavsQueryClient>::QueryClient as WavsQueryClientExt>::ServiceManager;
+    type ServiceHandler =
+        <<T as HasWavsQueryClient>::QueryClient as WavsQueryClientExt>::ServiceHandler;
+    type ServiceManager =
+        <<T as HasWavsQueryClient>::QueryClient as WavsQueryClientExt>::ServiceManager;
     type Trigger = <<T as HasWavsQueryClient>::QueryClient as WavsQueryClientExt>::Trigger;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
@@ -189,11 +185,14 @@ impl <T> WavsQueryClientExt for T where
     }
 }
 
-impl <T> WavsExecClientExt for T where
-    T: HasWavsExecClient
+impl<T> WavsExecClientExt for T
+where
+    T: HasWavsExecClient,
 {
-    type ServiceHandler = <<T as HasWavsExecClient>::ExecClient as WavsExecClientExt>::ServiceHandler;
-    type ServiceManager = <<T as HasWavsExecClient>::ExecClient as WavsExecClientExt>::ServiceManager;
+    type ServiceHandler =
+        <<T as HasWavsExecClient>::ExecClient as WavsExecClientExt>::ServiceHandler;
+    type ServiceManager =
+        <<T as HasWavsExecClient>::ExecClient as WavsExecClientExt>::ServiceManager;
     type Trigger = <<T as HasWavsExecClient>::ExecClient as WavsExecClientExt>::Trigger;
 
     fn service_handler(&self) -> &Self::ServiceHandler {

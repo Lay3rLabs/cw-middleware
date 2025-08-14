@@ -1,11 +1,14 @@
-use std::{cell::RefCell, rc::Rc, fmt::Debug};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 use async_trait::async_trait;
 use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::{App, Executor};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::prelude::{WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsExecClientExt, WavsQueryClientExt, WavsServiceHandlerAddrExt, WavsServiceManagerAddrExt, WavsTriggerAddrExt};
+use crate::prelude::{
+    WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsExecClientExt, WavsQueryClientExt,
+    WavsServiceHandlerAddrExt, WavsServiceManagerAddrExt, WavsTriggerAddrExt,
+};
 
 #[derive(Clone)]
 pub struct WavsApp {
@@ -81,7 +84,6 @@ impl WavsTriggerAddrExt for WavsApp {
         self.trigger_addr.clone()
     }
 }
-
 
 // Combined impls
 impl WavsQueryClientExt for WavsApp {

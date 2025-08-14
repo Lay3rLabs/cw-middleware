@@ -24,35 +24,54 @@ impl Guest for Component {
 fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
     match trigger_action.data {
         TriggerData::CosmosContractEvent(data) => {
-
-            let cosmos_event = cosmwasm_std::Event::new(data.event.ty).add_attributes(data.event.attributes);
+            let cosmos_event =
+                cosmwasm_std::Event::new(data.event.ty).add_attributes(data.event.attributes);
 
             let event = PushMessageEvent::try_from(&cosmos_event).map_err(|e| e.to_string())?;
 
-            let chain_config = host::get_cosmos_chain_config(&data.chain_name).ok_or_else(|| {
-                format!("No chain config found for {}", data.chain_name)
-            })?;
-
+            let chain_config = host::get_cosmos_chain_config(&data.chain_name)
+                .ok_or_else(|| format!("No chain config found for {}", data.chain_name))?;
 
             let message = wstd::runtime::block_on(async move {
-                let client = QueryClient::new(ChainConfig { 
-                    chain_id: chain_config.chain_id.parse().map_err(|_| "Invalid chain ID")?, 
-                    rpc_endpoint: chain_config.rpc_endpoint, 
-                    grpc_endpoint: chain_config.grpc_endpoint, 
-                    grpc_web_endpoint: None, 
-                    gas_price: chain_config.gas_price, 
-                    gas_denom: chain_config.gas_denom, 
-                    address_kind: AddrKind::Cosmos { prefix: chain_config.bech32_prefix },
-                }, None).await.map_err(|e| e.to_string())?;
+                let client = QueryClient::new(
+                    ChainConfig {
+                        chain_id: chain_config
+                            .chain_id
+                            .parse()
+                            .map_err(|_| "Invalid chain ID")?,
+                        rpc_endpoint: chain_config.rpc_endpoint,
+                        grpc_endpoint: chain_config.grpc_endpoint,
+                        grpc_web_endpoint: None,
+                        gas_price: chain_config.gas_price,
+                        gas_denom: chain_config.gas_denom,
+                        address_kind: AddrKind::Cosmos {
+                            prefix: chain_config.bech32_prefix,
+                        },
+                    },
+                    None,
+                )
+                .await
+                .map_err(|e| e.to_string())?;
 
                 // TODO - use utils extension
 
-                let address = Address::Cosmos { 
+                let address = Address::Cosmos {
                     bech32_addr: data.contract_address.bech32_addr,
-                    prefix_len: data.contract_address.prefix_len.try_into().map_err(|_| "Invalid prefix length")?
+                    prefix_len: data
+                        .contract_address
+                        .prefix_len
+                        .try_into()
+                        .map_err(|_| "Invalid prefix length")?,
                 };
 
-                let message:String = client.contract_smart(&address, &mock_api::trigger::QueryMsg::TriggerMessage { trigger_id: event.trigger_id }).await
+                let message: String = client
+                    .contract_smart(
+                        &address,
+                        &mock_api::trigger::QueryMsg::TriggerMessage {
+                            trigger_id: event.trigger_id,
+                        },
+                    )
+                    .await
                     .map_err(|e| e.to_string())?;
 
                 Result::<String, String>::Ok(message)
@@ -61,11 +80,13 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
             Ok(Some(WasmResponse {
                 payload: DataWithId {
                     trigger_id: event.trigger_id,
-                    data: message.into_bytes().into()
-                }.to_bytes().map_err(|e| e.to_string())?, 
+                    data: message.into_bytes().into(),
+                }
+                .to_bytes()
+                .map_err(|e| e.to_string())?,
                 ordering: None,
             }))
-        },
+        }
         TriggerData::Raw(raw) => handle_raw(raw).map_err(|e| e.to_string()),
         _ => Err("Unsupported trigger data".to_string()),
     }

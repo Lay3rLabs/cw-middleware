@@ -76,12 +76,6 @@ impl TestPool {
 
         let pool = SigningClientPool::new(Pool::builder(pool).max_size(8).build().unwrap());
 
-        Self {
-            pool,
-            querier
-        }
-
+        Self { pool, querier }
     }
 }
-
-

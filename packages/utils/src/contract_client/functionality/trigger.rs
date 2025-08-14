@@ -1,5 +1,5 @@
-use async_trait::async_trait;
 use crate::prelude::{WavsExecClientExt, WavsQueryClientExt};
+use async_trait::async_trait;
 
 #[async_trait(?Send)]
 pub trait WavsTriggerQueryClientExt: WavsQueryClientExt {

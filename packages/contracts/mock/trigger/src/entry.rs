@@ -31,24 +31,25 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
     match msg {
-        ExecuteMsg::Push{message} => {
-            let trigger_id:u64 = state::TRIGGER_MESSAGE_COUNT.may_load(deps.storage)?.unwrap_or_default() + 1;
+        ExecuteMsg::Push { message } => {
+            let trigger_id: u64 = state::TRIGGER_MESSAGE_COUNT
+                .may_load(deps.storage)?
+                .unwrap_or_default()
+                + 1;
             let trigger_id = Uint64::new(trigger_id);
 
             state::TRIGGER_MESSAGES.save(deps.storage, trigger_id, &message)?;
 
-            Ok(Response::new().add_event(PushMessageEvent {
-                trigger_id
-            }))
-        },
+            Ok(Response::new().add_event(PushMessageEvent { trigger_id }))
+        }
     }
 }
 
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
-        QueryMsg::TriggerMessage{trigger_id}  => { 
+        QueryMsg::TriggerMessage { trigger_id } => {
             to_json_binary(&state::TRIGGER_MESSAGES.load(deps.storage, trigger_id)?)
-        },
+        }
     }
 }

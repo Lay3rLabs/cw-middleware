@@ -1,13 +1,13 @@
 use std::path::Path;
 
 use async_trait::async_trait;
-use utils::prelude::{mock::{WavsMockExecClientExt, WavsMockQueryClientExt}, *};
 use tokio::sync::OnceCell;
-
-use utils::{
-    contract_client::on_chain::WavsSigningPoolClient,
-    path::repo_root
+use utils::prelude::{
+    mock::{WavsMockExecClientExt, WavsMockQueryClientExt},
+    *,
 };
+
+use utils::{contract_client::on_chain::WavsSigningPoolClient, path::repo_root};
 
 use crate::client::pool::TestPool;
 
@@ -18,14 +18,14 @@ static MOCK_TRIGGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 
 #[derive(Clone)]
 pub struct MockContractClient {
-    inner: WavsSigningPoolClient
+    inner: WavsSigningPoolClient,
 }
 
 impl MockContractClient {
     pub async fn new() -> Self {
         let code_ids = CodeIds::new_mock().await;
 
-        let TestPool{ querier, pool } = TestPool::get().await;
+        let TestPool { querier, pool } = TestPool::get().await;
         let client = pool.get().await.unwrap();
 
         let (manager_addr, _) = client
@@ -66,23 +66,22 @@ impl MockContractClient {
             .await
             .unwrap();
 
-        let inner = WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
+        let inner =
+            WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
 
-        Self {
-            inner
-        }
+        Self { inner }
     }
 }
 
 #[derive(Clone)]
 pub struct EcdsaContractClient {
-    inner: WavsSigningPoolClient
+    inner: WavsSigningPoolClient,
 }
 
 impl EcdsaContractClient {
     pub async fn new() -> Self {
         let code_ids = CodeIds::new_ecdsa().await;
-        let TestPool{ querier, pool } = TestPool::get().await;
+        let TestPool { querier, pool } = TestPool::get().await;
         let client = pool.get().await.unwrap();
 
         let (manager_addr, _) = client
@@ -123,24 +122,22 @@ impl EcdsaContractClient {
             .await
             .unwrap();
 
+        let inner =
+            WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
 
-        let inner = WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
-
-        Self {
-            inner
-        }
+        Self { inner }
     }
 }
 
 #[derive(Clone)]
 pub struct BlsContractClient {
-    inner: WavsSigningPoolClient
+    inner: WavsSigningPoolClient,
 }
 
 impl BlsContractClient {
     pub async fn new() -> Self {
         let code_ids = CodeIds::new_bls().await;
-        let TestPool{ querier, pool } = TestPool::get().await;
+        let TestPool { querier, pool } = TestPool::get().await;
         let client = pool.get().await.unwrap();
 
         let (manager_addr, _) = client
@@ -181,11 +178,10 @@ impl BlsContractClient {
             .await
             .unwrap();
 
-        let inner = WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
+        let inner =
+            WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
 
-        Self {
-            inner
-        }
+        Self { inner }
     }
 }
 
@@ -197,19 +193,31 @@ struct CodeIds {
 
 impl CodeIds {
     pub async fn new_mock() -> Self {
-        MOCK_CODE_IDS.get_or_init(Self::instantiate_mock).await.clone()
+        MOCK_CODE_IDS
+            .get_or_init(Self::instantiate_mock)
+            .await
+            .clone()
     }
 
     pub async fn new_ecdsa() -> Self {
-        ECDSA_CODE_IDS.get_or_init(Self::instantiate_ecdsa).await.clone()
+        ECDSA_CODE_IDS
+            .get_or_init(Self::instantiate_ecdsa)
+            .await
+            .clone()
     }
 
     pub async fn new_bls() -> Self {
-        BLS_CODE_IDS.get_or_init(Self::instantiate_bls).await.clone()
+        BLS_CODE_IDS
+            .get_or_init(Self::instantiate_bls)
+            .await
+            .clone()
     }
 
-    pub async fn new_mock_trigger() -> u64{
-        MOCK_TRIGGER_CODE_ID.get_or_init(Self::instantiate_mock_trigger).await.clone()
+    pub async fn new_mock_trigger() -> u64 {
+        MOCK_TRIGGER_CODE_ID
+            .get_or_init(Self::instantiate_mock_trigger)
+            .await
+            .clone()
     }
 
     async fn instantiate_mock() -> Self {
@@ -251,21 +259,29 @@ impl CodeIds {
         Self::instantiate(service_handler_path, service_manager_path).await
     }
 
-    async fn instantiate(path_to_service_handler: impl AsRef<Path>, path_to_service_manager: impl AsRef<Path>) -> Self {
+    async fn instantiate(
+        path_to_service_handler: impl AsRef<Path>,
+        path_to_service_manager: impl AsRef<Path>,
+    ) -> Self {
         let handler_wasm_bytes = tokio::fs::read(path_to_service_handler.as_ref())
             .await
             .unwrap_or_else(|_| {
-                panic!("Failed to read {}", path_to_service_handler.as_ref().display())
+                panic!(
+                    "Failed to read {}",
+                    path_to_service_handler.as_ref().display()
+                )
             });
         let manager_wasm_bytes = tokio::fs::read(path_to_service_manager.as_ref())
             .await
             .unwrap_or_else(|_| {
-                panic!("Failed to read {}", path_to_service_manager.as_ref().display())
+                panic!(
+                    "Failed to read {}",
+                    path_to_service_manager.as_ref().display()
+                )
             });
 
         let pool = TestPool::get().await;
         let client = pool.pool.get().await.unwrap();
-
 
         let service_handler_code_id = client
             .contract_upload_file(handler_wasm_bytes, None)
@@ -273,10 +289,7 @@ impl CodeIds {
             .unwrap()
             .0;
 
-        tracing::info!(
-            "service handler code ID: {}",
-            service_handler_code_id
-        );
+        tracing::info!("service handler code ID: {}", service_handler_code_id);
 
         let service_manager_code_id = client
             .contract_upload_file(manager_wasm_bytes, None)
@@ -284,15 +297,11 @@ impl CodeIds {
             .unwrap()
             .0;
 
-        tracing::info!(
-            "service manager code ID: {}",
-            service_manager_code_id
-        );
-
+        tracing::info!("service manager code ID: {}", service_manager_code_id);
 
         Self {
             service_handler: service_handler_code_id,
-            service_manager: service_manager_code_id
+            service_manager: service_manager_code_id,
         }
     }
 
@@ -308,13 +317,10 @@ impl CodeIds {
 
         let wasm_bytes = tokio::fs::read(&wasm_path)
             .await
-            .unwrap_or_else(|_| {
-                panic!("Failed to read {}", wasm_path.display())
-            });
+            .unwrap_or_else(|_| panic!("Failed to read {}", wasm_path.display()));
 
         let pool = TestPool::get().await;
         let client = pool.pool.get().await.unwrap();
-
 
         let code_id = client
             .contract_upload_file(wasm_bytes, None)
@@ -322,16 +328,11 @@ impl CodeIds {
             .unwrap()
             .0;
 
-        tracing::info!(
-            "mock trigger code ID: {}",
-           code_id 
-        );
+        tracing::info!("mock trigger code ID: {}", code_id);
 
         code_id
-
     }
 }
-
 
 impl HasWavsQueryClient for MockContractClient {
     type QueryClient = WavsSigningPoolClient;
@@ -350,9 +351,9 @@ impl HasWavsExecClient for MockContractClient {
 }
 
 #[async_trait(?Send)]
-impl WavsMockQueryClientExt for MockContractClient { }
+impl WavsMockQueryClientExt for MockContractClient {}
 #[async_trait(?Send)]
-impl WavsMockExecClientExt for MockContractClient { }
+impl WavsMockExecClientExt for MockContractClient {}
 
 impl HasWavsQueryClient for EcdsaContractClient {
     type QueryClient = WavsSigningPoolClient;
@@ -370,9 +371,9 @@ impl HasWavsExecClient for EcdsaContractClient {
 }
 
 #[async_trait(?Send)]
-impl WavsEcdsaQueryClientExt for EcdsaContractClient { }
+impl WavsEcdsaQueryClientExt for EcdsaContractClient {}
 #[async_trait(?Send)]
-impl WavsEcdsaExecClientExt for EcdsaContractClient { }
+impl WavsEcdsaExecClientExt for EcdsaContractClient {}
 
 impl HasWavsQueryClient for BlsContractClient {
     type QueryClient = WavsSigningPoolClient;
@@ -381,7 +382,6 @@ impl HasWavsQueryClient for BlsContractClient {
         &self.inner
     }
 }
-
 
 impl HasWavsExecClient for BlsContractClient {
     type ExecClient = WavsSigningPoolClient;
@@ -392,6 +392,6 @@ impl HasWavsExecClient for BlsContractClient {
 }
 
 #[async_trait(?Send)]
-impl WavsBlsQueryClientExt for BlsContractClient { }
+impl WavsBlsQueryClientExt for BlsContractClient {}
 #[async_trait(?Send)]
-impl WavsBlsExecClientExt for BlsContractClient { }
+impl WavsBlsExecClientExt for BlsContractClient {}

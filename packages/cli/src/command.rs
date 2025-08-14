@@ -14,7 +14,7 @@ pub struct CliArgs {
     #[clap(long)]
     pub wavs_home: Option<PathBuf>,
 
-    #[clap(long, default_value = "uni-7")]
+    #[clap(long, default_value = "local")]
     pub chain_name: ChainName,
 
     #[command(subcommand)]
@@ -111,11 +111,10 @@ pub enum ServiceHandlerCommand {
     },
 }
 
-
 #[derive(Debug, Clone, ValueEnum)]
 #[clap(rename_all = "snake_case")]
 pub enum ContractKind {
     Mock,
     Ecdsa,
-    Bls
+    Bls,
 }

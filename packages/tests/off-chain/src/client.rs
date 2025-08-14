@@ -4,11 +4,11 @@ use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::{App, ContractWrapper, Executor};
 use utils::{contract_client::off_chain::WavsApp, prelude::*};
 
-static ADMIN:LazyLock<Addr> = LazyLock::new(|| Addr::unchecked("admin"));
+static ADMIN: LazyLock<Addr> = LazyLock::new(|| Addr::unchecked("admin"));
 
 #[derive(Clone)]
 pub struct TestMockClient {
-    pub app: WavsApp, 
+    pub app: WavsApp,
 }
 
 impl TestMockClient {
@@ -46,7 +46,6 @@ impl TestMockClient {
                 None,
             )
             .unwrap();
-
 
         let contract = ContractWrapper::new(
             mock_service_handler::entry::execute,
@@ -88,7 +87,6 @@ impl TestMockClient {
             )
             .unwrap();
 
-
         let app = WavsApp::new(
             app,
             Addr::unchecked("admin"),
@@ -97,16 +95,13 @@ impl TestMockClient {
             Addr::unchecked(trigger_addr),
         );
 
-        Self {
-            app,
-        }
+        Self { app }
     }
 }
 
-
 #[derive(Clone)]
 pub struct TestEcdsaClient {
-    pub app: WavsApp, 
+    pub app: WavsApp,
 }
 
 impl TestEcdsaClient {
@@ -144,7 +139,6 @@ impl TestEcdsaClient {
                 None,
             )
             .unwrap();
-
 
         let contract = ContractWrapper::new(
             ecdsa_service_handler::entry::execute,
@@ -194,15 +188,13 @@ impl TestEcdsaClient {
             Addr::unchecked(trigger_addr),
         );
 
-        Self {
-            app,
-        }
+        Self { app }
     }
 }
 
 #[derive(Clone)]
 pub struct TestBlsClient {
-    pub app: WavsApp, 
+    pub app: WavsApp,
 }
 
 impl TestBlsClient {
@@ -240,7 +232,6 @@ impl TestBlsClient {
                 None,
             )
             .unwrap();
-
 
         let contract = ContractWrapper::new(
             bls_service_handler::entry::execute,
@@ -282,7 +273,6 @@ impl TestBlsClient {
             )
             .unwrap();
 
-
         let app = WavsApp::new(
             app,
             Addr::unchecked("admin"),
@@ -291,12 +281,9 @@ impl TestBlsClient {
             Addr::unchecked(trigger_addr),
         );
 
-        Self {
-            app,
-        }
+        Self { app }
     }
 }
-
 
 impl HasWavsQueryClient for TestMockClient {
     type QueryClient = WavsApp;
@@ -313,7 +300,6 @@ impl HasWavsExecClient for TestMockClient {
         &self.app
     }
 }
-
 
 impl HasWavsQueryClient for TestEcdsaClient {
     type QueryClient = WavsApp;

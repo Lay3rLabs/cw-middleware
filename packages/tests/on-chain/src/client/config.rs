@@ -3,8 +3,8 @@ use tokio::sync::OnceCell;
 use utils::{config::ChainConfigs, path::repo_wavs_home};
 use wavs_types::ChainName;
 
-pub(super) const WAVS_BASE_PORT:u32 = 8123;
-pub(super) const WAVS_AGGREGATOR_PORT:u32 =  8200;
+pub(super) const WAVS_BASE_PORT: u32 = 8123;
+pub(super) const WAVS_AGGREGATOR_PORT: u32 = 8200;
 
 // TODO - extend this for multiple operators
 static TEST_CONFIG: OnceCell<TestConfig> = OnceCell::const_new();
@@ -21,7 +21,10 @@ impl TestConfig {
     }
 
     pub fn wavs_endpoint(operator_number: Option<u32>) -> String {
-        format!("http://localhost:{}", WAVS_BASE_PORT + operator_number.unwrap_or(0))
+        format!(
+            "http://localhost:{}",
+            WAVS_BASE_PORT + operator_number.unwrap_or(0)
+        )
     }
 
     pub fn aggregator_endpoint() -> String {
@@ -33,7 +36,8 @@ impl TestConfig {
             .await
             .expect("Failed to load chain configurations");
 
-        let chain_name = ChainName::new(std::env::var("CHAIN_NAME").expect("CHAIN_NAME must be set")).unwrap();
+        let chain_name =
+            ChainName::new(std::env::var("CHAIN_NAME").expect("CHAIN_NAME must be set")).unwrap();
 
         let chain_config = chain_configs
             .cosmos
@@ -43,6 +47,9 @@ impl TestConfig {
 
         tracing::info!("Using chain config for {}", chain_name);
 
-        Self { chain_name, chain_config: chain_config.into() }
+        Self {
+            chain_name,
+            chain_config: chain_config.into(),
+        }
     }
 }
