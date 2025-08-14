@@ -24,6 +24,7 @@ pub struct MockContractClient {
 impl MockContractClient {
     pub async fn new() -> Self {
         let code_ids = CodeIds::new_mock().await;
+        let trigger_code_id = CodeIds::new_mock_trigger().await;
 
         let TestPool { querier, pool } = TestPool::get().await;
         let client = pool.get().await.unwrap();
@@ -57,7 +58,7 @@ impl MockContractClient {
         let (trigger_addr, _) = client
             .contract_instantiate(
                 None,
-                CodeIds::new_mock_trigger().await,
+                trigger_code_id,
                 "Mock Trigger",
                 &mock_api::trigger::InstantiateMsg {},
                 vec![],

@@ -4,13 +4,16 @@ use utils::{
 };
 
 pub async fn run_sanity_tests(client: &impl WavsClientExt) {
+    run_sanity_tests_with_id(client, "").await;
+}
+pub async fn run_sanity_tests_with_id(client: &impl WavsClientExt, id: &str) {
     // Example sanity test
     let addr = client
         .service_handler_querier()
         .get_manager_address()
         .await
         .unwrap();
-    tracing::info!("Service Handler Manager Address: {}", addr);
+    tracing::info!("[{id}] Service Handler Manager Address: {}", addr);
 
     client
         .service_manager_exec()

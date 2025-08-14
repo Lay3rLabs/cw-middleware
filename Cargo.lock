@@ -3554,6 +3554,7 @@ dependencies = [
  "cosmwasm-std",
  "deadpool",
  "ecdsa-api",
+ "futures",
  "layer-climb",
  "mock-api",
  "reqwest",

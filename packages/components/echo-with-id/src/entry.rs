@@ -8,16 +8,15 @@ use crate::bindings::wavs::worker::input::TriggerData;
 use crate::bindings::{host, Guest, TriggerAction, WasmResponse};
 use crate::error::EchoResult;
 
-struct Component;
+pub struct Component;
 
 impl Guest for Component {
     fn run(trigger_action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
-        Err("WTF!".to_string())
-        // let res = inner(trigger_action);
+        let res = inner(trigger_action);
 
-        // host::log(LogLevel::Warn, &format!("Echo response: {:?}", res));
+        host::log(LogLevel::Warn, &format!("Echo response: {:?}", res));
 
-        // res
+        res
     }
 }
 
@@ -102,4 +101,4 @@ fn handle_raw(raw: Vec<u8>) -> EchoResult<Option<WasmResponse>> {
     }))
 }
 
-crate::bindings::export!(Component with_types_in crate::bindings);
+

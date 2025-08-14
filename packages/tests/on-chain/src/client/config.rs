@@ -36,14 +36,18 @@ impl TestConfig {
             .await
             .expect("Failed to load chain configurations");
 
+
+
         let chain_name =
             ChainName::new(std::env::var("CHAIN_NAME").expect("CHAIN_NAME must be set")).unwrap();
 
-        let chain_config = chain_configs
+        let mut chain_config = chain_configs
             .cosmos
             .get(&chain_name)
             .expect(&format!("No cosmos chain config found for {}", chain_name))
             .clone();
+
+        chain_config.grpc_endpoint = None;
 
         tracing::info!("Using chain config for {}", chain_name);
 

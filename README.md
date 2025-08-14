@@ -88,13 +88,6 @@ Some more component building commands:
 
 ## Testing
 
-### All
-
-This will literally run all tests, usually it's not what you want... keep reading :)
-
-```bash
-task test:all
-```
 
 ### Contracts 
 
@@ -157,6 +150,14 @@ If you already have the chains running, then run `task backend:start-wavs` inste
 
 Jaeger UI is at [http://localhost:16686/](http://localhost:16686/)
 Prometheus is at [http://localhost:9090/](http://localhost:9090/)
+
+### Testing all
+
+This will literally run all tests, usually it's not what you want... but, it's doable:
+
+```bash
+task test:all
+```
 
 ### Multiple operators
 
