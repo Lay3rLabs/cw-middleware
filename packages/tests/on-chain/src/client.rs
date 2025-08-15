@@ -8,8 +8,7 @@ use mock_api::trigger::PushMessageEvent;
 use std::{collections::BTreeMap, sync::Arc};
 use utils::{contract_client::on_chain::WavsSigningPoolClient, prelude::*};
 use wavs_types::{
-    Component, ComponentSource, CosmosContractSubmission, Service, ServiceManager, Submit, Trigger,
-    Workflow,
+    AllowedHostPermission, Component, ComponentSource, CosmosContractSubmission, Service, ServiceManager, Submit, Trigger, Workflow
 };
 
 pub mod config;
@@ -70,6 +69,8 @@ impl TestClient {
 
     pub async fn new_service(&self) -> Service {
         let component = WavsNodeClient::component_digest().await;
+        let mut component = Component::new(ComponentSource::Digest(component));
+        component.permissions.allowed_http_hosts = AllowedHostPermission::All;
 
         let mut workflows = BTreeMap::new();
 
@@ -81,7 +82,7 @@ impl TestClient {
                     chain_name: self.config.chain_name.clone(),
                     event_type: PushMessageEvent::EVENT_TYPE.to_string(),
                 },
-                component: Component::new(ComponentSource::Digest(component)),
+                component,
                 submit: Submit::Aggregator {
                     url: TestConfig::aggregator_endpoint(),
                     component: None,
