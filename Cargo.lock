@@ -1482,18 +1482,18 @@ checksum = "09f86359c565ec8dc6f1b39e51fff1f63f712767d77529ff46d0d466ea37cd34"
 [[package]]
 name = "cosmwasm-core"
 version = "3.0.1"
-source = "git+https://github.com/dakom/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab#72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab"
+source = "git+https://github.com/CosmWasm/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab#72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab"
 
 [[package]]
 name = "cosmwasm-crypto"
 version = "3.0.1"
-source = "git+https://github.com/dakom/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab#72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab"
+source = "git+https://github.com/CosmWasm/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab#72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab"
 dependencies = [
  "ark-bls12-381",
  "ark-ec",
  "ark-ff 0.5.0",
  "ark-serialize 0.5.0",
- "cosmwasm-core 3.0.1 (git+https://github.com/dakom/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab)",
+ "cosmwasm-core 3.0.1 (git+https://github.com/CosmWasm/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab)",
  "curve25519-dalek",
  "digest 0.10.7",
  "ecdsa",

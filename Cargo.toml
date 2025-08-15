@@ -110,4 +110,4 @@ tracing-subscriber = {version = "0.3.19", features = ["env-filter"] }
 
 [patch.crates-io]
 # see https://github.com/CosmWasm/cosmwasm/issues/2525
-cosmwasm-crypto = { git = "https://github.com/dakom/cosmwasm", rev = "72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab" }
+cosmwasm-crypto = { git = "https://github.com/CosmWasm/cosmwasm", rev = "72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab" }
