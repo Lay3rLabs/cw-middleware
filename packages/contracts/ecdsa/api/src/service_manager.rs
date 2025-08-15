@@ -1,6 +1,5 @@
 use cosmwasm_schema::cw_serde;
-use cosmwasm_std::{Empty, Uint256};
-use layer_climb_address::AddrEvm;
+use cosmwasm_std::Empty;
 use wavs_types::contracts::cosmwasm::service_manager::{
     ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
 };
@@ -10,11 +9,7 @@ pub type InstantiateMsg = Empty;
 #[cw_serde]
 #[schemaifier(mute_warnings)]
 pub enum ExecuteMsg {
-    SetSigningKey {
-        operator: AddrEvm,
-        signing_key: AddrEvm,
-        weight: Uint256,
-    },
+    // TODO - uhh... ecdsa stuff
     #[serde(untagged)]
     Wavs(ServiceManagerExecuteMessages),
 }

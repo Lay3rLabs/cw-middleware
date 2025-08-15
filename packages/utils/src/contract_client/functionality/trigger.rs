@@ -1,8 +1,6 @@
 use async_trait::async_trait;
 use cosmwasm_std::{Coin, Uint64};
 use mock_api::trigger::PushMessageEvent;
-use serde::de::DeserializeOwned;
-use std::fmt::Debug;
 
 use crate::prelude::{
     TxResponseExt, WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsTriggerAddrExt,
@@ -11,19 +9,19 @@ use crate::prelude::{
 // Trigger Query
 #[async_trait(?Send)]
 pub trait WavsTriggerQueryClientExt: WavsBasicQueryClientExt + WavsTriggerAddrExt {
-    async fn query<RESP: DeserializeOwned + Send + Sync + Debug>(
+    async fn mock_trigger_query(
         &self,
         msg: &mock_api::trigger::QueryMsg,
-    ) -> Result<RESP, cosmwasm_std::StdError> {
-        let contract_addr = self.addr();
-        self.basic_contract_query(&contract_addr, msg).await
+    ) -> Result<String, cosmwasm_std::StdError> {
+        let addr = WavsTriggerAddrExt::addr(self);
+        self.basic_contract_query(&addr, msg).await
     }
 
     async fn get_trigger_message(
         &self,
         trigger_id: impl Into<Uint64>,
     ) -> Result<String, cosmwasm_std::StdError> {
-        self.query(&mock_api::trigger::QueryMsg::TriggerMessage {
+        self.mock_trigger_query(&mock_api::trigger::QueryMsg::TriggerMessage {
             trigger_id: trigger_id.into(),
         })
         .await
@@ -33,13 +31,13 @@ pub trait WavsTriggerQueryClientExt: WavsBasicQueryClientExt + WavsTriggerAddrEx
 // Trigger Exec
 #[async_trait(?Send)]
 pub trait WavsTriggerExecClientExt: WavsBasicExecClientExt + WavsTriggerQueryClientExt {
-    async fn exec(
+    async fn mock_trigger_exec(
         &self,
         msg: &mock_api::trigger::ExecuteMsg,
         funds: &[Coin],
     ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
-        let contract_addr = self.addr();
-        self.basic_contract_exec(&contract_addr, msg, funds).await
+        let addr = WavsTriggerAddrExt::addr(self);
+        self.basic_contract_exec(&addr, msg, funds).await
     }
 
     // returns the trigger ID
@@ -47,7 +45,7 @@ pub trait WavsTriggerExecClientExt: WavsBasicExecClientExt + WavsTriggerQueryCli
         let msg = mock_api::trigger::ExecuteMsg::Push {
             message: message.to_string(),
         };
-        let resp = self.exec(&msg, &[]).await?;
+        let resp = self.mock_trigger_exec(&msg, &[]).await?;
         let events = resp.extract_events();
 
         let event = events

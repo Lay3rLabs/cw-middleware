@@ -10,6 +10,7 @@ pub type InstantiateMsg = Empty;
 #[cw_serde]
 #[schemaifier(mute_warnings)]
 pub enum ExecuteMsg {
+    /// Mock contracts get superpowers
     SetSigningKey {
         operator: AddrEvm,
         signing_key: AddrEvm,

@@ -5759,10 +5759,12 @@ version = "0.5.3"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bls-api",
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-multi-test",
  "deadpool",
+ "ecdsa-api",
  "layer-climb",
  "mock-api",
  "reqwest",

@@ -42,16 +42,6 @@ pub fn execute(
                 Ok(Response::new().add_event(WavsServiceUriUpdatedEvent { service_uri }))
             }
         },
-        ExecuteMsg::SetSigningKey {
-            operator,
-            signing_key,
-            weight,
-        } => {
-            // TODO: This is a placeholder as the actual logic will depend on your application requirements
-            state::OPERATOR_SIGNING_KEY_ADDRS.save(deps.storage, &operator, &signing_key)?;
-            state::OPERATOR_WEIGHTS.save(deps.storage, &operator, &weight)?;
-            Ok(Response::default())
-        }
     }
 }
 
