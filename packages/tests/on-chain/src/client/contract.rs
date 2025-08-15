@@ -1,13 +1,7 @@
 use std::path::Path;
-
-use async_trait::async_trait;
 use tokio::sync::OnceCell;
-use utils::prelude::{
-    mock::{WavsMockExecClientExt, WavsMockQueryClientExt},
-    *,
-};
-
-use utils::{contract_client::on_chain::WavsSigningPoolClient, path::repo_root};
+use interface::*;
+use utils::path::repo_root;
 
 use crate::client::pool::TestPool;
 
@@ -18,7 +12,7 @@ static MOCK_TRIGGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 
 #[derive(Clone)]
 pub struct MockContractClient {
-    inner: WavsSigningPoolClient,
+    app: TestApp,
 }
 
 impl MockContractClient {
@@ -60,23 +54,23 @@ impl MockContractClient {
                 None,
                 trigger_code_id,
                 "Mock Trigger",
-                &mock_api::trigger::InstantiateMsg {},
+                &trigger_api::simple::InstantiateMsg {},
                 vec![],
                 None,
             )
             .await
             .unwrap();
 
-        let inner =
-            WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
+        let app =
+            TestApp::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
 
-        Self { inner }
+        Self { app}
     }
 }
 
 #[derive(Clone)]
 pub struct EcdsaContractClient {
-    inner: WavsSigningPoolClient,
+    app: TestApp,
 }
 
 impl EcdsaContractClient {
@@ -116,23 +110,23 @@ impl EcdsaContractClient {
                 None,
                 CodeIds::new_mock_trigger().await,
                 "Mock Trigger",
-                &mock_api::trigger::InstantiateMsg {},
+                &trigger_api::simple::InstantiateMsg {},
                 vec![],
                 None,
             )
             .await
             .unwrap();
 
-        let inner =
-            WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
+        let app =
+            TestApp::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
 
-        Self { inner }
+        Self { app }
     }
 }
 
 #[derive(Clone)]
 pub struct BlsContractClient {
-    inner: WavsSigningPoolClient,
+    app: TestApp
 }
 
 impl BlsContractClient {
@@ -172,17 +166,17 @@ impl BlsContractClient {
                 None,
                 CodeIds::new_mock_trigger().await,
                 "Mock Trigger",
-                &mock_api::trigger::InstantiateMsg {},
+                &trigger_api::simple::InstantiateMsg {},
                 vec![],
                 None,
             )
             .await
             .unwrap();
 
-        let inner =
-            WavsSigningPoolClient::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
+        let app =
+            TestApp::new(querier, pool, &handler_addr, &manager_addr, &trigger_addr);
 
-        Self { inner }
+        Self { app }
     }
 }
 
@@ -333,65 +327,3 @@ impl CodeIds {
         code_id
     }
 }
-
-impl HasWavsQueryClient for MockContractClient {
-    type QueryClient = WavsSigningPoolClient;
-
-    fn query_client(&self) -> &Self::QueryClient {
-        &self.inner
-    }
-}
-
-impl HasWavsExecClient for MockContractClient {
-    type ExecClient = WavsSigningPoolClient;
-
-    fn exec_client(&self) -> &Self::ExecClient {
-        &self.inner
-    }
-}
-
-#[async_trait(?Send)]
-impl WavsMockQueryClientExt for MockContractClient {}
-#[async_trait(?Send)]
-impl WavsMockExecClientExt for MockContractClient {}
-
-impl HasWavsQueryClient for EcdsaContractClient {
-    type QueryClient = WavsSigningPoolClient;
-
-    fn query_client(&self) -> &Self::QueryClient {
-        &self.inner
-    }
-}
-impl HasWavsExecClient for EcdsaContractClient {
-    type ExecClient = WavsSigningPoolClient;
-
-    fn exec_client(&self) -> &Self::ExecClient {
-        &self.inner
-    }
-}
-
-#[async_trait(?Send)]
-impl WavsEcdsaQueryClientExt for EcdsaContractClient {}
-#[async_trait(?Send)]
-impl WavsEcdsaExecClientExt for EcdsaContractClient {}
-
-impl HasWavsQueryClient for BlsContractClient {
-    type QueryClient = WavsSigningPoolClient;
-
-    fn query_client(&self) -> &Self::QueryClient {
-        &self.inner
-    }
-}
-
-impl HasWavsExecClient for BlsContractClient {
-    type ExecClient = WavsSigningPoolClient;
-
-    fn exec_client(&self) -> &Self::ExecClient {
-        &self.inner
-    }
-}
-
-#[async_trait(?Send)]
-impl WavsBlsQueryClientExt for BlsContractClient {}
-#[async_trait(?Send)]
-impl WavsBlsExecClientExt for BlsContractClient {}

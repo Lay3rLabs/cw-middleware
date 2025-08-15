@@ -3573,6 +3573,7 @@ dependencies = [
  "deadpool",
  "ecdsa-api",
  "futures",
+ "interface",
  "layer-climb",
  "mock-api",
  "reqwest",
@@ -3582,6 +3583,7 @@ dependencies = [
  "shared-tests",
  "tokio",
  "tracing",
+ "trigger-api",
  "utils",
  "wavs-types",
 ]

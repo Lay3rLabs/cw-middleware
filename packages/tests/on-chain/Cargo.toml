@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+interface = {workspace = true}
+trigger-api = {workspace = true}
 mock-api = {workspace = true}
 ecdsa-api = {workspace = true}
 bls-api = {workspace = true}

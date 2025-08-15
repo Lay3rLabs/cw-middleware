@@ -1,4 +1,3 @@
-use utils::prelude::WavsMockExecClientExt;
 use wavs_types::Service;
 
 use crate::e2e::client::{TestClient, TestContractClient};

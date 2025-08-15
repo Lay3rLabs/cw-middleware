@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use cosmwasm_std::Uint64;
-use utils::{contract_client::functionality::WavsTriggerExecClientExt, prelude::*};
 
 use crate::e2e::client::{TestClient, TestContractClient};
 

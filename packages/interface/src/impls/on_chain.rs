@@ -1,3 +1,6 @@
+mod test_app;
+pub use test_app::*;
+
 use std::fmt::Debug;
 use async_trait::async_trait;
 use cosmwasm_std::Addr;

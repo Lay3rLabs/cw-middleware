@@ -5,7 +5,6 @@ use crate::client::{
 };
 use layer_climb::prelude::Address;
 use std::sync::Arc;
-use utils::{contract_client::on_chain::WavsSigningPoolClient, prelude::*};
 
 #[derive(Clone)]
 pub struct TestClient {

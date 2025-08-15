@@ -1,6 +1,5 @@
 use std::collections::BTreeMap;
 
-use mock_api::trigger::PushMessageEvent;
 use wavs_types::{
     AllowedHostPermission, Component, ComponentSource, CosmosContractSubmission, Service,
     ServiceManager, Submit, Trigger, Workflow,
@@ -10,7 +9,6 @@ use crate::{
     client::{config::TestConfig, node::WavsNodeClient},
     e2e::client::TestClient,
 };
-use utils::prelude::*;
 
 pub async fn deploy_service(client: &TestClient) -> Service {
     let service = new_service(client).await;
