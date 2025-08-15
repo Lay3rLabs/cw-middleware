@@ -4,6 +4,7 @@ use crate::prelude::{
 };
 use async_trait::async_trait;
 use cosmwasm_std::{Coin, Uint64};
+use layer_climb::prelude::*;
 
 #[async_trait(?Send)]
 pub trait WavsMockQueryClientExt: WavsQueryClientExt {
@@ -61,5 +62,23 @@ pub trait WavsMockExecClientExt: WavsExecClientExt {
         self.service_manager()
             .basic_contract_exec(&addr, msg, funds)
             .await
+    }
+
+    async fn mock_service_manager_set_signing_key(
+        &self,
+        operator_addr: AddrEvm,
+        signing_key_addr: AddrEvm,
+        weight: u64,
+    ) -> Result<<Self::ServiceManager as WavsBasicExecClientExt>::TxResponse, cosmwasm_std::StdError>
+    {
+        self.mock_service_manager_exec(
+            &mock_api::service_manager::ExecuteMsg::SetSigningKey {
+                operator: operator_addr,
+                signing_key: signing_key_addr,
+                weight: weight.into(),
+            },
+            &[],
+        )
+        .await
     }
 }

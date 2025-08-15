@@ -4,13 +4,8 @@ use crate::client::{
     node::WavsNodeClient,
 };
 use layer_climb::prelude::Address;
-use mock_api::trigger::PushMessageEvent;
-use std::{collections::BTreeMap, sync::Arc};
+use std::sync::Arc;
 use utils::{contract_client::on_chain::WavsSigningPoolClient, prelude::*};
-use wavs_types::{
-    AllowedHostPermission, Component, ComponentSource, CosmosContractSubmission, Service,
-    ServiceManager, Submit, Trigger, Workflow,
-};
 
 #[derive(Clone)]
 pub struct TestClient {
@@ -60,46 +55,6 @@ impl TestClient {
             node: Arc::new(node),
             contract: TestContractClient::Bls(contracts),
             config: Arc::new(config),
-        }
-    }
-
-    pub async fn new_service(&self) -> Service {
-        let component = WavsNodeClient::component_digest().await;
-        let mut component = Component::new(ComponentSource::Digest(component));
-        component.permissions.allowed_http_hosts = AllowedHostPermission::All;
-
-        let mut workflows = BTreeMap::new();
-
-        workflows.insert(
-            "messenger".parse().unwrap(),
-            Workflow {
-                trigger: Trigger::CosmosContractEvent {
-                    address: self.trigger_address(),
-                    chain_name: self.config.chain_name.clone(),
-                    event_type: PushMessageEvent::EVENT_TYPE.to_string(),
-                },
-                component,
-                submit: Submit::Aggregator {
-                    url: TestConfig::aggregator_endpoint(),
-                    component: None,
-                    evm_contracts: None,
-                    cosmos_contracts: Some(vec![CosmosContractSubmission::new(
-                        self.config.chain_name.clone(),
-                        self.service_handler_address(),
-                        None,
-                    )]),
-                },
-            },
-        );
-
-        Service {
-            name: "test".to_string(),
-            status: wavs_types::ServiceStatus::Paused,
-            workflows,
-            manager: ServiceManager::Cosmos {
-                chain_name: self.config.chain_name.clone(),
-                address: self.service_manager_address(),
-            },
         }
     }
 
