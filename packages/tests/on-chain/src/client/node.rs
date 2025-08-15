@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
+use layer_climb::prelude::*;
 use tokio::sync::OnceCell;
-use utils::path::repo_root;
+use utils::{faucet, path::repo_root};
 use wavs_types::{
     aggregator::RegisterServiceRequest, AddServiceRequest, ComponentDigest, SaveServiceResponse,
     Service, ServiceManager, UploadComponentResponse,
@@ -8,15 +9,65 @@ use wavs_types::{
 
 use crate::client::config::TestConfig;
 
-// TODO - extend this for multiple operators
+// TODO - register the digest for each additional operator
 static COMPONENT_DIGEST: OnceCell<ComponentDigest> = OnceCell::const_new();
+static CLIENT: OnceCell<WavsNodeClient> = OnceCell::const_new();
 
+#[derive(Clone)]
 pub struct WavsNodeClient {
     inner: reqwest::Client,
 }
 
 impl WavsNodeClient {
     pub async fn new() -> Self {
+        CLIENT.get_or_init(Self::instantiate).await.clone()
+    }
+
+    async fn instantiate() -> Self {
+        // make sure the aggregator has funds to submit on-chain
+        let chain_config = TestConfig::get().await.chain_config;
+        let chain_config: ChainConfig = chain_config;
+        let querier = QueryClient::new(chain_config.clone(), None).await.unwrap();
+
+        let mnemonic = std::env::var("WAVS_AGGREGATOR_COSMOS_MNEMONIC")
+            .expect("WAVS_AGGREGATOR_COSMOS_MNEMONIC must be set");
+        let signer = KeySigner::new_mnemonic_str(&mnemonic, None)
+            .expect("Failed to create KeySigner from aggregator mnemonic");
+
+        let addr = chain_config
+            .address_from_pub_key(&signer.public_key().await.unwrap())
+            .unwrap();
+
+        let balance = querier
+            .balance(addr.clone(), None)
+            .await
+            .unwrap()
+            .unwrap_or_default();
+
+        if balance < 10000000000 {
+            tracing::info!(
+                "aggregator {} has balance of {}, tapping faucet...",
+                addr,
+                balance
+            );
+            faucet::tap(&addr, &chain_config.gas_denom).await.unwrap();
+            let new_balance = querier
+                .balance(addr, None)
+                .await
+                .unwrap()
+                .unwrap_or_default();
+            if new_balance == balance {
+                panic!("Failed to tap faucet, balance did not change");
+            }
+            tracing::info!("new balance is {:?}", new_balance);
+        } else {
+            tracing::info!(
+                "aggregator {} has balance of {}, no need to tap faucet",
+                addr,
+                balance
+            );
+        }
+
         Self {
             inner: reqwest::Client::new(),
         }
