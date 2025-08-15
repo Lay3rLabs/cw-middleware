@@ -1,28 +1,26 @@
-use utils::{
-    contract_client::functionality::{WavsTriggerExecClientExt, WavsTriggerQueryClientExt},
-    prelude::*,
-};
+use interface::*;
 
-pub async fn run_sanity_tests(client: &impl WavsClientExt) {
+
+pub async fn run_sanity_tests(client: &impl ServiceTriggerClient){
     run_sanity_tests_with_id(client, "").await;
 }
-pub async fn run_sanity_tests_with_id(client: &impl WavsClientExt, id: &str) {
+pub async fn run_sanity_tests_with_id(client: &impl ServiceTriggerClient, id: &str) {
     // Example sanity test
     let addr = client
-        .service_handler_querier()
+        .handler()
         .get_manager_address()
         .await
         .unwrap();
     tracing::info!("[{id}] Service Handler Manager Address: {}", addr);
 
     client
-        .service_manager_exec()
+        .manager()
         .set_service_uri("http://example.com".to_string())
         .await
         .unwrap();
 
     let url = client
-        .service_manager_querier()
+        .manager()
         .get_service_uri()
         .await
         .unwrap();
@@ -30,7 +28,7 @@ pub async fn run_sanity_tests_with_id(client: &impl WavsClientExt, id: &str) {
     assert_eq!(url, "http://example.com");
 
     let trigger_id = client
-        .trigger_exec()
+        .trigger()
         .push_message("hello world")
         .await
         .unwrap();
@@ -38,7 +36,7 @@ pub async fn run_sanity_tests_with_id(client: &impl WavsClientExt, id: &str) {
     assert!(trigger_id.u64() > 0, "Trigger ID should be greater than 0");
 
     let trigger_message = client
-        .trigger_querier()
+        .trigger()
         .get_trigger_message(trigger_id)
         .await
         .unwrap();

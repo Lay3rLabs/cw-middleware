@@ -1,5 +1,5 @@
 use mock_api::message_with_id::MessageWithId;
-use mock_api::trigger::PushMessageEvent;
+use trigger_api::simple::PushMessageEvent;
 
 use layer_climb::prelude::*;
 
@@ -66,7 +66,7 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                 let message: String = client
                     .contract_smart(
                         &address,
-                        &mock_api::trigger::QueryMsg::TriggerMessage {
+                        &trigger_api::simple::QueryMsg::TriggerMessage {
                             trigger_id: event.trigger_id,
                         },
                     )

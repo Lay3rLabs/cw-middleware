@@ -1,0 +1,34 @@
+[package]
+name = "interface"
+description = "Interfaces"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["impl_off_chain", "impl_on_chain", "impl_on_chain_pool"]
+impl_off_chain = ["dep:cw-multi-test"]
+impl_on_chain = ["dep:layer-climb"]
+impl_on_chain_pool = ["impl_on_chain", "deadpool"]
+
+[dependencies]
+wavs-types = {workspace = true}
+async-trait = {workspace = true}
+serde = {workspace = true}
+cosmwasm-std = {workspace = true}
+layer-climb-core = {workspace = true}
+layer-climb-address = {workspace = true}
+mock-api = {workspace = true}
+bls-api = {workspace = true}
+ecdsa-api = {workspace = true}
+trigger-api = {workspace = true}
+deadpool = { workspace = true, optional = true}
+cw-multi-test = {workspace = true, optional = true}
+layer-climb = {workspace = true, optional = true}

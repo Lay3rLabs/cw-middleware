@@ -5,7 +5,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 
 use crate::state;
-use mock_api::trigger::{ExecuteMsg, PushMessageEvent, QueryMsg};
+use trigger_api::simple::{ExecuteMsg, PushMessageEvent, QueryMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");

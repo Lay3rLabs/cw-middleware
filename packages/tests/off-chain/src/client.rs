@@ -1,9 +1,11 @@
 use std::{cell::RefCell, rc::Rc, sync::LazyLock};
-
+use std::fmt::Debug;
 use async_trait::async_trait;
 use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::{App, ContractWrapper, Executor};
-use utils::{contract_client::off_chain::WavsApp, prelude::*};
+use interface::*;
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 
 static ADMIN: LazyLock<Addr> = LazyLock::new(|| Addr::unchecked("admin"));
 
@@ -76,9 +78,9 @@ impl TestMockClient {
             .unwrap();
 
         let contract = ContractWrapper::new(
-            mock_trigger::entry::execute,
-            mock_trigger::entry::instantiate,
-            mock_trigger::entry::query,
+            trigger_simple::entry::execute,
+            trigger_simple::entry::instantiate,
+            trigger_simple::entry::query,
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 
@@ -87,7 +89,7 @@ impl TestMockClient {
             .instantiate_contract(
                 code_id,
                 ADMIN.clone(),
-                &mock_api::trigger::InstantiateMsg {},
+                &trigger_api::simple::InstantiateMsg {},
                 &[],
                 "Mock Trigger",
                 None,
@@ -175,9 +177,9 @@ impl TestEcdsaClient {
             .unwrap();
 
         let contract = ContractWrapper::new(
-            mock_trigger::entry::execute,
-            mock_trigger::entry::instantiate,
-            mock_trigger::entry::query,
+            trigger_simple::entry::execute,
+            trigger_simple::entry::instantiate,
+            trigger_simple::entry::query,
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 
@@ -186,7 +188,7 @@ impl TestEcdsaClient {
             .instantiate_contract(
                 code_id,
                 ADMIN.clone(),
-                &mock_api::trigger::InstantiateMsg {},
+                &trigger_api::simple::InstantiateMsg {},
                 &[],
                 "Mock Trigger",
                 None,
@@ -274,9 +276,9 @@ impl TestBlsClient {
             .unwrap();
 
         let contract = ContractWrapper::new(
-            mock_trigger::entry::execute,
-            mock_trigger::entry::instantiate,
-            mock_trigger::entry::query,
+            trigger_simple::entry::execute,
+            trigger_simple::entry::instantiate,
+            trigger_simple::entry::query,
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 
@@ -285,7 +287,7 @@ impl TestBlsClient {
             .instantiate_contract(
                 code_id,
                 ADMIN.clone(),
-                &mock_api::trigger::InstantiateMsg {},
+                &trigger_api::simple::InstantiateMsg {},
                 &[],
                 "Mock Trigger",
                 None,
@@ -304,65 +306,175 @@ impl TestBlsClient {
     }
 }
 
-impl HasWavsQueryClient for TestMockClient {
-    type QueryClient = WavsApp;
-
-    fn query_client(&self) -> &Self::QueryClient {
-        &self.app
-    }
-}
-
-impl HasWavsExecClient for TestMockClient {
-    type ExecClient = WavsApp;
-
-    fn exec_client(&self) -> &Self::ExecClient {
-        &self.app
-    }
-}
-
+// Mock
 #[async_trait(?Send)]
-impl WavsMockQueryClientExt for TestMockClient {}
-#[async_trait(?Send)]
-impl WavsMockExecClientExt for TestMockClient {}
-
-impl HasWavsQueryClient for TestEcdsaClient {
-    type QueryClient = WavsApp;
-
-    fn query_client(&self) -> &Self::QueryClient {
-        &self.app
-    }
-}
-
-impl HasWavsExecClient for TestEcdsaClient {
-    type ExecClient = WavsApp;
-
-    fn exec_client(&self) -> &Self::ExecClient {
-        &self.app
+impl QueryClientExt for TestMockClient {
+    async fn contract_query<
+        RESP: DeserializeOwned + Send + Sync + Debug,
+        MSG: Serialize + Debug,
+    >(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+    ) -> Result<RESP, cosmwasm_std::StdError> {
+        self.app.contract_query(address, msg).await
     }
 }
 
 #[async_trait(?Send)]
-impl WavsEcdsaQueryClientExt for TestEcdsaClient {}
-#[async_trait(?Send)]
-impl WavsEcdsaExecClientExt for TestEcdsaClient {}
+impl ExecClientExt for TestMockClient {
+    type TxResponse = cw_multi_test::AppResponse;
 
-impl HasWavsQueryClient for TestBlsClient {
-    type QueryClient = WavsApp;
-
-    fn query_client(&self) -> &Self::QueryClient {
-        &self.app
+    async fn contract_exec<MSG: Serialize + std::fmt::Debug>(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+        funds: &[Coin],
+    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
+        self.app.contract_exec(address, msg, funds).await
     }
 }
 
-impl HasWavsExecClient for TestBlsClient {
-    type ExecClient = WavsApp;
+impl HasServiceHandlerAddr for TestMockClient {
+    fn addr(&self) -> Addr {
+        HasServiceHandlerAddr::addr(&self.app)
+    }
+}
 
-    fn exec_client(&self) -> &Self::ExecClient {
-        &self.app
+impl HasServiceManagerAddr for TestMockClient {
+    fn addr(&self) -> Addr {
+        HasServiceManagerAddr::addr(&self.app)
+    }
+}
+
+impl HasSimpleTriggerAddr for TestMockClient {
+    fn addr(&self) -> Addr {
+        HasSimpleTriggerAddr::addr(&self.app)
+    }
+}
+
+impl HasMockServiceHandlerAddr for TestMockClient {
+    fn addr(&self) -> Addr {
+        HasServiceHandlerAddr::addr(&self.app)
+    }
+}
+impl HasMockServiceManagerAddr for TestMockClient {
+    fn addr(&self) -> Addr {
+        HasServiceManagerAddr::addr(&self.app)
+    }
+}
+
+// Ecdsa
+#[async_trait(?Send)]
+impl QueryClientExt for TestEcdsaClient {
+    async fn contract_query<
+        RESP: DeserializeOwned + Send + Sync + Debug,
+        MSG: Serialize + Debug,
+    >(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+    ) -> Result<RESP, cosmwasm_std::StdError> {
+        self.app.contract_query(address, msg).await
     }
 }
 
 #[async_trait(?Send)]
-impl WavsBlsQueryClientExt for TestBlsClient {}
+impl ExecClientExt for TestEcdsaClient {
+    type TxResponse = cw_multi_test::AppResponse;
+
+    async fn contract_exec<MSG: Serialize + std::fmt::Debug>(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+        funds: &[Coin],
+    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
+        self.app.contract_exec(address, msg, funds).await
+    }
+}
+
+impl HasServiceHandlerAddr for TestEcdsaClient {
+    fn addr(&self) -> Addr {
+        HasServiceHandlerAddr::addr(&self.app)
+    }
+}
+
+impl HasServiceManagerAddr for TestEcdsaClient {
+    fn addr(&self) -> Addr {
+        HasServiceManagerAddr::addr(&self.app)
+    }
+}
+
+impl HasSimpleTriggerAddr for TestEcdsaClient {
+    fn addr(&self) -> Addr {
+        HasSimpleTriggerAddr::addr(&self.app)
+    }
+}
+impl HasEcdsaServiceHandlerAddr for TestEcdsaClient {
+    fn addr(&self) -> Addr {
+        HasServiceHandlerAddr::addr(&self.app)
+    }
+}
+impl HasEcdsaServiceManagerAddr for TestEcdsaClient {
+    fn addr(&self) -> Addr {
+        HasServiceManagerAddr::addr(&self.app)
+    }
+}
+
+// BLS
 #[async_trait(?Send)]
-impl WavsBlsExecClientExt for TestBlsClient {}
+impl QueryClientExt for TestBlsClient {
+    async fn contract_query<
+        RESP: DeserializeOwned + Send + Sync + Debug,
+        MSG: Serialize + Debug,
+    >(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+    ) -> Result<RESP, cosmwasm_std::StdError> {
+        self.app.contract_query(address, msg).await
+    }
+}
+
+#[async_trait(?Send)]
+impl ExecClientExt for TestBlsClient {
+    type TxResponse = cw_multi_test::AppResponse;
+
+    async fn contract_exec<MSG: Serialize + std::fmt::Debug>(
+        &self,
+        address: &Addr,
+        msg: &MSG,
+        funds: &[Coin],
+    ) -> Result<Self::TxResponse, cosmwasm_std::StdError> {
+        self.app.contract_exec(address, msg, funds).await
+    }
+}
+
+impl HasBlsServiceHandlerAddr for TestBlsClient {
+    fn addr(&self) -> Addr {
+        HasServiceHandlerAddr::addr(&self.app)
+    }
+}
+impl HasBlsServiceManagerAddr for TestBlsClient {
+    fn addr(&self) -> Addr {
+        HasServiceManagerAddr::addr(&self.app)
+    }
+}
+
+impl HasServiceHandlerAddr for TestBlsClient {
+    fn addr(&self) -> Addr {
+        HasServiceHandlerAddr::addr(&self.app)
+    }
+}
+
+impl HasServiceManagerAddr for TestBlsClient {
+    fn addr(&self) -> Addr {
+        HasServiceManagerAddr::addr(&self.app)
+    }
+}
+
+impl HasSimpleTriggerAddr for TestBlsClient {
+    fn addr(&self) -> Addr {
+        HasSimpleTriggerAddr::addr(&self.app)
+    }
+}

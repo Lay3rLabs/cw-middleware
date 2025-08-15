@@ -2027,6 +2027,7 @@ dependencies = [
  "mock-api",
  "serde",
  "thiserror 2.0.14",
+ "trigger-api",
  "wavs-types",
  "wavs-wasi-utils",
  "wit-bindgen-rt 0.43.0",
@@ -2915,6 +2916,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "interface"
+version = "0.5.3"
+dependencies = [
+ "async-trait",
+ "bls-api",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "deadpool",
+ "ecdsa-api",
+ "layer-climb",
+ "layer-climb-address",
+ "layer-climb-core",
+ "mock-api",
+ "serde",
+ "trigger-api",
+ "wavs-types",
+]
+
+[[package]]
 name = "io-uring"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3389,21 +3409,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mock-trigger"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "const-hex",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-storage-plus",
- "cw2",
- "layer-climb-address",
- "mock-api",
- "wavs-types",
-]
-
-[[package]]
 name = "native-tls"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3543,14 +3548,16 @@ dependencies = [
  "ecdsa-api",
  "ecdsa-service-handler",
  "ecdsa-service-manager",
+ "interface",
  "mock-api",
  "mock-service-handler",
  "mock-service-manager",
- "mock-trigger",
  "serde",
  "shared-tests",
  "tokio",
  "tracing",
+ "trigger-api",
+ "trigger-simple",
  "utils",
  "wavs-types",
 ]
@@ -4865,6 +4872,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "cosmwasm-std",
+ "interface",
  "serde",
  "tracing",
  "tracing-subscriber",
@@ -5676,6 +5684,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "trigger-api"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "layer-climb-address",
+ "serde",
+ "wavs-types",
+]
+
+[[package]]
+name = "trigger-simple"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "layer-climb-address",
+ "mock-api",
+ "trigger-api",
+ "wavs-types",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5785,6 +5822,7 @@ dependencies = [
  "cw-multi-test",
  "deadpool",
  "ecdsa-api",
+ "interface",
  "layer-climb",
  "mock-api",
  "reqwest",

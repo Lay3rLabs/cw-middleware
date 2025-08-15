@@ -10,6 +10,7 @@ license.workspace = true
 publish = false
 
 [dependencies]
+interface = {workspace = true}
 mock-api = {workspace = true}
 bls-api = {workspace = true}
 ecdsa-api = {workspace = true}

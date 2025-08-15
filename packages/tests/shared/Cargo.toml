@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+interface = {workspace = true}
 wavs-types = {workspace = true}
 cosmwasm-std = {workspace = true}
 utils = {workspace = true}

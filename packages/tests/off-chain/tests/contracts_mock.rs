@@ -1,6 +1,6 @@
 use off_chain_tests::client::TestMockClient;
 use shared_tests::{contracts_sanity, tracing_init::tracing_tests_init};
-use utils::prelude::*;
+use interface::*;
 
 #[tokio::test]
 async fn mock_sanity() {
@@ -18,12 +18,12 @@ async fn mock_handler_works() {
     let client = TestMockClient::new();
 
     client
-        .mock_service_handler_set_trigger_message(42u64.into(), "hello world")
+        .set_trigger_message(42u64.into(), "hello world")
         .await
         .unwrap();
 
     let msg = client
-        .get_service_handler_trigger_message(42u64.into())
+        .get_handled_trigger_message(42u64.into())
         .await
         .unwrap();
 

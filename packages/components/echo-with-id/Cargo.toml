@@ -17,6 +17,7 @@ wit-bindgen-rt = { workspace = true }
 thiserror = { workspace = true }
 cosmwasm-std = { workspace = true }
 mock-api = {workspace = true }
+trigger-api = {workspace = true }
 wavs-types = {workspace = true}
 
 [lib]
