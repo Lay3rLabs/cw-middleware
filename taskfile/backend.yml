@@ -17,15 +17,11 @@ tasks:
   start-all:
     vars:
       OPERATORS: '{{.OPERATORS | default "1"}}'
-    deps: [
-      {
-        task: start-wavs, 
-        vars: {OPERATORS: "{{.OPERATORS}}"}
-      },
-      {
-        task: start-chains
-      }
-    ]
+    deps:
+      [
+        { task: start-wavs, vars: { OPERATORS: "{{.OPERATORS}}" } },
+        { task: start-chains },
+      ]
 
   stop-all:
     deps: [stop-wavs, stop-chains]
@@ -163,7 +159,6 @@ tasks:
         echo "Starting WAVS #{{.WAVS_INSTANCE}} on port $COMPOSE_WAVS_PORT"
       - |
         {{.DOCKER_SUDO}} docker compose --file "{{.DOCKER_DIR}}/wavs-instance.yml" up --force-recreate -d
-
 
   stop-wavs-aggregator:
     internal: true

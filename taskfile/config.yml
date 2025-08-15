@@ -7,7 +7,7 @@ vars:
   REPO_ROOT:
     # find the root directory of the repository by looking for the `.git` directory.
     sh: git rev-parse --show-toplevel
-  ARCH: 
+  ARCH:
     sh: uname -m
 
   BACKEND_DIR: '{{joinPath .REPO_ROOT "backend"}}'
@@ -15,7 +15,7 @@ vars:
   STARSHIP_DIR: '{{joinPath .BACKEND_DIR "starship"}}'
   STARSHIP_CHAIN_FILE: '{{joinPath .STARSHIP_DIR "chains.yml"}}'
   DOCKER_DIR: '{{joinPath .BACKEND_DIR "docker"}}'
-  COMPONENTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/component/artifacts"}}'
+  COMPONENTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/components/artifacts"}}'
 
   # Changing this requires a change in `packages/tests/on-chain/src/client/config.rs`
   WAVS_BASE_PORT: 8123 # Base port for WAVS, subsequent ports will be incremented by 1 for each instance
