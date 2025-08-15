@@ -38,6 +38,10 @@ tasks:
       - echo "Testing {{.CONTRACT_KIND}} contracts off-chain"
       - cd packages/tests/off-chain && cargo test --test contracts_{{.CONTRACT_KIND}}
 
+  concurrency:
+    cmds:
+      - cd packages/tests/on-chain && cargo test --test concurrency
+
   contracts-on-chain:
     vars:
       CONTRACT_KIND:

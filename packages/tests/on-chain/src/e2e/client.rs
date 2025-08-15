@@ -8,13 +8,9 @@ use mock_api::trigger::PushMessageEvent;
 use std::{collections::BTreeMap, sync::Arc};
 use utils::{contract_client::on_chain::WavsSigningPoolClient, prelude::*};
 use wavs_types::{
-    AllowedHostPermission, Component, ComponentSource, CosmosContractSubmission, Service, ServiceManager, Submit, Trigger, Workflow
+    AllowedHostPermission, Component, ComponentSource, CosmosContractSubmission, Service,
+    ServiceManager, Submit, Trigger, Workflow,
 };
-
-pub mod config;
-pub mod contract;
-pub mod node;
-pub(super) mod pool;
 
 #[derive(Clone)]
 pub struct TestClient {
