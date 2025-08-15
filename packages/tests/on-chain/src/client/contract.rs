@@ -215,10 +215,9 @@ impl CodeIds {
     }
 
     pub async fn new_mock_trigger() -> u64 {
-        MOCK_TRIGGER_CODE_ID
+        *MOCK_TRIGGER_CODE_ID
             .get_or_init(Self::instantiate_mock_trigger)
             .await
-            .clone()
     }
 
     async fn instantiate_mock() -> Self {

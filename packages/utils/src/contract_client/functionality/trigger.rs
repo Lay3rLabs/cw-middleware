@@ -4,8 +4,9 @@ use mock_api::trigger::PushMessageEvent;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 
-use crate::prelude::{TxResponseExt, WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsTriggerAddrExt};
-
+use crate::prelude::{
+    TxResponseExt, WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsTriggerAddrExt,
+};
 
 // Trigger Query
 #[async_trait(?Send)]

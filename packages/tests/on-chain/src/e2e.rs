@@ -55,7 +55,7 @@ async fn handle_mock_response(client: impl WavsMockQueryClientExt, trigger_id: U
                 Ok(s) => {
                     assert_eq!(s, "hello world!");
                 }
-                Err(e) => {
+                Err(_) => {
                     tracing::warn!("Waiting for response to land...");
                 }
             }

@@ -1,7 +1,6 @@
 use futures::{stream::FuturesUnordered, StreamExt};
 use on_chain_tests::client::TestClient;
 use shared_tests::{contracts_sanity, tracing_init::tracing_tests_init};
-use tracing::instrument;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn mock_sanity_1() {
@@ -16,7 +15,7 @@ async fn mock_sanity_1() {
         });
     }
 
-    while let Some(_) = futures.next().await {}
+    while (futures.next().await).is_some() {}
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -32,7 +31,7 @@ async fn mock_sanity_2() {
         });
     }
 
-    while let Some(_) = futures.next().await {}
+    while (futures.next().await).is_some() {}
 }
 
 #[tokio::test(flavor = "multi_thread")]
@@ -48,5 +47,5 @@ async fn mock_sanity_3() {
         });
     }
 
-    while let Some(_) = futures.next().await {}
+    while (futures.next().await).is_some() {}
 }

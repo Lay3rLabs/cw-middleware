@@ -12,14 +12,12 @@ use crate::client::config::TestConfig;
 static COMPONENT_DIGEST: OnceCell<ComponentDigest> = OnceCell::const_new();
 
 pub struct WavsNodeClient {
-    config: TestConfig,
     inner: reqwest::Client,
 }
 
 impl WavsNodeClient {
-    pub async fn new(config: TestConfig) -> Self {
+    pub async fn new() -> Self {
         Self {
-            config,
             inner: reqwest::Client::new(),
         }
     }
@@ -42,10 +40,10 @@ impl WavsNodeClient {
             .body(body)
             .send()
             .await
-            .with_context(|| format!("Failed to send request to {}", url))?
+            .with_context(|| format!("Failed to send request to {url}"))?
             .json()
             .await
-            .with_context(|| format!("Failed to parse response from {}", url))?;
+            .with_context(|| format!("Failed to parse response from {url}"))?;
 
         Ok(format!(
             "{}/service-by-hash/{}",
@@ -67,7 +65,7 @@ impl WavsNodeClient {
             .body(body)
             .send()
             .await
-            .with_context(|| format!("Failed to send request to {}", url))?;
+            .with_context(|| format!("Failed to send request to {url}"))?;
 
         let status = response.status();
         if !status.is_success() {

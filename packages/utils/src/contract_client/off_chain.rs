@@ -92,13 +92,13 @@ impl WavsQueryClientExt for WavsApp {
     type Trigger = WavsApp;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
-        &self
+        self
     }
     fn service_manager(&self) -> &Self::ServiceManager {
-        &self
+        self
     }
     fn trigger(&self) -> &Self::Trigger {
-        &self
+        self
     }
 }
 
@@ -108,14 +108,14 @@ impl WavsExecClientExt for WavsApp {
     type Trigger = WavsApp;
 
     fn service_handler(&self) -> &Self::ServiceHandler {
-        &self
+        self
     }
 
     fn service_manager(&self) -> &Self::ServiceManager {
-        &self
+        self
     }
 
     fn trigger(&self) -> &Self::ServiceManager {
-        &self
+        self
     }
 }

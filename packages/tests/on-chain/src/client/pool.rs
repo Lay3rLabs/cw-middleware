@@ -29,7 +29,7 @@ impl TestPool {
         let mnemonic = std::env::var("CLI_MNEMONIC").expect("CLI_MNEMONIC must be set");
 
         let chain_config = TestConfig::get().await.chain_config;
-        let chain_config: ChainConfig = chain_config.into();
+        let chain_config: ChainConfig = chain_config;
         let querier = QueryClient::new(chain_config.clone(), None).await.unwrap();
 
         // Before we run off and create the pool, make sure it has funds!

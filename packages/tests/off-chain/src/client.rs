@@ -11,6 +11,12 @@ pub struct TestMockClient {
     pub app: WavsApp,
 }
 
+impl Default for TestMockClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestMockClient {
     pub fn new() -> Self {
         let app = Rc::new(RefCell::new(App::new(|router, _, storage| {
@@ -18,7 +24,7 @@ impl TestMockClient {
                 .bank
                 .init_balance(
                     storage,
-                    &*ADMIN,
+                    &ADMIN,
                     vec![Coin {
                         denom: "utoken".to_string(),
                         amount: 1_000_000u128.into(),
@@ -104,6 +110,12 @@ pub struct TestEcdsaClient {
     pub app: WavsApp,
 }
 
+impl Default for TestEcdsaClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestEcdsaClient {
     pub fn new() -> Self {
         let app = Rc::new(RefCell::new(App::new(|router, _, storage| {
@@ -111,7 +123,7 @@ impl TestEcdsaClient {
                 .bank
                 .init_balance(
                     storage,
-                    &*ADMIN,
+                    &ADMIN,
                     vec![Coin {
                         denom: "utoken".to_string(),
                         amount: 1_000_000u128.into(),
@@ -197,6 +209,12 @@ pub struct TestBlsClient {
     pub app: WavsApp,
 }
 
+impl Default for TestBlsClient {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl TestBlsClient {
     pub fn new() -> Self {
         let app = Rc::new(RefCell::new(App::new(|router, _, storage| {
@@ -204,7 +222,7 @@ impl TestBlsClient {
                 .bank
                 .init_balance(
                     storage,
-                    &*ADMIN,
+                    &ADMIN,
                     vec![Coin {
                         denom: "utoken".to_string(),
                         amount: 1_000_000u128.into(),

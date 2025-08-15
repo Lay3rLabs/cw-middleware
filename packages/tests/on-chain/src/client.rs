@@ -35,7 +35,7 @@ impl TestClient {
     pub async fn new_mock() -> Self {
         let contracts = MockContractClient::new().await;
         let config = TestConfig::get().await;
-        let node = WavsNodeClient::new(config.clone()).await;
+        let node = WavsNodeClient::new().await;
 
         Self {
             node: Arc::new(node),
@@ -47,7 +47,7 @@ impl TestClient {
     pub async fn new_ecdsa() -> Self {
         let contracts = EcdsaContractClient::new().await;
         let config = TestConfig::get().await;
-        let node = WavsNodeClient::new(config.clone()).await;
+        let node = WavsNodeClient::new().await;
 
         Self {
             node: Arc::new(node),
@@ -59,7 +59,7 @@ impl TestClient {
     pub async fn new_bls() -> Self {
         let contracts = BlsContractClient::new().await;
         let config = TestConfig::get().await;
-        let node = WavsNodeClient::new(config.clone()).await;
+        let node = WavsNodeClient::new().await;
 
         Self {
             node: Arc::new(node),
@@ -136,9 +136,9 @@ impl HasWavsQueryClient for TestClient {
 
     fn query_client(&self) -> &Self::QueryClient {
         match &self.contract {
-            TestContractClient::Mock(client) => &client.query_client(),
-            TestContractClient::Ecdsa(client) => &client.query_client(),
-            TestContractClient::Bls(client) => &client.query_client(),
+            TestContractClient::Mock(client) => client.query_client(),
+            TestContractClient::Ecdsa(client) => client.query_client(),
+            TestContractClient::Bls(client) => client.query_client(),
         }
     }
 }
@@ -148,9 +148,9 @@ impl HasWavsExecClient for TestClient {
 
     fn exec_client(&self) -> &Self::ExecClient {
         match &self.contract {
-            TestContractClient::Mock(client) => &client.exec_client(),
-            TestContractClient::Ecdsa(client) => &client.exec_client(),
-            TestContractClient::Bls(client) => &client.exec_client(),
+            TestContractClient::Mock(client) => client.exec_client(),
+            TestContractClient::Ecdsa(client) => client.exec_client(),
+            TestContractClient::Bls(client) => client.exec_client(),
         }
     }
 }

@@ -215,7 +215,6 @@ tasks:
         {{.DOCKER_SUDO}} docker compose --file "{{.DOCKER_DIR}}/wavs-telemetry.yml" pull
 
   start-wavs-telemetry:
-    internal: true
     deps: [docker-start-wavs-telemetry]
     cmds:
       # Wait for Jaeger and Prometheus to be up and running
