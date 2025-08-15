@@ -9,8 +9,9 @@ use wavs_types::contracts::cosmwasm::{
     service_handler::ServiceHandlerExecuteMessages, service_manager::WavsValidateResult,
 };
 
-use crate::state;
 use bls_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg};
+
+use crate::state;
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -59,8 +60,6 @@ pub fn execute(
                         },
                     )?
                     .into_std()?;
-
-                state::save_envelope(deps.storage, envelope, signature_data)?;
             }
         },
     }
@@ -76,13 +75,5 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 to_json_binary(&state::SERVICE_MANAGER.load(deps.storage)?)
             }
         },
-
-        QueryMsg::TriggerValidated { trigger_id } => {
-            to_json_binary(&state::TRIGGER_DATA.has(deps.storage, trigger_id))
-        }
-
-        QueryMsg::SignedData { trigger_id } => {
-            to_json_binary(&state::TRIGGER_DATA.load(deps.storage, trigger_id)?)
-        }
     }
 }

@@ -45,9 +45,9 @@ jobs:
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Copy .example.env to .env
+        run: cp .example.env .env
 
       - name: Off-chain test mock contracts
-        run: task contracts:test-mocks-off-chain
-
-      - name: Build mock contracts
-        run: task contracts:build-mocks
+        run: task test:contracts-off-chain

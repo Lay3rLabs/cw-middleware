@@ -59,8 +59,6 @@ pub fn execute(
                         },
                     )?
                     .into_std()?;
-
-                state::save_envelope(deps.storage, envelope, signature_data)?;
             }
         },
     }
@@ -76,13 +74,5 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 to_json_binary(&state::SERVICE_MANAGER.load(deps.storage)?)
             }
         },
-
-        QueryMsg::TriggerValidated { trigger_id } => {
-            to_json_binary(&state::TRIGGER_DATA.has(deps.storage, trigger_id))
-        }
-
-        QueryMsg::SignedData { trigger_id } => {
-            to_json_binary(&state::TRIGGER_DATA.load(deps.storage, trigger_id)?)
-        }
     }
 }
