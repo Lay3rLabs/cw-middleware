@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use cosmwasm_std::{Coin, Uint64};
 use mock_api::trigger::PushMessageEvent;
+use serde::de::DeserializeOwned;
+use std::fmt::Debug;
 
 use crate::prelude::{
     TxResponseExt, WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsTriggerAddrExt,
@@ -9,10 +11,10 @@ use crate::prelude::{
 // Trigger Query
 #[async_trait(?Send)]
 pub trait WavsTriggerQueryClientExt: WavsBasicQueryClientExt + WavsTriggerAddrExt {
-    async fn mock_trigger_query(
+    async fn mock_trigger_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
         msg: &mock_api::trigger::QueryMsg,
-    ) -> Result<String, cosmwasm_std::StdError> {
+    ) -> Result<RESP, cosmwasm_std::StdError> {
         let addr = WavsTriggerAddrExt::addr(self);
         self.basic_contract_query(&addr, msg).await
     }

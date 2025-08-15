@@ -12,8 +12,8 @@ use crate::{
 };
 use utils::prelude::*;
 
-pub async fn deploy_service(client: TestClient) -> Service {
-    let mut service = new_service(&client).await;
+pub async fn deploy_service(client: &TestClient) -> Service {
+    let service = new_service(client).await;
 
     let service_url = client.node.save_service_url(&service).await.unwrap();
 
@@ -37,17 +37,19 @@ pub async fn deploy_service(client: TestClient) -> Service {
         .await
         .unwrap();
 
+    service
+}
+
+pub async fn activate_service(client: &TestClient, service: &mut Service) {
     service.status = wavs_types::ServiceStatus::Active;
 
-    let service_url = client.node.save_service_url(&service).await.unwrap();
+    let service_url = client.node.save_service_url(service).await.unwrap();
 
     client
         .service_manager_exec()
         .set_service_uri(service_url)
         .await
         .unwrap();
-
-    service
 }
 
 async fn new_service(client: &TestClient) -> Service {

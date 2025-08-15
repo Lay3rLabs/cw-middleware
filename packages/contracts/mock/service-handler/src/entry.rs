@@ -10,7 +10,7 @@ use wavs_types::contracts::cosmwasm::{
 };
 
 use crate::state;
-use mock_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use mock_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg, TriggerMessageResponse};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -63,6 +63,12 @@ pub fn execute(
                 state::save_envelope(deps.storage, envelope, signature_data)?;
             }
         },
+        ExecuteMsg::SetTriggerMessage {
+            trigger_id,
+            message,
+        } => {
+            state::TRIGGER_MESSAGE.save(deps.storage, trigger_id, &message)?;
+        }
     }
 
     Ok(Response::default())
@@ -78,17 +84,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
         },
 
         QueryMsg::TriggerValidated { trigger_id } => {
-            to_json_binary(&state::TRIGGER_DATA.has(deps.storage, trigger_id))
+            to_json_binary(&state::TRIGGER_MESSAGE.has(deps.storage, trigger_id))
         }
 
-        QueryMsg::TriggerMessage { trigger_id } => {
-            let data = &state::TRIGGER_DATA.load(deps.storage, trigger_id)?;
-            let s = String::from_utf8(data.to_vec())?;
-            to_json_binary(&s)
-        }
+        QueryMsg::TriggerMessage { trigger_id } => to_json_binary(&TriggerMessageResponse {
+            message: state::TRIGGER_MESSAGE.load(deps.storage, trigger_id)?,
+        }),
 
-        QueryMsg::SignedData { trigger_id } => {
-            to_json_binary(&state::TRIGGER_DATA.load(deps.storage, trigger_id)?)
+        QueryMsg::SignatureData { trigger_id } => {
+            to_json_binary(&state::SIGNATURE_DATA.load(deps.storage, trigger_id)?)
         }
     }
 }

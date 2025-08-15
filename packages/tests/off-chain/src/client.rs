@@ -1,5 +1,6 @@
 use std::{cell::RefCell, rc::Rc, sync::LazyLock};
 
+use async_trait::async_trait;
 use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::{App, ContractWrapper, Executor};
 use utils::{contract_client::off_chain::WavsApp, prelude::*};
@@ -319,6 +320,11 @@ impl HasWavsExecClient for TestMockClient {
     }
 }
 
+#[async_trait(?Send)]
+impl WavsMockQueryClientExt for TestMockClient {}
+#[async_trait(?Send)]
+impl WavsMockExecClientExt for TestMockClient {}
+
 impl HasWavsQueryClient for TestEcdsaClient {
     type QueryClient = WavsApp;
 
@@ -335,6 +341,11 @@ impl HasWavsExecClient for TestEcdsaClient {
     }
 }
 
+#[async_trait(?Send)]
+impl WavsEcdsaQueryClientExt for TestEcdsaClient {}
+#[async_trait(?Send)]
+impl WavsEcdsaExecClientExt for TestEcdsaClient {}
+
 impl HasWavsQueryClient for TestBlsClient {
     type QueryClient = WavsApp;
 
@@ -350,3 +361,8 @@ impl HasWavsExecClient for TestBlsClient {
         &self.app
     }
 }
+
+#[async_trait(?Send)]
+impl WavsBlsQueryClientExt for TestBlsClient {}
+#[async_trait(?Send)]
+impl WavsBlsExecClientExt for TestBlsClient {}

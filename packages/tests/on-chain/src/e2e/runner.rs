@@ -6,6 +6,7 @@ use utils::{contract_client::functionality::WavsTriggerExecClientExt, prelude::*
 use crate::e2e::client::{TestClient, TestContractClient};
 
 pub async fn run_e2e_tests(client: TestClient) {
+    tracing::info!("Sending trigger");
     let trigger_id = client
         .trigger_exec()
         .push_message("hello world!")
@@ -23,14 +24,16 @@ pub async fn run_e2e_tests(client: TestClient) {
 }
 
 async fn handle_mock_response(client: &impl WavsMockQueryClientExt, trigger_id: Uint64) {
-    tokio::time::timeout(Duration::from_secs(5), async move {
+    tokio::time::timeout(Duration::from_secs(30), async move {
         loop {
             match client.get_service_handler_trigger_message(trigger_id).await {
                 Ok(s) => {
+                    tracing::info!("Received trigger message for trigger {trigger_id}: {s}");
                     assert_eq!(s, "hello world!");
+                    break;
                 }
                 Err(_) => {
-                    tracing::warn!("Waiting for response to land...");
+                    tracing::warn!("Waiting for response to land for trigger {trigger_id}...");
                 }
             }
             tokio::time::sleep(Duration::from_millis(100)).await;

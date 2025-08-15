@@ -3,8 +3,8 @@ use layer_climb::prelude::*;
 use tokio::sync::OnceCell;
 use utils::{faucet, path::repo_root};
 use wavs_types::{
-    aggregator::RegisterServiceRequest, AddServiceRequest, ComponentDigest, SaveServiceResponse,
-    Service, ServiceManager, UploadComponentResponse,
+    aggregator::RegisterServiceRequest, AddServiceRequest, ComponentDigest, GetServiceKeyRequest,
+    SaveServiceResponse, Service, ServiceManager, SigningKeyResponse, UploadComponentResponse,
 };
 
 use crate::client::config::TestConfig;
@@ -151,6 +151,30 @@ impl WavsNodeClient {
             .error_for_status()?;
 
         Ok(())
+    }
+
+    pub async fn get_service_signing_key_addr(&self, service: &Service) -> anyhow::Result<AddrEvm> {
+        let body = serde_json::to_string(&GetServiceKeyRequest {
+            service_manager: service.manager.clone(),
+        })?;
+
+        let url = format!("{}/service-key", TestConfig::wavs_endpoint(None));
+
+        let response: SigningKeyResponse = self
+            .inner
+            .post(&url)
+            .header("Content-Type", "application/json")
+            .body(body)
+            .send()
+            .await
+            .with_context(|| format!("Failed to send request to {url}"))?
+            .json()
+            .await
+            .with_context(|| format!("Failed to parse response from {url}"))?;
+
+        let SigningKeyResponse::Secp256k1 { evm_address, .. } = response;
+
+        evm_address.parse()
     }
 }
 

@@ -1,14 +1,14 @@
 use bincode::error::{DecodeError, EncodeError};
-use cosmwasm_std::{Binary, Uint64};
+use cosmwasm_std::Uint64;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct DataWithId {
+pub struct MessageWithId {
     pub trigger_id: Uint64,
-    pub data: Binary,
+    pub message: String,
 }
 
-impl DataWithId {
+impl MessageWithId {
     pub fn to_bytes(&self) -> Result<Vec<u8>, EncodeError> {
         bincode::serde::encode_to_vec(self, bincode::config::standard())
     }

@@ -1,11 +1,11 @@
-use cosmwasm_std::{Addr, Binary, Uint64};
+use cosmwasm_std::{Addr, Uint64};
 use cw_storage_plus::{Item, Map};
-use mock_api::data_with_id::DataWithId;
+use mock_api::message_with_id::MessageWithId;
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 pub const SERVICE_MANAGER: Item<Addr> = Item::new("service-manager");
 
-pub const TRIGGER_DATA: Map<Uint64, Binary> = Map::new("trigger-data");
+pub const TRIGGER_MESSAGE: Map<Uint64, String> = Map::new("trigger-message");
 pub const SIGNATURE_DATA: Map<Uint64, WavsSignatureData> = Map::new("signature-data");
 
 pub fn save_envelope(
@@ -14,10 +14,14 @@ pub fn save_envelope(
     signature_data: WavsSignatureData,
 ) -> cosmwasm_std::StdResult<()> {
     let envelope = envelope.decode()?;
-    let data_with_id = DataWithId::from_bytes(&envelope.payload)?;
+    let message_with_id = MessageWithId::from_bytes(&envelope.payload)?;
 
-    TRIGGER_DATA.save(storage, data_with_id.trigger_id, &data_with_id.data)?;
-    SIGNATURE_DATA.save(storage, data_with_id.trigger_id, &signature_data)?;
+    TRIGGER_MESSAGE.save(
+        storage,
+        message_with_id.trigger_id,
+        &message_with_id.message,
+    )?;
+    SIGNATURE_DATA.save(storage, message_with_id.trigger_id, &signature_data)?;
 
     Ok(())
 }

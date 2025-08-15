@@ -12,6 +12,8 @@ pub struct InstantiateMsg {
 #[cw_serde]
 #[schemaifier(mute_warnings)]
 pub enum ExecuteMsg {
+    /// Mock contracts get superpowers
+    SetTriggerMessage { trigger_id: Uint64, message: String },
     #[serde(untagged)]
     Wavs(ServiceHandlerExecuteMessages),
 }
@@ -23,14 +25,18 @@ pub enum QueryMsg {
     #[returns(bool)]
     TriggerValidated { trigger_id: Uint64 },
 
-    #[returns(String)]
+    #[returns(TriggerMessageResponse)]
     TriggerMessage { trigger_id: Uint64 },
 
-    /// Returns the abi-encoded `SignedData` for the given `trigger_id`
-    #[returns(cosmwasm_std::Binary)]
-    SignedData { trigger_id: Uint64 },
+    #[returns(wavs_types::contracts::cosmwasm::service_handler::WavsSignatureData)]
+    SignatureData { trigger_id: Uint64 },
 
     #[serde(untagged)]
     #[returns(())]
     Wavs(ServiceHandlerQueryMessages),
+}
+
+#[cw_serde]
+pub struct TriggerMessageResponse {
+    pub message: String,
 }

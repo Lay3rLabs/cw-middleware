@@ -1,5 +1,7 @@
 use async_trait::async_trait;
 use cosmwasm_std::Coin;
+use serde::de::DeserializeOwned;
+use std::fmt::Debug;
 
 use crate::prelude::{
     WavsBasicExecClientExt, WavsBasicQueryClientExt, WavsExecClientExt, WavsQueryClientExt,
@@ -8,19 +10,20 @@ use crate::prelude::{
 
 #[async_trait(?Send)]
 pub trait WavsEcdsaQueryClientExt: WavsQueryClientExt {
-    async fn ecdsa_service_handler_query(
+    async fn ecdsa_service_handler_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
         msg: &ecdsa_api::service_handler::QueryMsg,
-    ) -> Result<String, cosmwasm_std::StdError> {
+    ) -> Result<RESP, cosmwasm_std::StdError> {
         let addr = WavsServiceHandlerAddrExt::addr(self.service_handler());
         self.service_handler()
             .basic_contract_query(&addr, msg)
             .await
     }
-    async fn ecdsa_service_manager_query(
+
+    async fn ecdsa_service_manager_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
         msg: &ecdsa_api::service_manager::QueryMsg,
-    ) -> Result<String, cosmwasm_std::StdError> {
+    ) -> Result<RESP, cosmwasm_std::StdError> {
         let addr = WavsServiceManagerAddrExt::addr(self.service_manager());
 
         self.service_handler()

@@ -1,4 +1,4 @@
-use mock_api::data_with_id::DataWithId;
+use mock_api::message_with_id::MessageWithId;
 use mock_api::trigger::PushMessageEvent;
 
 use layer_climb::prelude::*;
@@ -77,9 +77,9 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
             })?;
 
             Ok(Some(WasmResponse {
-                payload: DataWithId {
+                payload: MessageWithId {
                     trigger_id: event.trigger_id,
-                    data: message.into_bytes().into(),
+                    message,
                 }
                 .to_bytes()
                 .map_err(|e| e.to_string())?,
