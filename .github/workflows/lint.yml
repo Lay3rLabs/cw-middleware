@@ -12,8 +12,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    name: Test Suite
+  rust-lint:
+    name: rust linting
     runs-on: ubuntu-latest
     
     steps:

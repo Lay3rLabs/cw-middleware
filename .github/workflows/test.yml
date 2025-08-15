@@ -12,8 +12,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    name: Test Suite
+  off-chain-test:
+    name: off-chain tests
     runs-on: ubuntu-latest
     
     steps:
@@ -49,5 +49,46 @@ jobs:
       - name: Copy .example.env to .env
         run: cp .example.env .env
 
-      - name: Off-chain test mock contracts
-        run: task test:contracts-off-chain
+      - name: run the tests
+        run: task test:all-off-chain
+
+  on-chain-test:
+    name: on-chain tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Copy .example.env to .env
+        run: cp .example.env .env
+
+      - name: run the tests
+        run: echo "TODO!"
+        #run: task test:all-on-chain
