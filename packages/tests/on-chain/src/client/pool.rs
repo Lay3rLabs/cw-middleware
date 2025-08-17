@@ -17,7 +17,6 @@ static TEST_POOL: OnceCell<TestPool> = OnceCell::const_new();
 #[derive(Clone)]
 pub struct TestPool {
     pub pool: SigningClientPool,
-    pub querier: QueryClient,
 }
 
 impl TestPool {
@@ -76,6 +75,6 @@ impl TestPool {
 
         let pool = SigningClientPool::new(Pool::builder(pool).max_size(8).build().unwrap());
 
-        Self { pool, querier }
+        Self { pool }
     }
 }

@@ -1,0 +1,88 @@
+use sdk::contract_kinds::ecdsa::{
+    EcdsaServiceHandlerExecutor, EcdsaServiceHandlerQuerier, EcdsaServiceManagerExecutor,
+    EcdsaServiceManagerQuerier,
+};
+use sdk::service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier};
+use sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
+use shared_tests::wrapper::ContractTestWrapper;
+
+use crate::client::code_ids::CodeId;
+use crate::client::contract::simple_trigger::SimpleTriggerTestClient;
+use crate::client::contract::ContractTestClient;
+
+#[derive(Clone)]
+pub struct EcdsaTestClient {
+    pub service_handler_querier: EcdsaServiceHandlerQuerier,
+    pub service_handler_executor: EcdsaServiceHandlerExecutor,
+    pub service_manager_querier: EcdsaServiceManagerQuerier,
+    pub service_manager_executor: EcdsaServiceManagerExecutor,
+}
+
+impl EcdsaTestClient {
+    pub async fn new(test_client: ContractTestClient) -> Self {
+        let pool = test_client.pool();
+        let client = pool.get().await.unwrap();
+
+        let (service_manager, _) = client
+            .contract_instantiate(
+                None,
+                CodeId::new_ecdsa_service_manager().await,
+                "ECDSA Service Manager",
+                &ecdsa_api::service_manager::InstantiateMsg {},
+                vec![],
+                None,
+            )
+            .await
+            .unwrap();
+
+        let (service_handler, _) = client
+            .contract_instantiate(
+                None,
+                CodeId::new_ecdsa_service_handler().await,
+                "ECDSA Service Handler",
+                &ecdsa_api::service_handler::InstantiateMsg {
+                    service_manager: service_manager.to_string(),
+                },
+                vec![],
+                None,
+            )
+            .await
+            .unwrap();
+
+        let service_handler_querier = EcdsaServiceHandlerQuerier::new(ServiceHandlerQuerier::new(
+            test_client.querier.clone(),
+            service_handler.clone().try_into().unwrap(),
+        ));
+        let service_handler_executor =
+            EcdsaServiceHandlerExecutor::new(ServiceHandlerExecutor::new(
+                test_client.executor.clone(),
+                service_handler.try_into().unwrap(),
+            ));
+        let service_manager_querier = EcdsaServiceManagerQuerier::new(ServiceManagerQuerier::new(
+            test_client.querier.clone(),
+            service_manager.clone().try_into().unwrap(),
+        ));
+        let service_manager_executor =
+            EcdsaServiceManagerExecutor::new(ServiceManagerExecutor::new(
+                test_client.executor.clone(),
+                service_manager.try_into().unwrap(),
+            ));
+        Self {
+            service_handler_querier,
+            service_handler_executor,
+            service_manager_querier,
+            service_manager_executor,
+        }
+    }
+
+    pub fn wrap_test(&self, simple_trigger: &SimpleTriggerTestClient) -> ContractTestWrapper {
+        ContractTestWrapper {
+            service_handler_querier: self.service_handler_querier.service_handler().clone(),
+            service_handler_executor: self.service_handler_executor.service_handler().clone(),
+            service_manager_querier: self.service_manager_querier.service_manager().clone(),
+            service_manager_executor: self.service_manager_executor.service_manager().clone(),
+            simple_trigger_querier: simple_trigger.querier.clone(),
+            simple_trigger_executor: simple_trigger.executor.clone(),
+        }
+    }
+}

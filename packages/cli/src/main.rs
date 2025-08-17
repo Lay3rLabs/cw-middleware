@@ -1,6 +1,6 @@
 mod command;
 mod context;
-use utils::{faucet, prelude::*};
+use utils::faucet;
 
 use layer_climb_cli::command::WalletCommand;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -105,18 +105,15 @@ async fn main() {
                 println!("Service Manager deployed at: {address}");
             }
             ServiceManagerCommand::SetServiceUri { uri, address } => {
-                let client = ctx
-                    .wavs_service_manager_signing_client(&address)
-                    .await
-                    .unwrap();
+                let client = ctx.wavs_service_manager_executor(&address).await.unwrap();
                 let resp = client.set_service_uri(uri.to_string()).await.unwrap();
-                println!("Set service URI TX hash: {}", resp.txhash);
+                println!(
+                    "Set service URI TX hash: {}",
+                    resp.unchecked_into_tx_response().txhash
+                );
             }
             ServiceManagerCommand::GetServiceUri { address } => {
-                let client = ctx
-                    .wavs_service_manager_query_client(&address)
-                    .await
-                    .unwrap();
+                let client = ctx.wavs_service_manager_querier(&address).await.unwrap();
                 let uri = client.get_service_uri().await.unwrap();
                 println!("Service URI: {uri}");
             }
@@ -168,10 +165,7 @@ async fn main() {
                 println!("Service Handler deployed at: {address}");
             }
             ServiceHandlerCommand::GetManager { address } => {
-                let client = ctx
-                    .wavs_service_handler_query_client(&address)
-                    .await
-                    .unwrap();
+                let client = ctx.wavs_service_handler_querier(&address).await.unwrap();
                 let manager = client.get_manager_address().await.unwrap();
                 println!("Service Manager: {manager}");
             }

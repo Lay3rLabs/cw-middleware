@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "packages/interface",
+  "packages/sdk",
   "packages/utils",
   "packages/contracts/mock/api",
   "packages/contracts/mock/service-handler",
@@ -32,7 +32,7 @@ rust-version = "1.88.0"
 
 [workspace.dependencies]
 # Local
-interface = { path = "packages/interface" }
+sdk = { path = "packages/sdk" }
 mock-api = { path = "packages/contracts/mock/api" }
 ecdsa-api = { path = "packages/contracts/ecdsa/api" }
 bls-api = { path = "packages/contracts/bls/api" }
@@ -40,7 +40,7 @@ trigger-api = { path = "packages/contracts/trigger/api" }
 utils = { path = "packages/utils" }
 mock-service-handler = { path = "packages/contracts/mock/service-handler" }
 mock-service-manager = { path = "packages/contracts/mock/service-manager" }
-trigger-simple = { path = "packages/contracts/trigger/simple" }
+simple-trigger = { path = "packages/contracts/trigger/simple" }
 ecdsa-service-handler = { path = "packages/contracts/ecdsa/service-handler" }
 ecdsa-service-manager = { path = "packages/contracts/ecdsa/service-manager" }
 bls-service-handler = { path = "packages/contracts/bls/service-handler" }

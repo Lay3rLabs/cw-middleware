@@ -1,107 +1,111 @@
+use std::sync::Arc;
+
+use sdk::{
+    service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier},
+    service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
+};
+
 use crate::client::{
     config::TestConfig,
-    contract::{BlsContractClient, EcdsaContractClient, MockContractClient},
+    contract::{
+        bls::BlsTestClient, ecdsa::EcdsaTestClient, mock::MockTestClient,
+        simple_trigger::SimpleTriggerTestClient, ContractTestClient,
+    },
     node::WavsNodeClient,
 };
-use layer_climb::prelude::Address;
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct TestClient {
     pub node: Arc<WavsNodeClient>,
-    pub contract: TestContractClient,
+    pub service: TestService,
+    pub trigger: SimpleTriggerTestClient,
     pub config: Arc<TestConfig>,
 }
 
 #[derive(Clone)]
-pub enum TestContractClient {
-    Mock(MockContractClient),
-    Ecdsa(EcdsaContractClient),
-    Bls(BlsContractClient),
+pub enum TestService {
+    Mock(MockTestClient),
+    Ecdsa(EcdsaTestClient),
+    Bls(BlsTestClient),
+}
+
+impl TestService {
+    pub fn wavs_service_handler_querier(&self) -> ServiceHandlerQuerier {
+        match self {
+            Self::Mock(client) => client.service_handler_querier.service_handler().clone(),
+            Self::Ecdsa(client) => client.service_handler_querier.service_handler().clone(),
+            Self::Bls(client) => client.service_handler_querier.service_handler().clone(),
+        }
+    }
+
+    pub fn wavs_service_handler_executor(&self) -> ServiceHandlerExecutor {
+        match self {
+            Self::Mock(client) => client.service_handler_executor.service_handler().clone(),
+            Self::Ecdsa(client) => client.service_handler_executor.service_handler().clone(),
+            Self::Bls(client) => client.service_handler_executor.service_handler().clone(),
+        }
+    }
+
+    pub fn wavs_service_manager_querier(&self) -> ServiceManagerQuerier {
+        match self {
+            Self::Mock(client) => client.service_manager_querier.service_manager().clone(),
+            Self::Ecdsa(client) => client.service_manager_querier.service_manager().clone(),
+            Self::Bls(client) => client.service_manager_querier.service_manager().clone(),
+        }
+    }
+
+    pub fn wavs_service_manager_executor(&self) -> ServiceManagerExecutor {
+        match self {
+            Self::Mock(client) => client.service_manager_executor.service_manager().clone(),
+            Self::Ecdsa(client) => client.service_manager_executor.service_manager().clone(),
+            Self::Bls(client) => client.service_manager_executor.service_manager().clone(),
+        }
+    }
 }
 
 impl TestClient {
     pub async fn new_mock() -> Self {
-        let contracts = MockContractClient::new().await;
+        let client = ContractTestClient::new().await;
+        let trigger = SimpleTriggerTestClient::new(client.clone()).await;
+        let service = TestService::Mock(MockTestClient::new(client.clone()).await);
         let config = TestConfig::get().await;
         let node = WavsNodeClient::new().await;
 
         Self {
             node: Arc::new(node),
-            contract: TestContractClient::Mock(contracts),
+            trigger,
+            service,
             config: Arc::new(config),
         }
     }
 
     pub async fn new_ecdsa() -> Self {
-        let contracts = EcdsaContractClient::new().await;
+        let client = ContractTestClient::new().await;
+        let trigger = SimpleTriggerTestClient::new(client.clone()).await;
+        let service = TestService::Ecdsa(EcdsaTestClient::new(client.clone()).await);
         let config = TestConfig::get().await;
         let node = WavsNodeClient::new().await;
 
         Self {
             node: Arc::new(node),
-            contract: TestContractClient::Ecdsa(contracts),
+            trigger,
+            service,
             config: Arc::new(config),
         }
     }
 
     pub async fn new_bls() -> Self {
-        let contracts = BlsContractClient::new().await;
+        let client = ContractTestClient::new().await;
+        let trigger = SimpleTriggerTestClient::new(client.clone()).await;
+        let service = TestService::Bls(BlsTestClient::new(client.clone()).await);
         let config = TestConfig::get().await;
         let node = WavsNodeClient::new().await;
 
         Self {
             node: Arc::new(node),
-            contract: TestContractClient::Bls(contracts),
+            trigger,
+            service,
             config: Arc::new(config),
-        }
-    }
-
-    pub fn service_handler_address(&self) -> Address {
-        let addr = self.query_client().service_handler_querier().addr();
-        self.config
-            .chain_config
-            .parse_address(addr.as_str())
-            .unwrap()
-    }
-
-    pub fn service_manager_address(&self) -> Address {
-        let addr = self.query_client().service_manager_querier().addr();
-        self.config
-            .chain_config
-            .parse_address(addr.as_str())
-            .unwrap()
-    }
-
-    pub fn trigger_address(&self) -> Address {
-        let addr = self.query_client().trigger_querier().addr();
-        self.config
-            .chain_config
-            .parse_address(addr.as_str())
-            .unwrap()
-    }
-}
-
-impl HasWavsQueryClient for TestClient {
-    type QueryClient = WavsSigningPoolClient;
-
-    fn query_client(&self) -> &Self::QueryClient {
-        match &self.contract {
-            TestContractClient::Mock(client) => client.query_client(),
-            TestContractClient::Ecdsa(client) => client.query_client(),
-            TestContractClient::Bls(client) => client.query_client(),
-        }
-    }
-}
-
-impl HasWavsExecClient for TestClient {
-    type ExecClient = WavsSigningPoolClient;
-
-    fn exec_client(&self) -> &Self::ExecClient {
-        match &self.contract {
-            TestContractClient::Mock(client) => client.exec_client(),
-            TestContractClient::Ecdsa(client) => client.exec_client(),
-            TestContractClient::Bls(client) => client.exec_client(),
         }
     }
 }

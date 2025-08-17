@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-interface = {workspace = true}
+sdk = {workspace = true}
 wavs-types = {workspace = true}
 cosmwasm-std = {workspace = true}
 utils = {workspace = true}
@@ -13,3 +13,4 @@ serde = {workspace = true}
 tracing = {workspace = true}
 tracing-subscriber = {workspace = true}
 async-trait = {workspace = true}
+layer-climb = {workspace = true}
