@@ -16,49 +16,42 @@ pub struct CodeId {}
 
 impl CodeId {
     pub async fn new_mock_service_handler() -> u64 {
-        MOCK_SERVICE_HANDLER_CODE_ID
+        *MOCK_SERVICE_HANDLER_CODE_ID
             .get_or_init(upload_mock_service_handler)
             .await
-            .clone()
     }
     pub async fn new_mock_service_manager() -> u64 {
-        MOCK_SERVICE_MANAGER_CODE_ID
+        *MOCK_SERVICE_MANAGER_CODE_ID
             .get_or_init(upload_mock_service_manager)
             .await
-            .clone()
     }
 
     pub async fn new_bls_service_handler() -> u64 {
-        BLS_SERVICE_HANDLER_CODE_ID
+        *BLS_SERVICE_HANDLER_CODE_ID
             .get_or_init(upload_bls_service_handler)
             .await
-            .clone()
     }
 
     pub async fn new_bls_service_manager() -> u64 {
-        BLS_SERVICE_MANAGER_CODE_ID
+        *BLS_SERVICE_MANAGER_CODE_ID
             .get_or_init(upload_bls_service_manager)
             .await
-            .clone()
     }
 
     pub async fn new_ecdsa_service_handler() -> u64 {
-        ECDSA_SERVICE_HANDLER_CODE_ID
+        *ECDSA_SERVICE_HANDLER_CODE_ID
             .get_or_init(upload_ecdsa_service_handler)
             .await
-            .clone()
     }
     pub async fn new_ecdsa_service_manager() -> u64 {
-        ECDSA_SERVICE_MANAGER_CODE_ID
+        *ECDSA_SERVICE_MANAGER_CODE_ID
             .get_or_init(upload_ecdsa_service_manager)
             .await
-            .clone()
     }
     pub async fn new_simple_trigger() -> u64 {
-        SIMPLE_TRIGGER_CODE_ID
+        *SIMPLE_TRIGGER_CODE_ID
             .get_or_init(upload_simple_trigger)
             .await
-            .clone()
     }
 }
 

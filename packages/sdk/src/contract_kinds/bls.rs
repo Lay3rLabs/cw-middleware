@@ -30,7 +30,7 @@ impl BlsServiceHandlerQuerier {
     }
 
     pub fn querier(&self) -> &WavsQuerier {
-        &self.inner.querier()
+        self.inner.querier()
     }
 }
 
@@ -59,7 +59,7 @@ impl BlsServiceHandlerExecutor {
     }
 
     pub fn executor(&self) -> &WavsExecutor {
-        &self.inner.executor()
+        self.inner.executor()
     }
 }
 
@@ -87,7 +87,7 @@ impl BlsServiceManagerQuerier {
     }
 
     pub fn querier(&self) -> &WavsQuerier {
-        &self.inner.querier()
+        self.inner.querier()
     }
 }
 
@@ -116,6 +116,6 @@ impl BlsServiceManagerExecutor {
     }
 
     pub fn executor(&self) -> &WavsExecutor {
-        &self.inner.executor()
+        self.inner.executor()
     }
 }

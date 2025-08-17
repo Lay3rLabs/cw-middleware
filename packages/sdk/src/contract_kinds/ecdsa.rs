@@ -30,7 +30,7 @@ impl EcdsaServiceHandlerQuerier {
     }
 
     pub fn querier(&self) -> &WavsQuerier {
-        &self.inner.querier()
+        self.inner.querier()
     }
 }
 
@@ -59,7 +59,7 @@ impl EcdsaServiceHandlerExecutor {
     }
 
     pub fn executor(&self) -> &WavsExecutor {
-        &self.inner.executor()
+        self.inner.executor()
     }
 }
 
@@ -87,7 +87,7 @@ impl EcdsaServiceManagerQuerier {
     }
 
     pub fn querier(&self) -> &WavsQuerier {
-        &self.inner.querier()
+        self.inner.querier()
     }
 }
 
@@ -116,6 +116,6 @@ impl EcdsaServiceManagerExecutor {
     }
 
     pub fn executor(&self) -> &WavsExecutor {
-        &self.inner.executor()
+        self.inner.executor()
     }
 }

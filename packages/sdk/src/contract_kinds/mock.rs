@@ -33,7 +33,7 @@ impl MockServiceHandlerQuerier {
     }
 
     pub fn querier(&self) -> &WavsQuerier {
-        &self.inner.querier()
+        self.inner.querier()
     }
 
     pub async fn get_handled_trigger_message(
@@ -73,7 +73,7 @@ impl MockServiceHandlerExecutor {
     }
 
     pub fn executor(&self) -> &WavsExecutor {
-        &self.inner.executor()
+        self.inner.executor()
     }
 
     pub async fn set_trigger_message(
@@ -116,7 +116,7 @@ impl MockServiceManagerQuerier {
     }
 
     pub fn querier(&self) -> &WavsQuerier {
-        &self.inner.querier()
+        self.inner.querier()
     }
 }
 
@@ -145,7 +145,7 @@ impl MockServiceManagerExecutor {
     }
 
     pub fn executor(&self) -> &WavsExecutor {
-        &self.inner.executor()
+        self.inner.executor()
     }
 
     pub async fn set_signing_key(
