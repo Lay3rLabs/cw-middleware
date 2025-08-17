@@ -9,6 +9,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Debug;
 
 #[derive(Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum WavsQuerier {
     Climb(QueryClient),
     #[cfg(feature = "climb_pool")]
@@ -76,6 +77,7 @@ impl WavsQuerier {
 }
 
 #[derive(Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum WavsExecutor {
     Climb(SigningClient),
     #[cfg(feature = "climb_pool")]
@@ -163,6 +165,7 @@ impl WavsExecutor {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 pub enum WavsTxResponse {
     Climb(layer_climb::proto::abci::TxResponse),
     #[cfg(feature = "multitest")]
