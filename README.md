@@ -158,6 +158,8 @@ Prometheus is at [http://localhost:9090/](http://localhost:9090/)
 
 This will literally run all tests, usually it's not what you want... but, it's doable:
 
+TODO: currently blocked on https://github.com/Lay3rLabs/cw-middleware/issues/26
+
 ```bash
 task test:all
 ```
