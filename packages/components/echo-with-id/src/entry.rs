@@ -53,8 +53,6 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                 .await
                 .map_err(|e| e.to_string())?;
 
-                // TODO - use utils extension
-
                 let address = Address::Cosmos {
                     bech32_addr: data.contract_address.bech32_addr,
                     prefix_len: data
