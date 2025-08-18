@@ -16,3 +16,10 @@ tasks:
   default:
     cmds:
       - task --list-all
+
+  lint:
+    desc: "Run code formatting and linting checks"
+    cmds:
+      - cargo fmt --all -- --check
+      - cargo fix --allow-dirty --allow-staged
+      - cargo clippy --all-targets -- -D warnings

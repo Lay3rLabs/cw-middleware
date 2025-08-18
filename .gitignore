@@ -5,6 +5,7 @@
 .DS_Store
 .env
 .vscode
+.claude/
 
 # Rust
 target

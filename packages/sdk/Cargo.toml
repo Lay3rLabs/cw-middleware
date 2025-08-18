@@ -25,6 +25,7 @@ layer-climb = {workspace = true}
 mock-api = {workspace = true}
 bls-api = {workspace = true}
 ecdsa-api = {workspace = true}
+mirror-api = {workspace = true}
 trigger-api = {workspace = true}
 deadpool = { workspace = true, optional = true}
 cw-multi-test = {workspace = true, optional = true}
