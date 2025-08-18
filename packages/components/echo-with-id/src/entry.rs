@@ -1,4 +1,5 @@
 use mock_api::message_with_id::MessageWithId;
+use sdk::contract_kinds::trigger::SimpleTriggerQuerier;
 use trigger_api::simple::PushMessageEvent;
 
 use layer_climb::prelude::*;
@@ -63,13 +64,13 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                         .map_err(|_| "Invalid prefix length")?,
                 };
 
-                let message: String = client
-                    .contract_smart(
-                        &address,
-                        &trigger_api::simple::QueryMsg::TriggerMessage {
-                            trigger_id: event.trigger_id,
-                        },
-                    )
+                let trigger = SimpleTriggerQuerier::new(
+                    client.into(),
+                    cosmwasm_std::Addr::try_from(address).map_err(|e| e.to_string())?,
+                );
+
+                let message = trigger
+                    .get_trigger_message(event.trigger_id)
                     .await
                     .map_err(|e| e.to_string())?;
 

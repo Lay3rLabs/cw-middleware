@@ -2025,6 +2025,7 @@ dependencies = [
  "cosmwasm-std",
  "layer-climb",
  "mock-api",
+ "sdk",
  "serde",
  "thiserror 2.0.14",
  "trigger-api",

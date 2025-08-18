@@ -186,6 +186,7 @@ impl WavsTxResponse {
     pub fn unchecked_into_tx_response(self) -> layer_climb::proto::abci::TxResponse {
         match self {
             Self::Climb(tx_resp) => tx_resp,
+            #[allow(unreachable_patterns)]
             _ => panic!("unable to get unchecked tx response"),
         }
     }

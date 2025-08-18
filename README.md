@@ -6,9 +6,9 @@ It's constructed so that developing and testing any combination of the following
 
 **Contracts**
 
-* Mock (Service Handler + Service Manager)
-* ECDSA (Service Handler + Service Manager)
-* BLS (Service Handler + Service Manager)
+* Mock (Service Handler and Service Manager)
+* ECDSA (Service Handler and Service Manager)
+* BLS (Service Handler and Service Manager)
 * Trigger (Simple)
 
 **Chains**
@@ -21,9 +21,9 @@ It's constructed so that developing and testing any combination of the following
 * Local on-chain
 * Remote on-chain
 
-In other words: test functionality is shared between all these different requirements, making it painless to switch between e.g. mocks on-chain and ecdsa off-chain for common tests, while still supporting specific functionality as needed in isolated parts of the codebase
+Code is generally shared between all these different requirements. So, for example, it's very easy to switch between mock on-chain and ecdsa off-chain for common tests that hit "wavs service" code, while still supporting mock-specific tests.
 
-Functionality can also be shared between tests and non-tests, such as CLI
+Functionality can also be shared between tests and non-tests, such as CLI and components
 
 Additionally, a docker image is provided (TODO!) such that consumers can bring the middleware into their project with ease.
 
