@@ -3,13 +3,11 @@ use clap::Parser;
 use layer_climb::prelude::*;
 use layer_climb_cli::command::WalletCommand;
 use rand::prelude::*;
-use utils::{
-    config::ChainConfigs,
-    contract_client::on_chain::{
-        WavsServiceHandlerQueryClient, WavsServiceHandlerSigningClient,
-        WavsServiceManagerQueryClient, WavsServiceManagerSigningClient,
-    },
+use sdk::{
+    service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier},
+    service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
 };
+use utils::config::ChainConfigs;
 
 use crate::command::{CliArgs, Command, WalletArgs};
 
@@ -115,44 +113,39 @@ impl CliContext {
         Ok(address)
     }
 
-    pub async fn wavs_service_handler_query_client(
-        &self,
-        addr: &str,
-    ) -> Result<WavsServiceHandlerQueryClient> {
-        Ok(WavsServiceHandlerQueryClient::new(
-            self.query_client().await?,
-            &self.parse_address(addr)?,
+    pub async fn wavs_service_handler_querier(&self, addr: &str) -> Result<ServiceHandlerQuerier> {
+        Ok(ServiceHandlerQuerier::new(
+            self.query_client().await?.into(),
+            self.parse_address(addr)?.try_into()?,
         ))
     }
 
-    pub async fn wavs_service_manager_query_client(
-        &self,
-        addr: &str,
-    ) -> Result<WavsServiceManagerQueryClient> {
-        Ok(WavsServiceManagerQueryClient::new(
-            self.query_client().await?,
-            &self.parse_address(addr)?,
+    pub async fn wavs_service_manager_querier(&self, addr: &str) -> Result<ServiceManagerQuerier> {
+        Ok(ServiceManagerQuerier::new(
+            self.query_client().await?.into(),
+            self.parse_address(addr)?.try_into()?,
         ))
     }
 
     #[allow(dead_code)]
-    pub async fn wavs_service_handler_signing_client(
+    pub async fn wavs_service_handler_executor(
         &self,
         addr: &str,
-    ) -> Result<WavsServiceHandlerSigningClient> {
-        Ok(WavsServiceHandlerSigningClient::new(
-            self.signing_client().await?,
-            &self.parse_address(addr)?,
+    ) -> Result<ServiceHandlerExecutor> {
+        Ok(ServiceHandlerExecutor::new(
+            self.signing_client().await?.into(),
+            self.parse_address(addr)?.try_into()?,
         ))
     }
 
-    pub async fn wavs_service_manager_signing_client(
+    #[allow(dead_code)]
+    pub async fn wavs_service_manager_executor(
         &self,
         addr: &str,
-    ) -> Result<WavsServiceManagerSigningClient> {
-        Ok(WavsServiceManagerSigningClient::new(
-            self.signing_client().await?,
-            &self.parse_address(addr)?,
+    ) -> Result<ServiceManagerExecutor> {
+        Ok(ServiceManagerExecutor::new(
+            self.signing_client().await?.into(),
+            self.parse_address(addr)?.try_into()?,
         ))
     }
 

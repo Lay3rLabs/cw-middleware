@@ -2025,8 +2025,10 @@ dependencies = [
  "cosmwasm-std",
  "layer-climb",
  "mock-api",
+ "sdk",
  "serde",
  "thiserror 2.0.14",
+ "trigger-api",
  "wavs-types",
  "wavs-wasi-utils",
  "wit-bindgen-rt 0.43.0",
@@ -3389,21 +3391,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mock-trigger"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "const-hex",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-storage-plus",
- "cw2",
- "layer-climb-address",
- "mock-api",
- "wavs-types",
-]
-
-[[package]]
 name = "native-tls"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3546,11 +3533,13 @@ dependencies = [
  "mock-api",
  "mock-service-handler",
  "mock-service-manager",
- "mock-trigger",
+ "sdk",
  "serde",
  "shared-tests",
  "tokio",
  "tracing",
+ "trigger-api",
+ "trigger-simple",
  "utils",
  "wavs-types",
 ]
@@ -3570,11 +3559,13 @@ dependencies = [
  "mock-api",
  "reqwest",
  "rustls",
+ "sdk",
  "serde",
  "serde_json",
  "shared-tests",
  "tokio",
  "tracing",
+ "trigger-api",
  "utils",
  "wavs-types",
 ]
@@ -4548,6 +4539,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
+name = "sdk"
+version = "0.5.3"
+dependencies = [
+ "bls-api",
+ "cosmwasm-std",
+ "cw-multi-test",
+ "deadpool",
+ "ecdsa-api",
+ "layer-climb",
+ "mock-api",
+ "serde",
+ "trigger-api",
+ "wavs-types",
+]
+
+[[package]]
 name = "sec1"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4865,6 +4872,8 @@ dependencies = [
  "anyhow",
  "async-trait",
  "cosmwasm-std",
+ "layer-climb",
+ "sdk",
  "serde",
  "tracing",
  "tracing-subscriber",
@@ -5676,6 +5685,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "trigger-api"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "bincode",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "layer-climb-address",
+ "serde",
+ "wavs-types",
+]
+
+[[package]]
+name = "trigger-simple"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "layer-climb-address",
+ "mock-api",
+ "trigger-api",
+ "wavs-types",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6024,6 +6062,7 @@ dependencies = [
  "mock-api",
  "rand 0.9.2",
  "rustls",
+ "sdk",
  "serde",
  "shared-tests",
  "tokio",

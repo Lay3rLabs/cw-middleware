@@ -1,5 +1,7 @@
 use futures::{stream::FuturesUnordered, StreamExt};
-use on_chain_tests::client::contract::MockContractClient;
+use on_chain_tests::client::contract::{
+    mock::MockTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
+};
 use shared_tests::{contracts_sanity, tracing_init::tracing_tests_init};
 
 #[tokio::test(flavor = "multi_thread")]
@@ -10,8 +12,11 @@ async fn mock_sanity_1() {
 
     for _ in 0..5 {
         futures.push(async {
-            let client = MockContractClient::new().await;
-            contracts_sanity::run_sanity_tests_with_id(&client, "1").await;
+            let client = ContractTestClient::new().await;
+            let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+            let contract = MockTestClient::new(client.clone()).await;
+            let wrapped = contract.wrap_test(&trigger_simple);
+            contracts_sanity::run_sanity_tests_with_id(&wrapped, "1").await;
         });
     }
 
@@ -26,8 +31,11 @@ async fn mock_sanity_2() {
 
     for _ in 0..5 {
         futures.push(async {
-            let client = MockContractClient::new().await;
-            contracts_sanity::run_sanity_tests_with_id(&client, "2").await;
+            let client = ContractTestClient::new().await;
+            let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+            let contract = MockTestClient::new(client.clone()).await;
+            let wrapped = contract.wrap_test(&trigger_simple);
+            contracts_sanity::run_sanity_tests_with_id(&wrapped, "2").await;
         });
     }
 
@@ -42,8 +50,11 @@ async fn mock_sanity_3() {
 
     for _ in 0..5 {
         futures.push(async {
-            let client = MockContractClient::new().await;
-            contracts_sanity::run_sanity_tests_with_id(&client, "3").await;
+            let client = ContractTestClient::new().await;
+            let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+            let contract = MockTestClient::new(client.clone()).await;
+            let wrapped = contract.wrap_test(&trigger_simple);
+            contracts_sanity::run_sanity_tests_with_id(&wrapped, "3").await;
         });
     }
 

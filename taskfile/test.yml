@@ -62,4 +62,4 @@ tasks:
       COMPONENT_PATH: "packages/components/{{.SRC}}"
     cmds:
       - echo "Testing {{.COMPONENT_PATH}}"
-      - cd "{{.COMPONENT_PATH}}" && cargo component test
+      - cd "{{.COMPONENT_PATH}}" && cargo test

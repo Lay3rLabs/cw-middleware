@@ -1,11 +1,15 @@
-use on_chain_tests::client::contract::EcdsaContractClient;
+use on_chain_tests::client::contract::{
+    ecdsa::EcdsaTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
+};
 use shared_tests::{contracts_sanity, tracing_init::tracing_tests_init};
 
 #[tokio::test]
 async fn mock_sanity() {
     tracing_tests_init();
 
-    let client = EcdsaContractClient::new().await;
+    let client = ContractTestClient::new().await;
+    let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+    let contract = EcdsaTestClient::new(client.clone()).await;
 
-    contracts_sanity::run_sanity_tests(&client).await;
+    contracts_sanity::run_sanity_tests(&contract.wrap_test(&trigger_simple)).await;
 }

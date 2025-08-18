@@ -1,0 +1,30 @@
+[package]
+name = "sdk"
+description = "sdk"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["multitest", "climb_pool"]
+multitest = ["dep:cw-multi-test"]
+climb_pool = ["dep:deadpool"]
+
+[dependencies]
+wavs-types = {workspace = true}
+serde = {workspace = true}
+cosmwasm-std = {workspace = true}
+layer-climb = {workspace = true}
+mock-api = {workspace = true}
+bls-api = {workspace = true}
+ecdsa-api = {workspace = true}
+trigger-api = {workspace = true}
+deadpool = { workspace = true, optional = true}
+cw-multi-test = {workspace = true, optional = true}

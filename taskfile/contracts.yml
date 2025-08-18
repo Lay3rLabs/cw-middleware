@@ -67,13 +67,13 @@ tasks:
         vars:
           CONTRACT_KIND:
             sh: task contracts:env-kind
-      - task: build-mock-trigger
+      - task: build-trigger-simple
 
   build-all:
     cmds:
       - for: { var: ALL_CONTRACT_KINDS }
         cmd: task contracts:build-inner CONTRACT_KIND={{.ITEM}}
-      - task: build-mock-trigger
+      - task: build-trigger-simple
 
   build-inner:
     requires:
@@ -101,12 +101,12 @@ tasks:
         SRC: "service-manager"
         CONTRACT_KIND: "{{.CONTRACT_KIND}}"
 
-  build-mock-trigger:
+  build-trigger-simple:
     - task: inner-build-contract
       vars:
-        NAME: "trigger"
-        SRC: "trigger"
-        CONTRACT_KIND: "mock"
+        NAME: "simple"
+        SRC: "simple"
+        CONTRACT_KIND: "trigger"
 
   inner-build-contract:
     internal: true
