@@ -1,4 +1,4 @@
-use cosmwasm_schema::cw_serde;
+use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Binary, Uint256};
 use layer_climb_address::AddrEvm;
 
@@ -23,6 +23,7 @@ pub struct StrategyParams {
 }
 
 #[cw_serde]
+#[schemaifier(mute_warnings)]
 pub enum ExecuteMsg {
     /// Set operator details (owner only)
     SetOperatorDetails {
@@ -39,24 +40,33 @@ pub enum ExecuteMsg {
 }
 
 #[cw_serde]
+#[derive(QueryResponses)]
+#[schemaifier(mute_warnings)]
 pub enum QueryMsg {
     /// Check if a signature is valid (equivalent to isValidSignature)
     /// Returns ValidationResult with total voting power and voting power that signed
+    #[returns(ValidationResult)]
     ValidateSignature {
         digest: Binary,
         signature_data: Binary,
     },
     /// Get operator weight
+    #[returns(Uint256)]
     GetOperatorWeight { operator: AddrEvm },
     /// Get operator signing key
+    #[returns(Option<AddrEvm>)]
     GetOperatorSigningKey { operator: AddrEvm },
     /// Get latest operator for signing key
+    #[returns(Option<AddrEvm>)]
     GetLatestOperatorForSigningKey { signing_key: AddrEvm },
     /// Get service manager address
+    #[returns(String)]
     GetServiceManager {},
     /// Get total weight
+    #[returns(Uint256)]
     GetTotalWeight {},
     /// Get quorum config
+    #[returns(QuorumConfig)]
     GetQuorum {},
 }
 
