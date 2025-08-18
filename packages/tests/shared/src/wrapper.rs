@@ -1,5 +1,5 @@
 use sdk::{
-    contract_kinds::simple_trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier},
+    contract_kinds::trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier},
     service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier},
     service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
 };
@@ -10,8 +10,8 @@ pub struct ContractTestWrapper {
     pub service_handler_executor: ServiceHandlerExecutor,
     pub service_manager_querier: ServiceManagerQuerier,
     pub service_manager_executor: ServiceManagerExecutor,
-    pub simple_trigger_querier: SimpleTriggerQuerier,
-    pub simple_trigger_executor: SimpleTriggerExecutor,
+    pub trigger_simple_querier: SimpleTriggerQuerier,
+    pub trigger_simple_executor: SimpleTriggerExecutor,
 }
 
 impl ContractTestWrapper {
@@ -20,16 +20,16 @@ impl ContractTestWrapper {
         service_handler_executor: ServiceHandlerExecutor,
         service_manager_querier: ServiceManagerQuerier,
         service_manager_executor: ServiceManagerExecutor,
-        simple_trigger_querier: SimpleTriggerQuerier,
-        simple_trigger_executor: SimpleTriggerExecutor,
+        trigger_simple_querier: SimpleTriggerQuerier,
+        trigger_simple_executor: SimpleTriggerExecutor,
     ) -> Self {
         Self {
             service_handler_querier,
             service_handler_executor,
             service_manager_querier,
             service_manager_executor,
-            simple_trigger_querier,
-            simple_trigger_executor,
+            trigger_simple_querier,
+            trigger_simple_executor,
         }
     }
 }

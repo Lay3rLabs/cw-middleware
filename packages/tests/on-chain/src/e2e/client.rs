@@ -9,7 +9,7 @@ use crate::client::{
     config::TestConfig,
     contract::{
         bls::BlsTestClient, ecdsa::EcdsaTestClient, mock::MockTestClient,
-        simple_trigger::SimpleTriggerTestClient, ContractTestClient,
+        trigger::SimpleTriggerTestClient, ContractTestClient,
     },
     node::WavsNodeClient,
 };

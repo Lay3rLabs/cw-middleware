@@ -6,9 +6,10 @@ It's constructed so that developing and testing any combination of the following
 
 **Contracts**
 
-* Mock
-* ECDSA
-* BLS
+* Mock (Service Handler + Service Manager)
+* ECDSA (Service Handler + Service Manager)
+* BLS (Service Handler + Service Manager)
+* Trigger (Simple)
 
 **Chains**
 
@@ -22,11 +23,13 @@ It's constructed so that developing and testing any combination of the following
 
 In other words: test functionality is shared between all these different requirements, making it painless to switch between e.g. mocks on-chain and ecdsa off-chain for common tests, while still supporting specific functionality as needed in isolated parts of the codebase
 
+Functionality can also be shared between tests and non-tests, such as CLI
+
 Additionally, a docker image is provided (TODO!) such that consumers can bring the middleware into their project with ease.
 
 # What it is not
 
-This is not a repo for developing Wavs/Cosmwasm components or non-middleware contracts. While we have components in this repo for testing, it's purely to fulfill that need, not meant for public consumption. Check [wavs-tools](https://github.com/Lay3rLabs/wavs-tools) for that.
+This is not a repo for developing Wavs/Cosmwasm components, triggers, or other non-middleware contracts. While we have extra goodies in this repo for testing, it's purely to fulfill that need, not meant for public consumption. Check [wavs-tools](https://github.com/Lay3rLabs/wavs-tools) for that.
 
 # Getting Started
 
@@ -68,7 +71,7 @@ Some more contract building commands:
 * `task contracts:build-all`: build all the different kinds of contracts
 * `task contracts:build-service-handler`: build just the service handler for the current kind
 * `task contracts:build-service-manager`: build just the service handler for the current kind
-* `task contracts:build-mock-trigger`: build just the mock trigger (this is re-used for all kinds of tests) 
+* `task contracts:build-trigger-simple`: build just the mock trigger (this is re-used for all kinds of tests) 
 
 
 #### Components
@@ -121,7 +124,7 @@ helm delete cw-middleware
 
 ### Components 
 
-Usually you just `cargo component test` as needed. However, for convenience, this will test all the component packages:
+Usually you just `cargo test` as needed. However, for convenience, this will test all the component packages:
 
 ```bash
 task test:components

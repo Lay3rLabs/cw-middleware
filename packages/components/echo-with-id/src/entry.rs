@@ -91,12 +91,11 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
     }
 }
 
-fn handle_raw(raw: Vec<u8>) -> EchoResult<Option<WasmResponse>> {
+pub fn handle_raw(raw: Vec<u8>) -> EchoResult<Option<WasmResponse>> {
     let input = String::from_utf8(raw)?;
-    let response = format!("Echo: {input}");
 
     Ok(Some(WasmResponse {
-        payload: response.into_bytes(),
+        payload: input.into_bytes(),
         ordering: None,
     }))
 }

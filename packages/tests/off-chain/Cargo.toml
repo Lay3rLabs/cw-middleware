@@ -9,7 +9,7 @@ mock-api = {workspace = true}
 mock-service-handler = {workspace = true}
 mock-service-manager = {workspace = true}
 trigger-api = {workspace = true}
-simple-trigger = {workspace = true}
+trigger-simple = {workspace = true}
 ecdsa-api = {workspace = true}
 ecdsa-service-handler = {workspace = true}
 ecdsa-service-manager = {workspace = true}

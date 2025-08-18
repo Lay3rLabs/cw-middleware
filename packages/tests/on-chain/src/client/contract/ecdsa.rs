@@ -7,7 +7,7 @@ use sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
 use shared_tests::wrapper::ContractTestWrapper;
 
 use crate::client::code_ids::CodeId;
-use crate::client::contract::simple_trigger::SimpleTriggerTestClient;
+use crate::client::contract::trigger::SimpleTriggerTestClient;
 use crate::client::contract::ContractTestClient;
 
 #[derive(Clone)]
@@ -75,14 +75,14 @@ impl EcdsaTestClient {
         }
     }
 
-    pub fn wrap_test(&self, simple_trigger: &SimpleTriggerTestClient) -> ContractTestWrapper {
+    pub fn wrap_test(&self, trigger_simple: &SimpleTriggerTestClient) -> ContractTestWrapper {
         ContractTestWrapper {
             service_handler_querier: self.service_handler_querier.service_handler().clone(),
             service_handler_executor: self.service_handler_executor.service_handler().clone(),
             service_manager_querier: self.service_manager_querier.service_manager().clone(),
             service_manager_executor: self.service_manager_executor.service_manager().clone(),
-            simple_trigger_querier: simple_trigger.querier.clone(),
-            simple_trigger_executor: simple_trigger.executor.clone(),
+            trigger_simple_querier: trigger_simple.querier.clone(),
+            trigger_simple_executor: trigger_simple.executor.clone(),
         }
     }
 }

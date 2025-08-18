@@ -27,7 +27,7 @@ pub async fn run_sanity_tests_with_id(contracts: &ContractTestWrapper, id: &str)
     assert_eq!(url, "http://example.com");
 
     let trigger_id = contracts
-        .simple_trigger_executor
+        .trigger_simple_executor
         .push_message("hello world")
         .await
         .unwrap();
@@ -35,7 +35,7 @@ pub async fn run_sanity_tests_with_id(contracts: &ContractTestWrapper, id: &str)
     assert!(trigger_id.u64() > 0, "Trigger ID should be greater than 0");
 
     let trigger_message = contracts
-        .simple_trigger_querier
+        .trigger_simple_querier
         .get_trigger_message(trigger_id)
         .await
         .unwrap();

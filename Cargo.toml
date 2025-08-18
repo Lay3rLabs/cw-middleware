@@ -40,7 +40,7 @@ trigger-api = { path = "packages/contracts/trigger/api" }
 utils = { path = "packages/utils" }
 mock-service-handler = { path = "packages/contracts/mock/service-handler" }
 mock-service-manager = { path = "packages/contracts/mock/service-manager" }
-simple-trigger = { path = "packages/contracts/trigger/simple" }
+trigger-simple = { path = "packages/contracts/trigger/simple" }
 ecdsa-service-handler = { path = "packages/contracts/ecdsa/service-handler" }
 ecdsa-service-manager = { path = "packages/contracts/ecdsa/service-manager" }
 bls-service-handler = { path = "packages/contracts/bls/service-handler" }

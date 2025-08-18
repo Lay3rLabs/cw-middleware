@@ -1,5 +1,5 @@
 use cw_multi_test::{ContractWrapper, Executor};
-use sdk::contract_kinds::simple_trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
+use sdk::contract_kinds::trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
 
 use crate::client::ContractTestClient;
 
@@ -15,9 +15,9 @@ impl SimpleTriggerTestClient {
         let admin = client.admin();
 
         let contract = ContractWrapper::new(
-            simple_trigger::entry::execute,
-            simple_trigger::entry::instantiate,
-            simple_trigger::entry::query,
+            trigger_simple::entry::execute,
+            trigger_simple::entry::instantiate,
+            trigger_simple::entry::query,
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 

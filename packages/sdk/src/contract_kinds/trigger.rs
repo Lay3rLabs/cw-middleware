@@ -16,7 +16,7 @@ impl SimpleTriggerQuerier {
     pub fn new(inner: WavsQuerier, addr: Addr) -> Self {
         Self { inner, addr }
     }
-    pub async fn simple_trigger_query<RESP: DeserializeOwned + Send + Sync + Debug>(
+    pub async fn trigger_simple_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
         msg: &trigger_api::simple::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
@@ -31,7 +31,7 @@ impl SimpleTriggerQuerier {
         &self,
         trigger_id: impl Into<Uint64>,
     ) -> Result<String, cosmwasm_std::StdError> {
-        self.simple_trigger_query(&trigger_api::simple::QueryMsg::TriggerMessage {
+        self.trigger_simple_query(&trigger_api::simple::QueryMsg::TriggerMessage {
             trigger_id: trigger_id.into(),
         })
         .await
@@ -48,7 +48,7 @@ impl SimpleTriggerExecutor {
     pub fn new(inner: WavsExecutor, addr: Addr) -> Self {
         Self { inner, addr }
     }
-    pub async fn simple_trigger_exec(
+    pub async fn trigger_simple_exec(
         &self,
         msg: &trigger_api::simple::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
@@ -67,7 +67,7 @@ impl SimpleTriggerExecutor {
         let msg = trigger_api::simple::ExecuteMsg::Push {
             message: message.to_string(),
         };
-        let resp = self.simple_trigger_exec(&msg, &[]).await?;
+        let resp = self.trigger_simple_exec(&msg, &[]).await?;
         let events = CosmosTxEvents::from(&resp);
 
         let event = events

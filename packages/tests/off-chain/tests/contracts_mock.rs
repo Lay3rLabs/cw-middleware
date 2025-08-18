@@ -1,6 +1,6 @@
 use cosmwasm_std::Addr;
 use off_chain_tests::client::{
-    mock::MockTestClient, simple_trigger::SimpleTriggerTestClient, ContractTestClient,
+    mock::MockTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };
 use shared_tests::{contracts_sanity, tracing_init::tracing_tests_init};
 

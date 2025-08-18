@@ -10,7 +10,7 @@ static ECDSA_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static ECDSA_SERVICE_MANAGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static BLS_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static BLS_SERVICE_MANAGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
-static SIMPLE_TRIGGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
+static TRIGGER_SIMPLE_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 
 pub struct CodeId {}
 
@@ -48,21 +48,21 @@ impl CodeId {
             .get_or_init(upload_ecdsa_service_manager)
             .await
     }
-    pub async fn new_simple_trigger() -> u64 {
-        *SIMPLE_TRIGGER_CODE_ID
-            .get_or_init(upload_simple_trigger)
+    pub async fn new_trigger_simple() -> u64 {
+        *TRIGGER_SIMPLE_CODE_ID
+            .get_or_init(upload_trigger_simple)
             .await
     }
 }
 
-async fn upload_simple_trigger() -> u64 {
+async fn upload_trigger_simple() -> u64 {
     let wasm_path = repo_root()
         .unwrap()
         .join("packages")
         .join("contracts")
         .join("trigger")
         .join("artifacts")
-        .join("simple_.wasm");
+        .join("trigger_simple.wasm");
 
     upload(wasm_path).await
 }

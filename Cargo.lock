@@ -3535,10 +3535,10 @@ dependencies = [
  "sdk",
  "serde",
  "shared-tests",
- "simple-trigger",
  "tokio",
  "tracing",
  "trigger-api",
+ "trigger-simple",
  "utils",
  "wavs-types",
 ]
@@ -4906,22 +4906,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "simple-trigger"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "const-hex",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-storage-plus",
- "cw2",
- "layer-climb-address",
- "mock-api",
- "trigger-api",
- "wavs-types",
-]
-
-[[package]]
 name = "siphasher"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5709,6 +5693,22 @@ dependencies = [
  "cosmwasm-std",
  "layer-climb-address",
  "serde",
+ "wavs-types",
+]
+
+[[package]]
+name = "trigger-simple"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "layer-climb-address",
+ "mock-api",
+ "trigger-api",
  "wavs-types",
 ]
 

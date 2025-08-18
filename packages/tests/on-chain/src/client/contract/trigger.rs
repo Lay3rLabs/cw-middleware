@@ -1,4 +1,4 @@
-use sdk::contract_kinds::simple_trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
+use sdk::contract_kinds::trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
 
 use crate::client::code_ids::CodeId;
 use crate::client::contract::ContractTestClient;
@@ -17,7 +17,7 @@ impl SimpleTriggerTestClient {
         let (address, _) = client
             .contract_instantiate(
                 None,
-                CodeId::new_simple_trigger().await,
+                CodeId::new_trigger_simple().await,
                 "Simple Trigger",
                 &trigger_api::simple::InstantiateMsg {},
                 vec![],
