@@ -1,0 +1,26 @@
+[package]
+name = "on-chain-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sdk = {workspace = true}
+trigger-api = {workspace = true}
+mock-api = {workspace = true}
+ecdsa-api = {workspace = true}
+bls-api = {workspace = true}
+tokio = {workspace = true}
+shared-tests = {workspace = true}
+tracing = {workspace = true}
+layer-climb = {workspace = true}
+async-trait = {workspace = true}
+cosmwasm-std = {workspace = true}
+serde = {workspace = true}
+deadpool = {workspace = true}
+rustls = {workspace = true}
+utils = {workspace = true}
+wavs-types = {workspace = true}
+anyhow = {workspace = true}
+serde_json = {workspace = true}
+reqwest = {workspace = true}
+futures = {workspace = true}

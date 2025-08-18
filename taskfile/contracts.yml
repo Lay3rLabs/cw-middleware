@@ -1,0 +1,135 @@
+version: "3"
+
+includes:
+  config:
+    taskfile: ./config.yml
+    flatten: true
+
+tasks:
+  # Validate CONTRACT_KIND env var before returning it
+  env-kind:
+    silent: true
+    vars:
+      VALID_KINDS_PATTERN: '{{range $i, $v := .ALL_CONTRACT_KINDS}}{{if $i}}|{{end}}"{{$v}}"{{end}}'
+      VALID_KINDS_LIST: "{{range $i, $v := .ALL_CONTRACT_KINDS}}{{if $i}}, {{end}}{{$v}}{{end}}"
+    cmds:
+      - |
+        if [ -z "{{.CONTRACT_KIND}}" ]; then
+          echo "❌ CONTRACT_KIND environment variable is not set. Please set it in .env file." >&2
+          exit 1
+        fi
+
+        case "{{.CONTRACT_KIND}}" in
+          {{.VALID_KINDS_PATTERN}})
+            echo "{{.CONTRACT_KIND}}"
+            ;;
+          *)
+            echo "❌ CONTRACT_KIND must be one of: {{.VALID_KINDS_LIST}}. Current value: {{.CONTRACT_KIND}}" >&2
+            exit 1
+            ;;
+        esac
+
+  artifacts-path:
+    vars:
+      # If CONTRACT_KIND is explicitly provided, use that, otherwise load from env
+      CONTRACT_KIND_DEFAULT:
+        sh: task contracts:env-kind
+      CONTRACT_KIND: "{{if .CONTRACT_KIND}}{{.CONTRACT_KIND}}{{else}}{{.CONTRACT_KIND_DEFAULT}}{{end}}"
+      CONTRACT_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages" "contracts" .CONTRACT_KIND "artifacts"}}'
+    cmds:
+      - echo "{{.CONTRACT_ARTIFACTS_PATH}}"
+
+  clean:
+    cmds:
+      - task: clean-inner
+        vars:
+          CONTRACT_KIND:
+            sh: task contracts:env-kind
+
+  clean-all:
+    cmds:
+      - for: { var: ALL_CONTRACT_KINDS }
+        cmd: task contracts:clean-inner CONTRACT_KIND={{.ITEM}}
+
+  clean-inner:
+    requires:
+      vars: [CONTRACT_KIND]
+    vars:
+      CONTRACT_ARTIFACTS_PATH:
+        sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
+    cmds:
+      - echo "Cleaning {{.CONTRACT_KIND}} contracts"
+      - rm -rf "{{.CONTRACT_ARTIFACTS_PATH}}"
+
+  build:
+    cmds:
+      - task: build-inner
+        vars:
+          CONTRACT_KIND:
+            sh: task contracts:env-kind
+      - task: build-trigger-simple
+
+  build-all:
+    cmds:
+      - for: { var: ALL_CONTRACT_KINDS }
+        cmd: task contracts:build-inner CONTRACT_KIND={{.ITEM}}
+      - task: build-trigger-simple
+
+  build-inner:
+    requires:
+      vars: [CONTRACT_KIND]
+    cmds:
+      # Building in parallel seems to break things
+      - task: build-service-handler
+        vars:
+          CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+      - task: build-service-manager
+        vars:
+          CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+
+  build-service-handler:
+    - task: inner-build-contract
+      vars:
+        NAME: "service_handler"
+        SRC: "service-handler"
+        CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+
+  build-service-manager:
+    - task: inner-build-contract
+      vars:
+        NAME: "service_manager"
+        SRC: "service-manager"
+        CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+
+  build-trigger-simple:
+    - task: inner-build-contract
+      vars:
+        NAME: "simple"
+        SRC: "simple"
+        CONTRACT_KIND: "trigger"
+
+  inner-build-contract:
+    internal: true
+    requires:
+      vars: [NAME, SRC, CONTRACT_KIND]
+    vars:
+      CONTRACT_ARTIFACTS_PATH:
+        sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
+      CONTRACT_PATH: "packages/contracts/{{.CONTRACT_KIND}}/{{.SRC}}"
+      CONTRACT_NAME: "{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
+    cmds:
+      - echo "Building contract {{.CONTRACT_NAME}} at {{.CONTRACT_PATH}}"
+      - |
+        {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
+      - rm -f "{{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}" || true
+      - >
+        {{.DOCKER_SUDO}} docker run --rm
+        -v "{{.REPO_ROOT}}:/code"
+        --mount type=volume,source="layer_wavs_cache",target=/target
+        --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry
+        {{.COSMWASM_OPTIMIZER_IMAGE}} "{{.CONTRACT_PATH}}"
+      - mkdir -p "{{.CONTRACT_ARTIFACTS_PATH}}"
+      - cp -r "./artifacts/{{.CONTRACT_NAME}}" "{{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"
+      - |
+        {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
+      - echo "Built contract at {{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"

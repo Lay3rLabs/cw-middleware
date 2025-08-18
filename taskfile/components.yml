@@ -1,0 +1,74 @@
+version: "3"
+
+includes:
+  config:
+    taskfile: ./config.yml
+    flatten: true
+
+tasks:
+  build-all:
+    cmds:
+      - for: { var: ALL_COMPONENTS }
+        cmd: task components:build-{{.ITEM}}
+
+  bindings-all:
+    cmds:
+      - for: { var: ALL_COMPONENTS }
+        cmd: task components:bindings-{{.ITEM}}
+
+  build-echo-with-id:
+    - task: build-component-inner
+      vars:
+        NAME: "echo_with_id"
+        SRC: "echo-with-id"
+
+  bindings-echo-with-id:
+    - task: bindings-component-inner
+      vars:
+        SRC: "echo-with-id"
+
+  exec-echo-with-id:
+    - task: exec-component-inner
+      vars:
+        NAME: "echo_with_id"
+
+  build-component-inner:
+    internal: true
+    requires:
+      vars: [NAME, SRC]
+    vars:
+      COMPONENT_PATH: "packages/components/{{.SRC}}"
+      COMPONENT_NAME: "{{.NAME}}.wasm"
+    cmds:
+      - echo "Building component {{.COMPONENT_NAME}} at {{.COMPONENT_PATH}}"
+      - rm -f "./target/wasm32-wasip1/release/{{.COMPONENT_NAME}}.*" || true
+      - rm -f "{{.COMPONENTS_ARTIFACTS_PATH}}/{{.COMPONENT_NAME}}" || true
+      - cd "{{.COMPONENT_PATH}}" && cargo component build --release
+      - mkdir -p "{{.COMPONENTS_ARTIFACTS_PATH}}"
+      - cp "./target/wasm32-wasip1/release/{{.COMPONENT_NAME}}" "{{.COMPONENTS_ARTIFACTS_PATH}}/{{.COMPONENT_NAME}}"
+
+  bindings-component-inner:
+    internal: true
+    requires:
+      vars: [SRC]
+    vars:
+      COMPONENT_PATH: "packages/components/{{.SRC}}"
+    cmds:
+      - echo "Generating bindings at {{.COMPONENT_PATH}}"
+      - cd "{{.COMPONENT_PATH}}" && cargo component bindings
+
+  exec-component-inner:
+    internal: true
+    requires:
+      vars: [NAME]
+    vars:
+      COMPONENT_PATH: "packages/components/artifacts/{{.NAME}}.wasm"
+      LOG_LEVEL: "{{.RUST_LOG}}"
+    cmds:
+      - echo "Executing component {{.COMPONENT_PATH}} with args of \"{{.CLI_ARGS}}\""
+      - >
+        {{.DOCKER_SUDO}} docker run --rm --network host
+        -v "{{.REPO_ROOT}}":/repo
+        -v "{{.WAVS_HOME_DIR}}":/wavs-home 
+        {{.WAVS_DOCKER_IMAGE}}
+        wavs-cli exec --home /wavs-home --log-level {{.LOG_LEVEL}} --component "/repo/{{.COMPONENT_PATH}}" --input "{{.CLI_ARGS}}"
