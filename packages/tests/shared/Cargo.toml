@@ -16,3 +16,6 @@ async-trait = { workspace = true }
 layer-climb = { workspace = true }
 layer-climb-address = { workspace = true }
 ethabi = { workspace = true }
+k256 = { workspace = true }
+alloy-primitives = { workspace = true }
+rand = "0.8"

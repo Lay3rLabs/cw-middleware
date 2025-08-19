@@ -1,13 +1,11 @@
-use alloy_primitives;
+use alloy_primitives::{Signature, B256};
 use cosmwasm_std::{
     entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
     StdError, StdResult, Uint256,
 };
 use cw2::set_contract_version;
 use ethabi::{decode, ParamType, Token};
-use k256::ecdsa::{RecoveryId, Signature, VerifyingKey};
 use layer_climb_address::AddrEvm;
-use sha2::{Digest, Sha256};
 
 use crate::error::ContractError;
 use crate::state::{
@@ -245,8 +243,14 @@ fn query_validate_signature(
     let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
     let mut voting_power_signed = Uint256::zero();
 
-    // Verify each signature
-    for (i, operator) in decoded.operators.iter().enumerate() {
+    // Verify each signature (operators are actually signing keys in the decoded data)
+    for (i, signing_key) in decoded.operators.iter().enumerate() {
+        // Get operator for this signing key
+        let signing_key_str = signing_key.to_string();
+        let operator = SIGNING_KEY_TO_OPERATOR
+            .may_load(deps.storage, signing_key_str)?
+            .ok_or_else(|| StdError::msg("Signer not registered"))?;
+
         // Check if operator is registered
         let operator_key = operator.to_string();
         let is_registered = OPERATOR_REGISTERED
@@ -261,14 +265,9 @@ fn query_validate_signature(
             });
         }
 
-        // Get operator's signing key
-        let signing_key = OPERATOR_SIGNING_KEYS
-            .may_load(deps.storage, operator_key.clone())?
-            .ok_or_else(|| StdError::msg("Operator not found"))?;
-
-        // Verify signature
+        // Verify signature using the signing key
         let signature = &decoded.signatures[i];
-        if !verify_ecdsa_signature(&digest, signature, &signing_key)? {
+        if !is_valid_signature(&digest, signature, signing_key)? {
             return Ok(ValidationResult {
                 is_valid: false,
                 total_voting_power: total_weight,
@@ -368,48 +367,46 @@ pub fn decode_signature_data(data: &Binary) -> Result<SignatureData, ContractErr
     })
 }
 
-fn verify_ecdsa_signature(
-    message_hash: &Binary,
+// Mimics Solidity's signer.isValidSignatureNow(digest, signature)
+fn is_valid_signature(
+    digest: &Binary,
     signature: &Binary,
     signer_address: &AddrEvm,
 ) -> StdResult<bool> {
-    // Extract signature components (r, s, v)
+    // Validate signature length (must be 65 bytes for ECDSA)
     if signature.len() != 65 {
         return Ok(false);
     }
 
-    let r = &signature[0..32];
-    let s = &signature[32..64];
-    let v = signature[64];
+    // Convert to format expected by alloy
+    let hash = match B256::try_from(digest.as_slice()) {
+        Ok(h) => h,
+        Err(_) => return Ok(false),
+    };
 
-    // Create signature
-    let mut sig_bytes = [0u8; 64];
-    sig_bytes[0..32].copy_from_slice(r);
-    sig_bytes[32..64].copy_from_slice(s);
-    let sig = Signature::from_bytes(&sig_bytes.into())
-        .map_err(|_| StdError::msg("Invalid signature format"))?;
+    let alloy_sig = match Signature::try_from(signature.as_slice()) {
+        Ok(sig) => sig,
+        Err(_) => return Ok(false),
+    };
 
-    // Recovery ID
-    let recovery_id = RecoveryId::try_from(v).map_err(|_| StdError::msg("Invalid recovery ID"))?;
+    // Perform ECDSA recovery to get the recovered address
+    let recovered_addr = match alloy_sig.recover_address_from_prehash(&hash) {
+        Ok(addr) => addr,
+        Err(_) => return Ok(false),
+    };
 
-    // Recover public key
-    let recovered_key =
-        VerifyingKey::recover_from_prehash(message_hash.as_slice(), &sig, recovery_id)
-            .map_err(|_| StdError::msg("Failed to recover public key"))?;
+    // Validate that recovered address matches the expected signer address
+    if recovered_addr.as_slice() != signer_address.as_bytes() {
+        return Ok(false);
+    }
 
-    // Convert public key to address
-    let public_key_bytes = recovered_key.to_encoded_point(false);
-    let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip the 0x04 prefix
+    // Additional validation: signature must not be zero
+    if signature.as_slice().iter().all(|&b| b == 0) {
+        return Ok(false);
+    }
 
-    let mut hasher = Sha256::new();
-    hasher.update(public_key_uncompressed);
-    let hash = hasher.finalize();
-
-    // Take last 20 bytes as Ethereum address
-    let recovered_address = &hash[12..32];
-
-    // Compare with expected signer address
-    Ok(recovered_address == signer_address.as_bytes())
+    // Signature is valid
+    Ok(true)
 }
 
 fn query_operator_weight(deps: Deps, operator: AddrEvm) -> StdResult<Uint256> {

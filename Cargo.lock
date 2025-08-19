@@ -3431,7 +3431,6 @@ dependencies = [
  "layer-climb-address",
  "mirror-api",
  "serde",
- "sha2 0.10.9",
  "thiserror 2.0.14",
 ]
 
@@ -4966,12 +4965,15 @@ dependencies = [
 name = "shared-tests"
 version = "0.1.0"
 dependencies = [
+ "alloy-primitives",
  "anyhow",
  "async-trait",
  "cosmwasm-std",
  "ethabi",
+ "k256",
  "layer-climb",
  "layer-climb-address",
+ "rand 0.8.5",
  "sdk",
  "serde",
  "tracing",

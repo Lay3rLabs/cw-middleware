@@ -1,7 +1,22 @@
+use alloy_primitives::{keccak256 as alloy_keccak256, Signature as AlloySignature, B256};
 use cosmwasm_std::{Binary, Uint256};
 use ethabi::{decode, encode, ParamType, Token};
+use k256::ecdsa::{signature::hazmat::PrehashSigner, Signature, SigningKey};
 use layer_climb_address::AddrEvm;
+use rand::thread_rng;
 use sdk::contract_kinds::mirror::{MirrorStakeRegistryExecutor, MirrorStakeRegistryQuerier};
+
+fn create_eip191_hash(message: &[u8]) -> B256 {
+    let prefix = b"\x19Ethereum Signed Message:\n";
+    let message_len = message.len().to_string();
+
+    let mut full_message = Vec::new();
+    full_message.extend_from_slice(prefix);
+    full_message.extend_from_slice(message_len.as_bytes());
+    full_message.extend_from_slice(message);
+
+    alloy_keccak256(&full_message)
+}
 
 pub async fn run_mirror_operator_management_test(
     executor: &MirrorStakeRegistryExecutor,
@@ -68,70 +83,131 @@ pub async fn run_mirror_batch_operator_management_test(
     assert_eq!(total_weight, expected_total);
 }
 
+fn create_signing_key_and_address() -> (SigningKey, AddrEvm) {
+    let signing_key = SigningKey::random(&mut thread_rng());
+    let eth_address = derive_eth_address_from_signing_key(&signing_key);
+    (signing_key, eth_address)
+}
+
+fn derive_eth_address_from_signing_key(signing_key: &SigningKey) -> AddrEvm {
+    let public_key = signing_key.verifying_key();
+    let public_key_point = public_key.to_encoded_point(false);
+    let public_key_bytes = &public_key_point.as_bytes()[1..]; // Skip 0x04 prefix
+
+    let hash = alloy_keccak256(public_key_bytes);
+
+    // Take last 20 bytes as Ethereum address
+    let mut addr_bytes = [0u8; 20];
+    addr_bytes.copy_from_slice(&hash[12..32]);
+    AddrEvm::new(addr_bytes)
+}
+
+fn sign_message_hash(signing_key: &SigningKey, message_hash: &[u8]) -> Vec<u8> {
+    let signature: Signature = signing_key.sign_prehash(message_hash).unwrap();
+    let (r, s) = signature.split_bytes();
+
+    let mut signature_bytes = Vec::with_capacity(65);
+    signature_bytes.extend_from_slice(&r);
+    signature_bytes.extend_from_slice(&s);
+
+    // Find the correct recovery ID
+    for recovery_id in 0..4u8 {
+        signature_bytes.truncate(64);
+        signature_bytes.push(recovery_id);
+
+        // Test if this recovery ID works with alloy (same as contract will use)
+        if let Ok(hash) = B256::try_from(message_hash) {
+            if let Ok(alloy_sig) = AlloySignature::try_from(signature_bytes.as_slice()) {
+                if let Ok(recovered_addr) = alloy_sig.recover_address_from_prehash(&hash) {
+                    let expected_addr = derive_eth_address_from_signing_key(signing_key);
+                    if recovered_addr.as_slice() == expected_addr.as_bytes() {
+                        return signature_bytes;
+                    }
+                }
+            }
+        }
+    }
+
+    // Fallback with recovery ID 0 (shouldn't happen in normal cases)
+    signature_bytes.truncate(64);
+    signature_bytes.push(0);
+    signature_bytes
+}
+
 pub async fn run_mirror_abi_signature_validation_test(
     executor: &MirrorStakeRegistryExecutor,
     querier: &MirrorStakeRegistryQuerier,
 ) {
-    // Register operators
+    // Create real signing keys and addresses
+    let (signing_key1, signing_address1) = create_signing_key_and_address();
+    let (signing_key2, signing_address2) = create_signing_key_and_address();
+
+    // Use deterministic operator addresses
     let operator1 = AddrEvm::new([1u8; 20]);
     let operator2 = AddrEvm::new([2u8; 20]);
-    let signing_key1 = AddrEvm::new([0xaa; 20]);
-    let signing_key2 = AddrEvm::new([0xbb; 20]);
 
     executor
-        .set_operator_details(operator1, signing_key1, Uint256::from(600u128))
+        .set_operator_details(
+            operator1.clone(),
+            signing_address1.clone(),
+            Uint256::from(600u128),
+        )
         .await
         .unwrap();
 
     executor
-        .set_operator_details(operator2, signing_key2, Uint256::from(500u128))
+        .set_operator_details(
+            operator2.clone(),
+            signing_address2.clone(),
+            Uint256::from(500u128),
+        )
         .await
         .unwrap();
 
-    // Create ABI-encoded signature data (same format as Solidity)
-    let operators = vec![
-        Token::Address([1u8; 20].into()),
-        Token::Address([2u8; 20].into()),
+    // Create a deterministic test message hash using EIP-191 format
+    let test_message = b"test message for signature validation";
+    let digest = create_eip191_hash(test_message);
+
+    // Create proper ECDSA signatures
+    let sig1 = sign_message_hash(&signing_key1, digest.as_slice());
+    let sig2 = sign_message_hash(&signing_key2, digest.as_slice());
+
+    // Create ABI-encoded signature data
+    let signers = vec![
+        Token::Address(signing_address1.as_bytes().into()),
+        Token::Address(signing_address2.as_bytes().into()),
     ];
 
-    // Create signatures with valid recovery IDs
-    let mut sig1 = vec![0u8; 65];
-    sig1[64] = 0; // Valid recovery ID
-    let mut sig2 = vec![0u8; 65];
-    sig2[64] = 1; // Valid recovery ID
-
     let signatures = vec![Token::Bytes(sig1), Token::Bytes(sig2)];
-
     let reference_block = Token::Uint(12345u32.into());
 
-    // Encode using the same ABI format as Solidity: abi.encode(operators, signatures, referenceBlock)
     let encoded_data = encode(&[
-        Token::Array(operators),
+        Token::Array(signers),
         Token::Array(signatures),
         reference_block,
     ]);
 
     // Test signature validation
-    let digest = Binary::from(vec![0u8; 32]); // Mock digest
+    let digest_binary = Binary::from(digest.to_vec());
     let signature_data = Binary::from(encoded_data);
 
-    let result = querier.validate_signature(digest, signature_data).await;
+    let result = querier
+        .validate_signature(digest_binary, signature_data)
+        .await;
 
-    match result {
-        Ok(validation_result) => {
-            // Verify enhanced return values
-            assert_eq!(
-                validation_result.total_voting_power,
-                Uint256::from(1100u128)
-            );
-            assert_eq!(validation_result.reference_block, 12345);
-            // Mock signatures should fail validation
-            assert!(!validation_result.is_valid);
-        }
-        Err(_) => {
-            // Also acceptable for mock signatures - the important thing is binary format worked
-        }
-    }
+    let validation_result = result.unwrap();
+
+    // Verify the validation results
+    assert_eq!(
+        validation_result.total_voting_power,
+        Uint256::from(1100u128)
+    );
+    assert_eq!(validation_result.reference_block, 12345);
+    assert_eq!(
+        validation_result.voting_power_signed,
+        Uint256::from(1100u128)
+    );
+    assert!(validation_result.is_valid);
 }
 
 pub async fn run_mirror_abi_binary_compatibility_test() {
