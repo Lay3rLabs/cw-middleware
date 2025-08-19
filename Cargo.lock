@@ -3411,9 +3411,47 @@ dependencies = [
 name = "mirror-api"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "cosmwasm-schema",
  "cosmwasm-std",
  "layer-climb-address",
+ "serde",
+ "wavs-types",
+]
+
+[[package]]
+name = "mirror-service-handler"
+version = "0.0.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "mirror-api",
+ "wavs-types",
+]
+
+[[package]]
+name = "mirror-service-manager"
+version = "0.0.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw2",
+ "layer-climb-address",
+ "mirror-api",
+ "wavs-types",
 ]
 
 [[package]]

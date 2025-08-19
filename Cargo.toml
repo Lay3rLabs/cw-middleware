@@ -14,6 +14,8 @@ members = [
   "packages/contracts/bls/service-handler",
   "packages/contracts/bls/service-manager",
   "packages/contracts/mirror/api",
+  "packages/contracts/mirror/service-handler",
+  "packages/contracts/mirror/service-manager",
   "packages/contracts/mirror/stake-registry",
   "packages/components/echo-with-id",
   "packages/tests/off-chain",
@@ -40,6 +42,8 @@ ecdsa-api = { path = "packages/contracts/ecdsa/api" }
 bls-api = { path = "packages/contracts/bls/api" }
 trigger-api = { path = "packages/contracts/trigger/api" }
 mirror-api = { path = "packages/contracts/mirror/api" }
+mirror-service-handler = { path = "packages/contracts/mirror/service-handler" }
+mirror-service-manager = { path = "packages/contracts/mirror/service-manager" }
 utils = { path = "packages/utils" }
 mock-service-handler = { path = "packages/contracts/mock/service-handler" }
 mock-service-manager = { path = "packages/contracts/mock/service-manager" }
@@ -104,6 +108,7 @@ cosmwasm-std = "3.0.1"
 cosmwasm-crypto = "3.0.1"
 cw-storage-plus = "3.0.0"
 cw2 = "3.0.0"
+cw-ownable = "2.1.0"
 cw-multi-test = { version = "3.0.1", features = ["staking", "stargate"] }
 
 # WASI

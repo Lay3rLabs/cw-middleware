@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bincode = { workspace = true }
 cosmwasm-schema = { workspace = true }
 cosmwasm-std = { workspace = true }
 layer-climb-address = { workspace = true }
+serde = { workspace = true }
+wavs-types = { workspace = true }
