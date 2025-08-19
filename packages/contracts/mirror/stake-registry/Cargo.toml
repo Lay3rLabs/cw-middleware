@@ -17,9 +17,9 @@ mirror-api = { workspace = true }
 layer-climb-address = { workspace = true }
 k256 = { workspace = true }
 sha2 = { workspace = true }
-ethabi = "18.0"
+ethabi = { workspace = true }
+alloy-primitives = { workspace = true }
 hex = "0.4"
-alloy-primitives = "1.0"
 
 [features]
 library = []
