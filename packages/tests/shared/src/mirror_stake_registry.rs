@@ -18,10 +18,7 @@ pub async fn run_mirror_operator_management_test(
         .unwrap();
 
     // Query the operator weight
-    let queried_weight = querier
-        .get_operator_weight(operator.clone())
-        .await
-        .unwrap();
+    let queried_weight = querier.get_operator_weight(operator.clone()).await.unwrap();
 
     assert_eq!(queried_weight, weight);
 
@@ -34,10 +31,7 @@ pub async fn run_mirror_operator_management_test(
     assert_eq!(queried_key, Some(signing_key));
 
     // Query total weight
-    let total_weight = querier
-        .get_total_weight()
-        .await
-        .unwrap();
+    let total_weight = querier.get_total_weight().await.unwrap();
 
     assert_eq!(total_weight, weight);
 }
@@ -58,10 +52,7 @@ pub async fn run_mirror_batch_operator_management_test(
 
     // Verify each operator
     for (i, operator) in operators.iter().enumerate() {
-        let queried_weight = querier
-            .get_operator_weight(operator.clone())
-            .await
-            .unwrap();
+        let queried_weight = querier.get_operator_weight(operator.clone()).await.unwrap();
         assert_eq!(queried_weight, weights[i]);
 
         let queried_key = querier
@@ -73,10 +64,7 @@ pub async fn run_mirror_batch_operator_management_test(
 
     // Check total weight
     let expected_total = weights.iter().sum::<Uint256>();
-    let total_weight = querier
-        .get_total_weight()
-        .await
-        .unwrap();
+    let total_weight = querier.get_total_weight().await.unwrap();
     assert_eq!(total_weight, expected_total);
 }
 
@@ -127,9 +115,7 @@ pub async fn run_mirror_abi_signature_validation_test(
     let digest = Binary::from(vec![0u8; 32]); // Mock digest
     let signature_data = Binary::from(encoded_data);
 
-    let result = querier
-        .validate_signature(digest, signature_data)
-        .await;
+    let result = querier.validate_signature(digest, signature_data).await;
 
     match result {
         Ok(validation_result) => {
