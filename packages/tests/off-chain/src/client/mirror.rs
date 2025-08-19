@@ -1,6 +1,5 @@
 use cw_multi_test::{ContractWrapper, Executor};
 use sdk::contract_kinds::mirror::{MirrorStakeRegistryExecutor, MirrorStakeRegistryQuerier};
-use sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
 
 use crate::client::ContractTestClient;
 
@@ -43,13 +42,10 @@ impl MirrorTestClient {
             )
             .unwrap();
 
-        let stake_registry_querier = MirrorStakeRegistryQuerier::new(ServiceManagerQuerier::new(
-            client.querier.clone(),
-            stake_registry.clone(),
-        ));
-        let stake_registry_executor = MirrorStakeRegistryExecutor::new(
-            ServiceManagerExecutor::new(client.executor.clone(), stake_registry),
-        );
+        let stake_registry_querier =
+            MirrorStakeRegistryQuerier::new(client.querier.clone(), stake_registry.clone());
+        let stake_registry_executor =
+            MirrorStakeRegistryExecutor::new(client.executor, stake_registry);
 
         Self {
             stake_registry_querier,

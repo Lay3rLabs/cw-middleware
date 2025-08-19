@@ -1,8 +1,5 @@
-use crate::{
-    client::{WavsExecutor, WavsQuerier, WavsTxResponse},
-    service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
-};
-use cosmwasm_std::{Binary, Uint256};
+use crate::client::{WavsExecutor, WavsQuerier, WavsTxResponse};
+use cosmwasm_std::{Addr, Binary, Uint256};
 use layer_climb::prelude::AddrEvm;
 use mirror_api::stake_registry::{ExecuteMsg, QueryMsg, ValidationResult};
 use serde::de::DeserializeOwned;
@@ -10,29 +7,24 @@ use std::fmt::Debug;
 
 #[derive(Clone)]
 pub struct MirrorStakeRegistryQuerier {
-    inner: ServiceManagerQuerier,
+    inner: WavsQuerier,
+    pub addr: Addr,
 }
 
 impl MirrorStakeRegistryQuerier {
-    pub fn new(inner: ServiceManagerQuerier) -> Self {
-        Self { inner }
+    pub fn new(inner: WavsQuerier, addr: Addr) -> Self {
+        Self { inner, addr }
     }
 
-    pub async fn mirror_query<RESP: DeserializeOwned + Send + Sync + Debug>(
+    pub async fn mirror_stake_registry_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
         msg: &QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
-        self.querier()
-            .contract_query(&self.service_manager().addr, msg)
-            .await
-    }
-
-    pub fn service_manager(&self) -> &ServiceManagerQuerier {
-        &self.inner
+        self.querier().contract_query(&self.addr, msg).await
     }
 
     pub fn querier(&self) -> &WavsQuerier {
-        self.inner.querier()
+        &self.inner
     }
 
     pub async fn validate_signature(
@@ -40,7 +32,7 @@ impl MirrorStakeRegistryQuerier {
         digest: Binary,
         signature_data: Binary,
     ) -> Result<ValidationResult, cosmwasm_std::StdError> {
-        self.mirror_query(&QueryMsg::ValidateSignature {
+        self.mirror_stake_registry_query(&QueryMsg::ValidateSignature {
             digest,
             signature_data,
         })
@@ -51,7 +43,7 @@ impl MirrorStakeRegistryQuerier {
         &self,
         operator: AddrEvm,
     ) -> Result<Uint256, cosmwasm_std::StdError> {
-        self.mirror_query(&QueryMsg::GetOperatorWeight { operator })
+        self.mirror_stake_registry_query(&QueryMsg::GetOperatorWeight { operator })
             .await
     }
 
@@ -59,7 +51,7 @@ impl MirrorStakeRegistryQuerier {
         &self,
         operator: AddrEvm,
     ) -> Result<Option<AddrEvm>, cosmwasm_std::StdError> {
-        self.mirror_query(&QueryMsg::GetOperatorSigningKey { operator })
+        self.mirror_stake_registry_query(&QueryMsg::GetOperatorSigningKey { operator })
             .await
     }
 
@@ -67,27 +59,30 @@ impl MirrorStakeRegistryQuerier {
         &self,
         signing_key: AddrEvm,
     ) -> Result<Option<AddrEvm>, cosmwasm_std::StdError> {
-        self.mirror_query(&QueryMsg::GetLatestOperatorForSigningKey { signing_key })
+        self.mirror_stake_registry_query(&QueryMsg::GetLatestOperatorForSigningKey { signing_key })
             .await
     }
 
     pub async fn get_service_manager(&self) -> Result<String, cosmwasm_std::StdError> {
-        self.mirror_query(&QueryMsg::GetServiceManager {}).await
+        self.mirror_stake_registry_query(&QueryMsg::GetServiceManager {})
+            .await
     }
 
     pub async fn get_total_weight(&self) -> Result<Uint256, cosmwasm_std::StdError> {
-        self.mirror_query(&QueryMsg::GetTotalWeight {}).await
+        self.mirror_stake_registry_query(&QueryMsg::GetTotalWeight {})
+            .await
     }
 }
 
 #[derive(Clone)]
 pub struct MirrorStakeRegistryExecutor {
-    inner: ServiceManagerExecutor,
+    inner: WavsExecutor,
+    pub addr: Addr,
 }
 
 impl MirrorStakeRegistryExecutor {
-    pub fn new(inner: ServiceManagerExecutor) -> Self {
-        Self { inner }
+    pub fn new(inner: WavsExecutor, addr: Addr) -> Self {
+        Self { inner, addr }
     }
 
     pub async fn mirror_exec(
@@ -95,17 +90,11 @@ impl MirrorStakeRegistryExecutor {
         msg: &ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
-        self.executor()
-            .contract_exec(&self.service_manager().addr, msg, funds)
-            .await
-    }
-
-    pub fn service_manager(&self) -> &ServiceManagerExecutor {
-        &self.inner
+        self.executor().contract_exec(&self.addr, msg, funds).await
     }
 
     pub fn executor(&self) -> &WavsExecutor {
-        self.inner.executor()
+        &self.inner
     }
 
     pub async fn set_operator_details(
