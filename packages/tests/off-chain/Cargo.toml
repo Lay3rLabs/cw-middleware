@@ -17,6 +17,8 @@ bls-api = {workspace = true}
 bls-service-handler = {workspace = true}
 bls-service-manager = {workspace = true}
 mirror-api = {workspace = true}
+mirror-service-handler = {workspace = true}
+mirror-service-manager = {workspace = true}
 mirror-stake-registry = {workspace = true}
 wavs-types = {workspace = true}
 shared-tests = {workspace = true}

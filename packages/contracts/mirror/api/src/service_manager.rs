@@ -13,7 +13,7 @@ pub struct InstantiateMsg {
 #[cw_serde]
 #[schemaifier(mute_warnings)]
 pub enum ExecuteMsg {
-    /// Admin-only: Set signing key (permissioned unlike mock)
+    /// Admin-only: Set signing key for mirror service operators
     SetSigningKey {
         operator: AddrEvm,
         signing_key: AddrEvm,

@@ -10,6 +10,9 @@ static ECDSA_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static ECDSA_SERVICE_MANAGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static BLS_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static BLS_SERVICE_MANAGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
+static MIRROR_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
+static MIRROR_SERVICE_MANAGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
+static MIRROR_STAKE_REGISTRY_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static TRIGGER_SIMPLE_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 
 pub struct CodeId {}
@@ -48,6 +51,25 @@ impl CodeId {
             .get_or_init(upload_ecdsa_service_manager)
             .await
     }
+
+    pub async fn new_mirror_service_handler() -> u64 {
+        *MIRROR_SERVICE_HANDLER_CODE_ID
+            .get_or_init(upload_mirror_service_handler)
+            .await
+    }
+
+    pub async fn new_mirror_service_manager() -> u64 {
+        *MIRROR_SERVICE_MANAGER_CODE_ID
+            .get_or_init(upload_mirror_service_manager)
+            .await
+    }
+
+    pub async fn new_mirror_stake_registry() -> u64 {
+        *MIRROR_STAKE_REGISTRY_CODE_ID
+            .get_or_init(upload_mirror_stake_registry)
+            .await
+    }
+
     pub async fn new_trigger_simple() -> u64 {
         *TRIGGER_SIMPLE_CODE_ID
             .get_or_init(upload_trigger_simple)
@@ -89,6 +111,26 @@ async fn upload_bls_service_handler() -> u64 {
 
 async fn upload_bls_service_manager() -> u64 {
     upload(service_wasm_path("bls", "service_manager")).await
+}
+
+async fn upload_mirror_service_handler() -> u64 {
+    upload(service_wasm_path("mirror", "service_handler")).await
+}
+
+async fn upload_mirror_service_manager() -> u64 {
+    upload(service_wasm_path("mirror", "service_manager")).await
+}
+
+async fn upload_mirror_stake_registry() -> u64 {
+    let wasm_path = repo_root()
+        .unwrap()
+        .join("packages")
+        .join("contracts")
+        .join("mirror")
+        .join("artifacts")
+        .join("mirror_stake_registry.wasm");
+
+    upload(wasm_path).await
 }
 
 async fn upload(wasm_path: impl AsRef<Path>) -> u64 {
