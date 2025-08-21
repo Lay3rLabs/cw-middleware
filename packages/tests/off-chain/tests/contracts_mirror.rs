@@ -98,9 +98,14 @@ async fn test_mirror_service_manager_admin_only() {
     let non_admin_client = ContractTestClient::new(non_admin);
     let non_admin_executor = sdk::service_manager::ServiceManagerExecutor::new(
         non_admin_client.executor,
-        mirror_client.service_manager_executor.service_manager().addr.clone(),
+        mirror_client
+            .service_manager_executor
+            .service_manager()
+            .addr
+            .clone(),
     );
-    let non_admin_mirror_executor = sdk::contract_kinds::mirror::MirrorServiceManagerExecutor::new(non_admin_executor);
+    let non_admin_mirror_executor =
+        sdk::contract_kinds::mirror::MirrorServiceManagerExecutor::new(non_admin_executor);
 
     let result = non_admin_mirror_executor
         .mirror_exec(

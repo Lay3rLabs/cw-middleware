@@ -30,7 +30,9 @@ impl MirrorTestClient {
             mirror_service_manager::entry::instantiate,
             mirror_service_manager::entry::query,
         );
-        let service_manager_code_id = app.borrow_mut().store_code(Box::new(service_manager_contract));
+        let service_manager_code_id = app
+            .borrow_mut()
+            .store_code(Box::new(service_manager_contract));
         let service_manager = app
             .borrow_mut()
             .instantiate_contract(
@@ -51,7 +53,9 @@ impl MirrorTestClient {
             mirror_service_handler::entry::instantiate,
             mirror_service_handler::entry::query,
         );
-        let service_handler_code_id = app.borrow_mut().store_code(Box::new(service_handler_contract));
+        let service_handler_code_id = app
+            .borrow_mut()
+            .store_code(Box::new(service_handler_contract));
         let service_handler = app
             .borrow_mut()
             .instantiate_contract(
@@ -73,7 +77,9 @@ impl MirrorTestClient {
             mirror_stake_registry::entry::instantiate,
             mirror_stake_registry::entry::query,
         );
-        let stake_registry_code_id = app.borrow_mut().store_code(Box::new(stake_registry_contract));
+        let stake_registry_code_id = app
+            .borrow_mut()
+            .store_code(Box::new(stake_registry_contract));
         let stake_registry = app
             .borrow_mut()
             .instantiate_contract(
@@ -100,18 +106,16 @@ impl MirrorTestClient {
             client.querier.clone(),
             service_handler.clone(),
         ));
-        let service_handler_executor = MirrorServiceHandlerExecutor::new(ServiceHandlerExecutor::new(
-            client.executor.clone(),
-            service_handler,
-        ));
+        let service_handler_executor = MirrorServiceHandlerExecutor::new(
+            ServiceHandlerExecutor::new(client.executor.clone(), service_handler),
+        );
         let service_manager_querier = MirrorServiceManagerQuerier::new(ServiceManagerQuerier::new(
             client.querier.clone(),
             service_manager.clone(),
         ));
-        let service_manager_executor = MirrorServiceManagerExecutor::new(ServiceManagerExecutor::new(
-            client.executor.clone(),
-            service_manager,
-        ));
+        let service_manager_executor = MirrorServiceManagerExecutor::new(
+            ServiceManagerExecutor::new(client.executor.clone(), service_manager),
+        );
         let stake_registry_querier =
             MirrorStakeRegistryQuerier::new(client.querier.clone(), stake_registry.clone());
         let stake_registry_executor =
@@ -127,7 +131,10 @@ impl MirrorTestClient {
         }
     }
 
-    pub fn wrap_test(&self, trigger_simple: &crate::client::trigger::SimpleTriggerTestClient) -> ContractTestWrapper {
+    pub fn wrap_test(
+        &self,
+        trigger_simple: &crate::client::trigger::SimpleTriggerTestClient,
+    ) -> ContractTestWrapper {
         ContractTestWrapper {
             service_handler_querier: self.service_handler_querier.service_handler().clone(),
             service_handler_executor: self.service_handler_executor.service_handler().clone(),
