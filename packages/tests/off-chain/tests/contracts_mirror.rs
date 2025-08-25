@@ -15,13 +15,13 @@ async fn mirror_sanity() {
 }
 
 #[tokio::test]
-async fn test_mirror_operator_management() {
+async fn mirror_stake_registry_sanity() {
     tracing_tests_init();
 
     let client = ContractTestClient::new("admin");
     let mirror_client = MirrorTestClient::new(client);
 
-    mirror_stake_registry::run_mirror_operator_management_test(
+    mirror_stake_registry::run_mirror_sanity_tests(
         &mirror_client.stake_registry_executor,
         &mirror_client.stake_registry_querier,
     )
@@ -29,21 +29,7 @@ async fn test_mirror_operator_management() {
 }
 
 #[tokio::test]
-async fn test_mirror_batch_operator_management() {
-    tracing_tests_init();
-
-    let client = ContractTestClient::new("admin");
-    let mirror_client = MirrorTestClient::new(client);
-
-    mirror_stake_registry::run_mirror_batch_operator_management_test(
-        &mirror_client.stake_registry_executor,
-        &mirror_client.stake_registry_querier,
-    )
-    .await;
-}
-
-#[tokio::test]
-async fn test_mirror_abi_signature_validation() {
+async fn mirror_multi_signer_validation() {
     tracing_tests_init();
 
     let client = ContractTestClient::new("admin");
@@ -57,14 +43,14 @@ async fn test_mirror_abi_signature_validation() {
 }
 
 #[tokio::test]
-async fn test_mirror_abi_binary_compatibility() {
+async fn mirror_abi_binary_compatibility() {
     tracing_tests_init();
 
     mirror_stake_registry::run_mirror_abi_binary_compatibility_test().await;
 }
 
 #[tokio::test]
-async fn test_mirror_service_manager_admin_only() {
+async fn mirror_service_manager_admin_only() {
     tracing_tests_init();
 
     let client = ContractTestClient::new("admin");
@@ -90,7 +76,6 @@ async fn test_mirror_service_manager_admin_only() {
     assert!(result.is_ok(), "Admin should be able to set signing key");
 
     // Non-admin trying to set signing key should fail
-    // Create non-admin executor but use same service manager contract
     let non_admin_client = ContractTestClient::new("not_admin");
     let non_admin_executor = sdk::service_manager::ServiceManagerExecutor::new(
         non_admin_client.executor,
@@ -106,8 +91,8 @@ async fn test_mirror_service_manager_admin_only() {
     let result = non_admin_mirror_executor
         .mirror_exec(
             &mirror_api::service_manager::ExecuteMsg::SetSigningKey {
-                operator: operator.clone(),
-                signing_key: signing_key.clone(),
+                operator,
+                signing_key,
                 weight,
             },
             &[],
@@ -118,4 +103,18 @@ async fn test_mirror_service_manager_admin_only() {
         result.is_err(),
         "Non-admin should not be able to set signing key"
     );
+}
+
+#[tokio::test]
+async fn mirror_negative_scenarios() {
+    tracing_tests_init();
+
+    let client = ContractTestClient::new("admin");
+    let mirror_client = MirrorTestClient::new(client);
+
+    mirror_stake_registry::run_mirror_negative_test_scenarios(
+        &mirror_client.stake_registry_executor,
+        &mirror_client.stake_registry_querier,
+    )
+    .await;
 }
