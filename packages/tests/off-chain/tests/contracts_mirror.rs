@@ -1,4 +1,3 @@
-use cosmwasm_std::Addr;
 use off_chain_tests::client::{
     mirror::MirrorTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };
@@ -8,7 +7,7 @@ use shared_tests::{contracts_sanity, mirror_stake_registry, tracing_init::tracin
 async fn mirror_sanity() {
     tracing_tests_init();
 
-    let client = ContractTestClient::new(Addr::unchecked("admin"));
+    let client = ContractTestClient::new("admin");
     let mirror_client = MirrorTestClient::new(client.clone());
     let trigger_client = SimpleTriggerTestClient::new(client);
 
@@ -19,7 +18,7 @@ async fn mirror_sanity() {
 async fn test_mirror_operator_management() {
     tracing_tests_init();
 
-    let client = ContractTestClient::new(Addr::unchecked("admin"));
+    let client = ContractTestClient::new("admin");
     let mirror_client = MirrorTestClient::new(client);
 
     mirror_stake_registry::run_mirror_operator_management_test(
@@ -33,7 +32,7 @@ async fn test_mirror_operator_management() {
 async fn test_mirror_batch_operator_management() {
     tracing_tests_init();
 
-    let client = ContractTestClient::new(Addr::unchecked("admin"));
+    let client = ContractTestClient::new("admin");
     let mirror_client = MirrorTestClient::new(client);
 
     mirror_stake_registry::run_mirror_batch_operator_management_test(
@@ -47,7 +46,7 @@ async fn test_mirror_batch_operator_management() {
 async fn test_mirror_abi_signature_validation() {
     tracing_tests_init();
 
-    let client = ContractTestClient::new(Addr::unchecked("admin"));
+    let client = ContractTestClient::new("admin");
     let mirror_client = MirrorTestClient::new(client);
 
     mirror_stake_registry::run_mirror_abi_signature_validation_test(
@@ -68,10 +67,7 @@ async fn test_mirror_abi_binary_compatibility() {
 async fn test_mirror_service_manager_admin_only() {
     tracing_tests_init();
 
-    let admin = Addr::unchecked("admin");
-    let non_admin = Addr::unchecked("not_admin");
-
-    let client = ContractTestClient::new(admin.clone());
+    let client = ContractTestClient::new("admin");
     let mirror_client = MirrorTestClient::new(client.clone());
 
     // Admin should be able to set signing key
@@ -95,7 +91,7 @@ async fn test_mirror_service_manager_admin_only() {
 
     // Non-admin trying to set signing key should fail
     // Create non-admin executor but use same service manager contract
-    let non_admin_client = ContractTestClient::new(non_admin);
+    let non_admin_client = ContractTestClient::new("not_admin");
     let non_admin_executor = sdk::service_manager::ServiceManagerExecutor::new(
         non_admin_client.executor,
         mirror_client

@@ -30,7 +30,7 @@ impl MirrorTestClient {
             mirror_service_manager::entry::instantiate,
             mirror_service_manager::entry::query,
         )
-        .with_checksum(cosmwasm_std::Checksum::generate(admin.as_bytes()));
+        .with_checksum(cosmwasm_std::Checksum::generate(b"mirror-service-manager"));
 
         let service_manager_code_id = app
             .borrow_mut()

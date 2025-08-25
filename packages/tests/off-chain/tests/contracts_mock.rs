@@ -1,4 +1,3 @@
-use cosmwasm_std::Addr;
 use off_chain_tests::client::{
     mock::MockTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };
@@ -8,7 +7,7 @@ use shared_tests::{contracts_sanity, tracing_init::tracing_tests_init};
 async fn mock_sanity() {
     tracing_tests_init();
 
-    let client = ContractTestClient::new(Addr::unchecked("admin"));
+    let client = ContractTestClient::new("admin");
     let mock_client = MockTestClient::new(client.clone());
     let trigger_client = SimpleTriggerTestClient::new(client);
 
@@ -19,7 +18,7 @@ async fn mock_sanity() {
 async fn mock_handler_works() {
     tracing_tests_init();
 
-    let client = ContractTestClient::new(Addr::unchecked("admin"));
+    let client = ContractTestClient::new("admin");
     let mock_client = MockTestClient::new(client.clone());
 
     mock_client
