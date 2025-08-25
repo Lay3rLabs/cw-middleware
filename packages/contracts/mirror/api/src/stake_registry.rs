@@ -1,12 +1,10 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Binary, Uint256};
+use cosmwasm_std::{Addr, Binary, Uint256, WasmMsg};
 use layer_climb_address::AddrEvm;
 
-pub type InstantiateMsg = StakeRegistryInstantiateMsg;
-
 #[cw_serde]
-pub struct StakeRegistryInstantiateMsg {
-    pub service_manager: String,
+pub struct InstantiateMsg {
+    pub service_manager_instantiate: WasmMsg,
     pub threshold_weight: Uint256,
     pub quorum: QuorumConfig,
 }
@@ -60,7 +58,7 @@ pub enum QueryMsg {
     #[returns(Option<AddrEvm>)]
     GetLatestOperatorForSigningKey { signing_key: AddrEvm },
     /// Get service manager address
-    #[returns(String)]
+    #[returns(Addr)]
     GetServiceManager {},
     /// Get total weight
     #[returns(Uint256)]

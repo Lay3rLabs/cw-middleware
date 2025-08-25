@@ -24,28 +24,17 @@ impl MirrorTestClient {
         let app = client.app();
         let admin = client.admin();
 
-        // Service Manager
+        // Service Manager (store code for stake registry)
         let service_manager_contract = ContractWrapper::new(
             mirror_service_manager::entry::execute,
             mirror_service_manager::entry::instantiate,
             mirror_service_manager::entry::query,
-        );
+        )
+        .with_checksum(cosmwasm_std::Checksum::generate(admin.as_bytes()));
+
         let service_manager_code_id = app
             .borrow_mut()
             .store_code(Box::new(service_manager_contract));
-        let service_manager = app
-            .borrow_mut()
-            .instantiate_contract(
-                service_manager_code_id,
-                admin.clone(),
-                &mirror_api::service_manager::InstantiateMsg {
-                    admin: admin.to_string(),
-                },
-                &[],
-                "Mirror Service Manager",
-                None,
-            )
-            .unwrap();
 
         // Service Handler
         let service_handler_contract = ContractWrapper::new(
@@ -56,20 +45,6 @@ impl MirrorTestClient {
         let service_handler_code_id = app
             .borrow_mut()
             .store_code(Box::new(service_handler_contract));
-        let service_handler = app
-            .borrow_mut()
-            .instantiate_contract(
-                service_handler_code_id,
-                admin.clone(),
-                &mirror_api::service_handler::InstantiateMsg {
-                    admin: admin.to_string(),
-                    service_manager: service_manager.to_string(),
-                },
-                &[],
-                "Mirror Service Handler",
-                None,
-            )
-            .unwrap();
 
         // Stake Registry
         let stake_registry_contract = ContractWrapper::new(
@@ -80,13 +55,27 @@ impl MirrorTestClient {
         let stake_registry_code_id = app
             .borrow_mut()
             .store_code(Box::new(stake_registry_contract));
+
+        // Create service manager instantiate message for stake registry
+        let service_manager_instantiate_msg = cosmwasm_std::WasmMsg::Instantiate2 {
+            admin: Some(admin.to_string()),
+            code_id: service_manager_code_id,
+            msg: cosmwasm_std::to_json_binary(&mirror_api::service_manager::InstantiateMsg {
+                owner: admin.to_string(),
+            })
+            .unwrap(),
+            funds: vec![],
+            label: "Mirror Service Manager".to_string(),
+            salt: cosmwasm_std::Binary::from("service_manager".as_bytes()),
+        };
+
         let stake_registry = app
             .borrow_mut()
             .instantiate_contract(
                 stake_registry_code_id,
                 admin.clone(),
                 &mirror_api::stake_registry::InstantiateMsg {
-                    service_manager: service_manager.to_string(),
+                    service_manager_instantiate: service_manager_instantiate_msg,
                     threshold_weight: cosmwasm_std::Uint256::from(1000u128),
                     quorum: mirror_api::stake_registry::QuorumConfig {
                         strategies: vec![mirror_api::stake_registry::StrategyParams {
@@ -101,6 +90,31 @@ impl MirrorTestClient {
             )
             .unwrap();
 
+        // Get the service manager address from stake registry
+        let service_manager_addr: cosmwasm_std::Addr = app
+            .borrow()
+            .wrap()
+            .query_wasm_smart(
+                stake_registry.clone(),
+                &mirror_api::stake_registry::QueryMsg::GetServiceManager {},
+            )
+            .unwrap();
+
+        // Now instantiate the service handler with the service manager address
+        let service_handler = app
+            .borrow_mut()
+            .instantiate_contract(
+                service_handler_code_id,
+                admin.clone(),
+                &mirror_api::service_handler::InstantiateMsg {
+                    service_manager: service_manager_addr.to_string(),
+                },
+                &[],
+                "Mirror Service Handler",
+                None,
+            )
+            .unwrap();
+
         // Create service clients
         let service_handler_querier = MirrorServiceHandlerQuerier::new(ServiceHandlerQuerier::new(
             client.querier.clone(),
@@ -111,10 +125,10 @@ impl MirrorTestClient {
         );
         let service_manager_querier = MirrorServiceManagerQuerier::new(ServiceManagerQuerier::new(
             client.querier.clone(),
-            service_manager.clone(),
+            service_manager_addr.clone(),
         ));
         let service_manager_executor = MirrorServiceManagerExecutor::new(
-            ServiceManagerExecutor::new(client.executor.clone(), service_manager),
+            ServiceManagerExecutor::new(client.executor.clone(), service_manager_addr),
         );
         let stake_registry_querier =
             MirrorStakeRegistryQuerier::new(client.querier.clone(), stake_registry.clone());

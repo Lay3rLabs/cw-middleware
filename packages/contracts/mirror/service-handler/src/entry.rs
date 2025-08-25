@@ -25,13 +25,11 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    // Initialize admin - use unchecked for test compatibility
-    let admin = cosmwasm_std::Addr::unchecked(&msg.admin);
-    state::ADMIN.save(deps.storage, &admin)?;
-
-    // Initialize service manager - use unchecked for test compatibility
-    let service_manager = cosmwasm_std::Addr::unchecked(&msg.service_manager);
-
+    // Validate and save service manager
+    let service_manager = deps
+        .api
+        .addr_validate(&msg.service_manager)
+        .map_err(|_| cosmwasm_std::StdError::msg("Invalid service manager address"))?;
     state::SERVICE_MANAGER.save(deps.storage, &service_manager)?;
 
     Ok(Response::default())

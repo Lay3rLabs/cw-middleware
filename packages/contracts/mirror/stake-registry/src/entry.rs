@@ -1,7 +1,7 @@
 use alloy_primitives::{Signature, B256};
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
-    StdError, StdResult, Uint256,
+    entry_point, instantiate2_address, to_json_binary, Addr, Binary, CodeInfoResponse, Deps,
+    DepsMut, Env, MessageInfo, QueryResponse, Response, StdError, StdResult, Uint256, WasmMsg,
 };
 use cw2::set_contract_version;
 use ethabi::{decode, ParamType, Token};
@@ -23,20 +23,37 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[entry_point]
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let config = Config::new(msg.service_manager, msg.threshold_weight, msg.quorum);
-    CONFIG.save(deps.storage, &config)?;
+    match msg.service_manager_instantiate {
+        WasmMsg::Instantiate2 {
+            code_id, ref salt, ..
+        } => {
+            let canonical_creator = deps.api.addr_canonicalize(env.contract.address.as_str())?;
+            let CodeInfoResponse { checksum, .. } = deps.querier.query_wasm_code_info(code_id)?;
+            let service_manager =
+                instantiate2_address(checksum.as_slice(), &canonical_creator, salt)?;
+            let service_manager = deps.api.addr_humanize(&service_manager)?;
+
+            let config = Config::new(service_manager, msg.threshold_weight, msg.quorum);
+            CONFIG.save(deps.storage, &config)?;
+        }
+        _ => {
+            return Err(ContractError::Std(StdError::msg(
+                "Could not instantiate service manager",
+            )));
+        }
+    }
     OWNER.save(deps.storage, &info.sender)?;
     TOTAL_WEIGHT.save(deps.storage, &Uint256::zero())?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender))
+        .add_message(msg.service_manager_instantiate))
 }
 
 #[entry_point]
@@ -95,8 +112,9 @@ fn execute_set_operator_details(
         return Err(ContractError::Unauthorized {});
     }
 
+    let snapshot_height = env.block.height;
     let (mut events, old_total_weight, new_total_weight) =
-        set_operator_details(deps, &env, &operator, &signing_key, weight)?;
+        set_operator_details_at(deps, snapshot_height, &operator, &signing_key, weight)?;
 
     // Emit TotalWeightUpdated event
     let total_weight_event = TotalWeightUpdatedEvent {
@@ -134,9 +152,9 @@ fn execute_batch_set_operator_details(
     let initial_total_weight = TOTAL_WEIGHT.load(deps.storage)?;
 
     for i in 0..operators.len() {
-        let (events, _old_total, _new_total) = set_operator_details(
+        let (events, _old_total, _new_total) = set_operator_details_at(
             deps.branch(),
-            &env,
+            env.block.height,
             &operators[i],
             &signing_keys[i],
             weights[i],
@@ -158,9 +176,9 @@ fn execute_batch_set_operator_details(
         .add_attribute("count", operators.len().to_string()))
 }
 
-fn set_operator_details(
+fn set_operator_details_at(
     deps: DepsMut,
-    env: &Env,
+    snapshot_height: u64,
     operator: &AddrEvm,
     signing_key: &AddrEvm,
     weight: Uint256,
@@ -172,12 +190,7 @@ fn set_operator_details(
         .unwrap_or_default();
 
     // Update operator weight with block height
-    OPERATOR_WEIGHTS.save(
-        deps.storage,
-        operator_key.clone(),
-        &weight,
-        env.block.height,
-    )?;
+    OPERATOR_WEIGHTS.save(deps.storage, operator_key.clone(), &weight, snapshot_height)?;
 
     // Update total weight
     let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
@@ -193,7 +206,7 @@ fn set_operator_details(
         // Remove old signing key mapping if it exists
         if let Some(old_key) = current_signing_key.clone() {
             let old_key_str = old_key.to_string();
-            SIGNING_KEY_TO_OPERATOR.remove(deps.storage, old_key_str, env.block.height)?;
+            SIGNING_KEY_TO_OPERATOR.remove(deps.storage, old_key_str, snapshot_height)?;
         }
 
         // Set new signing key mapping
@@ -202,14 +215,14 @@ fn set_operator_details(
             deps.storage,
             operator_key.clone(),
             signing_key,
-            env.block.height,
+            snapshot_height,
         )?;
-        SIGNING_KEY_TO_OPERATOR.save(deps.storage, signing_key_str, operator, env.block.height)?;
+        SIGNING_KEY_TO_OPERATOR.save(deps.storage, signing_key_str, operator, snapshot_height)?;
 
         // Emit SigningKeyUpdate event
         let signing_key_event = SigningKeyUpdateEvent {
             operator: operator.clone(),
-            block_number: env.block.height,
+            block_number: snapshot_height,
             new_signing_key: signing_key.clone(),
             old_signing_key: current_signing_key.clone(),
         };
@@ -243,20 +256,24 @@ fn query_validate_signature(
     let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
     let mut voting_power_signed = Uint256::zero();
 
+    // Basic sanity checks to avoid panics and invalid data
+    if decoded.operators.is_empty() || decoded.operators.len() != decoded.signatures.len() {
+        return Ok(ValidationResult {
+            is_valid: false,
+            total_voting_power: total_weight,
+            voting_power_signed: Uint256::zero(),
+            reference_block: decoded.reference_block,
+        });
+    }
+
+    // Enforce unique signers to prevent double counting
+    use std::collections::HashSet;
+    let mut seen_signers: HashSet<[u8; 20]> = HashSet::new();
+
     // Verify each signature (operators are actually signing keys in the decoded data)
     for (i, signing_key) in decoded.operators.iter().enumerate() {
-        // Get operator for this signing key
-        let signing_key_str = signing_key.to_string();
-        let operator = SIGNING_KEY_TO_OPERATOR
-            .may_load(deps.storage, signing_key_str)?
-            .ok_or_else(|| StdError::msg("Signer not registered"))?;
-
-        // Check if operator is registered
-        let operator_key = operator.to_string();
-        let is_registered = OPERATOR_REGISTERED
-            .may_load(deps.storage, operator_key.clone())?
-            .unwrap_or(false);
-        if !is_registered {
+        // Reject zero address signers
+        if signing_key.as_bytes().iter().all(|b| *b == 0) {
             return Ok(ValidationResult {
                 is_valid: false,
                 total_voting_power: total_weight,
@@ -265,7 +282,35 @@ fn query_validate_signature(
             });
         }
 
-        // Verify signature using the signing key
+        // Reject duplicate signer entries
+        let signer_arr: [u8; 20] = signing_key.as_bytes();
+        if !seen_signers.insert(signer_arr) {
+            return Ok(ValidationResult {
+                is_valid: false,
+                total_voting_power: total_weight,
+                voting_power_signed: Uint256::zero(),
+                reference_block: decoded.reference_block,
+            });
+        }
+
+        // Get operator for this signing key as of reference_block (snapshot)
+        let signing_key_str = signing_key.to_string();
+        // Prefer snapshot at reference block; fall back to latest if no snapshot exists
+        let operator = match SIGNING_KEY_TO_OPERATOR.may_load_at_height(
+            deps.storage,
+            signing_key_str.clone(),
+            decoded.reference_block as u64,
+        )? {
+            Some(op) => op,
+            None => SIGNING_KEY_TO_OPERATOR
+                .may_load(deps.storage, signing_key_str)?
+                .ok_or_else(|| StdError::msg("Signer not registered"))?,
+        };
+
+        // Determine registration at reference block by non-zero weight
+        let operator_key = operator.to_string();
+
+        // Verify signature using the signing key (safe index: len equality checked above)
         let signature = &decoded.signatures[i];
         if !is_valid_signature(&digest, signature, signing_key)? {
             return Ok(ValidationResult {
@@ -276,10 +321,28 @@ fn query_validate_signature(
             });
         }
 
-        // Add operator's weight to voting power
-        let operator_weight = OPERATOR_WEIGHTS
-            .may_load(deps.storage, operator_key)?
+        // Add operator's weight to voting power (snapshot at reference block)
+        let operator_weight_snapshot = OPERATOR_WEIGHTS.may_load_at_height(
+            deps.storage,
+            operator_key.clone(),
+            decoded.reference_block as u64,
+        )?;
+        let operator_weight = operator_weight_snapshot
+            .or_else(|| {
+                OPERATOR_WEIGHTS
+                    .may_load(deps.storage, operator_key)
+                    .ok()
+                    .flatten()
+            })
             .unwrap_or_default();
+        if operator_weight.is_zero() {
+            return Ok(ValidationResult {
+                is_valid: false,
+                total_voting_power: total_weight,
+                voting_power_signed: Uint256::zero(),
+                reference_block: decoded.reference_block,
+            });
+        }
         voting_power_signed += operator_weight;
     }
 
@@ -429,7 +492,7 @@ fn query_latest_operator_for_signing_key(
     SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)
 }
 
-fn query_service_manager(deps: Deps) -> StdResult<String> {
+fn query_service_manager(deps: Deps) -> StdResult<Addr> {
     let config = CONFIG.load(deps.storage)?;
     Ok(config.service_manager)
 }

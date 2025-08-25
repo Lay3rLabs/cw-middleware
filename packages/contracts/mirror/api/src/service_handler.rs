@@ -6,7 +6,6 @@ use wavs_types::contracts::cosmwasm::service_handler::{
 
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub admin: String,
     pub service_manager: String,
 }
 

@@ -104,12 +104,16 @@ layer-climb-cli = "0.7.3"
 
 # Cosmos-specific dependencies
 cosmwasm-schema = "3.0.1"
-cosmwasm-std = "3.0.1"
+cosmwasm-std = { version = "3.0.1", features = ["cosmwasm_1_2"] }
 cosmwasm-crypto = "3.0.1"
 cw-storage-plus = "3.0.0"
 cw2 = "3.0.0"
-cw-ownable = "2.1.0"
-cw-multi-test = { version = "3.0.1", features = ["staking", "stargate"] }
+cw-ownable = "3.0.1"
+cw-multi-test = { version = "3.0.1", features = [
+  "staking",
+  "stargate",
+  "cosmwasm_1_2",
+] }
 
 # WASI
 wstd = "0.5.3"
@@ -137,3 +141,4 @@ tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 [patch.crates-io]
 # see https://github.com/CosmWasm/cosmwasm/issues/2525
 cosmwasm-crypto = { git = "https://github.com/CosmWasm/cosmwasm", rev = "72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab" }
+cw-ownable = { git = "https://github.com/permissionlessweb/cw-plus-plus", rev = "8a4c87ee0ed3124a73443c5ab57f0586e72e714b" }

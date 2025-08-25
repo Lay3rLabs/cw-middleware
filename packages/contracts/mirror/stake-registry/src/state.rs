@@ -34,13 +34,13 @@ pub const TOTAL_WEIGHT: Item<Uint256> = Item::new("total_weight");
 
 #[cw_serde]
 pub struct Config {
-    pub service_manager: String,
+    pub service_manager: Addr,
     pub threshold_weight: Uint256,
     pub quorum: QuorumConfig,
 }
 
 impl Config {
-    pub fn new(service_manager: String, threshold_weight: Uint256, quorum: QuorumConfig) -> Self {
+    pub fn new(service_manager: Addr, threshold_weight: Uint256, quorum: QuorumConfig) -> Self {
         Self {
             service_manager,
             threshold_weight,

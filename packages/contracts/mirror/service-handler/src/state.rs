@@ -4,7 +4,6 @@ use mirror_api::message_with_id::MessageWithId;
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 pub const SERVICE_MANAGER: Item<Addr> = Item::new("service-manager");
-pub const ADMIN: Item<Addr> = Item::new("admin");
 
 pub const TRIGGER_MESSAGE: Map<Uint64, String> = Map::new("trigger-message");
 pub const SIGNATURE_DATA: Map<Uint64, WavsSignatureData> = Map::new("signature-data");
