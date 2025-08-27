@@ -21,6 +21,13 @@ impl TestClient {
                     .await
                     .unwrap();
             }
+            TestService::Mirror(client) => {
+                client
+                    .service_manager_executor
+                    .set_signing_key(operator_addr, signing_key_addr, 1)
+                    .await
+                    .unwrap();
+            }
             TestService::Ecdsa(_) => {
                 tracing::warn!(
                     "TODO - add weight for avs-key {} on ecdsa contract",
