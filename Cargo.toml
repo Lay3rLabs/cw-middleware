@@ -56,7 +56,7 @@ mirror-stake-registry = { path = "packages/contracts/mirror/stake-registry" }
 shared-tests = { path = "packages/tests/shared" }
 
 # WAVS
-wavs-types = { version = "0.5.3", default-features = false, features = [
+wavs-types = { version = "0.5.5", default-features = false, features = [
   "cosmwasm",
 ] }
 wavs-wasi-utils = "0.5.1"

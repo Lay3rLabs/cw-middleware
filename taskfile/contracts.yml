@@ -121,7 +121,7 @@ tasks:
       - echo "Building contract {{.CONTRACT_NAME}} at {{.CONTRACT_PATH}}"
       - |
         {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
-      - rm -f "{{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}" || true
+      - mkdir -p "./artifacts"
       - >
         {{.DOCKER_SUDO}} docker run --rm
         -v "{{.REPO_ROOT}}:/code"
