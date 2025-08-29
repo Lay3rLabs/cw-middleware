@@ -8,6 +8,7 @@ license = "Apache-2.0"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+getrandom = { workspace = true }
 mirror-api = { workspace = true }
 wavs-types = { workspace = true }
 cosmwasm-std = { workspace = true }
