@@ -1478,21 +1478,25 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-core"
+version = "3.0.1"
+source = "git+https://github.com/CosmWasm/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab#72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab"
+
+[[package]]
+name = "cosmwasm-core"
 version = "3.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b0a718b13ffe224e32a8c1f68527354868f47d6cc84afe8c66cb05fbb3ced6e"
 
 [[package]]
 name = "cosmwasm-crypto"
-version = "3.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c08dd7585b5c48fbcb947ada7a3fb49465fb735481ed295b54ca98add6dc17f"
+version = "3.0.1"
+source = "git+https://github.com/CosmWasm/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab#72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab"
 dependencies = [
  "ark-bls12-381",
  "ark-ec",
  "ark-ff 0.5.0",
  "ark-serialize 0.5.0",
- "cosmwasm-core",
+ "cosmwasm-core 3.0.1",
  "curve25519-dalek",
  "digest 0.10.7",
  "ecdsa",
@@ -1545,14 +1549,14 @@ dependencies = [
 
 [[package]]
 name = "cosmwasm-std"
-version = "3.0.2"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4881104f54871bcea6f30757bee13b7f09c0998d1b0de133cce5a52336a2ada"
+checksum = "c145f354e0dac3734bf62872ab8969e03bbd36b6c67e189cc7c15a8a47d19aab"
 dependencies = [
  "base64 0.22.1",
  "bech32",
  "bnum",
- "cosmwasm-core",
+ "cosmwasm-core 3.0.2",
  "cosmwasm-crypto",
  "cosmwasm-derive",
  "cw-schema",
@@ -1893,6 +1897,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e7c1832837b905bbfb5101e07cc24c8deddf52f93225eee6ead5f4d63d53ddcb"
 dependencies = [
  "const-oid",
+ "pem-rfc7468",
  "zeroize",
 ]
 
@@ -2095,16 +2100,17 @@ dependencies = [
 
 [[package]]
 name = "ed25519-zebra"
-version = "4.0.3"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d9ce6874da5d4415896cd45ffbc4d1cfc0c4f9c079427bd870742c30f2f65a9"
+checksum = "0017d969298eec91e3db7a2985a8cab4df6341d86e6f3a6f5878b13fb7846bc9"
 dependencies = [
  "curve25519-dalek",
  "ed25519",
- "hashbrown 0.14.5",
- "hex",
+ "hashbrown 0.15.5",
+ "pkcs8",
  "rand_core 0.6.4",
  "sha2 0.10.9",
+ "subtle",
  "zeroize",
 ]
 
@@ -2565,10 +2571,6 @@ name = "hashbrown"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
-dependencies = [
- "ahash",
- "allocator-api2",
-]
 
 [[package]]
 name = "hashbrown"
@@ -3923,6 +3925,15 @@ name = "peg-runtime"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "132dca9b868d927b35b5dd728167b2dee150eb1ad686008fc71ccb298b776fca"
+
+[[package]]
+name = "pem-rfc7468"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "88b39c9bfcfc231068454382784bb460aae594343fb030d46e9f50a645418412"
+dependencies = [
+ "base64ct",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -6768,8 +6779,3 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
-
-[[patch.unused]]
-name = "cosmwasm-crypto"
-version = "3.0.1"
-source = "git+https://github.com/CosmWasm/cosmwasm?rev=72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab#72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab"
