@@ -2,6 +2,7 @@ use cosmwasm_std::{Addr, Uint256};
 use cw_storage_plus::{Item, Map};
 use layer_climb_address::AddrEvm;
 
+pub const ADMIN: Item<Addr> = Item::new("admin");
 pub const SERVICE_URI: Item<String> = Item::new("service-uri");
 pub const STAKE_REGISTRY: Item<Addr> = Item::new("stake-registry");
 pub const OPERATOR_SIGNING_KEY_ADDRS: Map<&AddrEvm, AddrEvm> =

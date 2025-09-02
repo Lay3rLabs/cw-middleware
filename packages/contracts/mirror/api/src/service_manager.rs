@@ -1,10 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::Uint256;
-use cw_ownable::{cw_ownable_execute, cw_ownable_query};
+use cosmwasm_std::{Addr, Uint256};
 use layer_climb_address::AddrEvm;
-use wavs_types::contracts::cosmwasm::service_manager::{
-    ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
-};
+use wavs_types::contracts::cosmwasm::service_manager::ServiceManagerExecuteMessages;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -22,26 +19,32 @@ pub enum ExecuteMsg {
     },
     #[serde(untagged)]
     Wavs(ServiceManagerExecuteMessages),
-    #[serde(untagged)]
-    Ownable(OwnableExecuteMsg),
 }
 
 #[cw_serde]
 #[derive(QueryResponses)]
 #[schemaifier(mute_warnings)]
-#[query_responses(nested)]
 pub enum QueryMsg {
-    #[serde(untagged)]
-    Wavs(ServiceManagerQueryMessages),
-    #[serde(untagged)]
-    Ownable(OwnableQueryMsg),
+    /// Get the current admin address
+    #[returns(Addr)]
+    Admin {},
+    /// WAVS operator weight query
+    #[returns(cosmwasm_std::Uint256)]
+    WavsOperatorWeight {
+        operator_address: layer_climb_address::AddrEvm,
+    },
+    /// WAVS signature validation
+    #[returns(wavs_types::contracts::cosmwasm::service_manager::WavsValidateResult)]
+    WavsValidate {
+        envelope: wavs_types::contracts::cosmwasm::service_handler::WavsEnvelope,
+        signature_data: wavs_types::contracts::cosmwasm::service_handler::WavsSignatureData,
+    },
+    /// WAVS service URI query
+    #[returns(String)]
+    WavsServiceUri {},
+    /// WAVS latest operator for signing key
+    #[returns(Option<layer_climb_address::AddrEvm>)]
+    WavsLatestOperatorForSigningKey {
+        signing_key_addr: layer_climb_address::AddrEvm,
+    },
 }
-
-#[cw_ownable_query]
-#[cw_serde]
-#[derive(QueryResponses)]
-pub enum OwnableQueryMsg {}
-
-#[cw_ownable_execute]
-#[cw_serde]
-pub enum OwnableExecuteMsg {}
