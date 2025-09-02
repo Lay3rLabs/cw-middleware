@@ -90,24 +90,22 @@ impl MirrorTestClient {
             test_client.querier.clone(),
             service_handler.clone().try_into().unwrap(),
         ));
-        let service_handler_executor =
-            MirrorServiceHandlerExecutor::new(ServiceHandlerExecutor::new(
-                test_client.executor.clone(),
-                service_handler.try_into().unwrap(),
-            ));
+        let service_handler_executor = MirrorServiceHandlerExecutor::new(
+            ServiceHandlerExecutor::new(client.clone().into(), service_handler.try_into().unwrap()),
+        );
         let service_manager_querier = MirrorServiceManagerQuerier::new(ServiceManagerQuerier::new(
             test_client.querier.clone(),
             service_manager_addr.clone(),
         ));
         let service_manager_executor = MirrorServiceManagerExecutor::new(
-            ServiceManagerExecutor::new(test_client.executor.clone(), service_manager_addr),
+            ServiceManagerExecutor::new(client.clone().into(), service_manager_addr),
         );
         let stake_registry_querier = MirrorStakeRegistryQuerier::new(
             test_client.querier.clone(),
             stake_registry.clone().try_into().unwrap(),
         );
         let stake_registry_executor = MirrorStakeRegistryExecutor::new(
-            test_client.executor.clone(),
+            client.clone().into(),
             stake_registry.try_into().unwrap(),
         );
 
