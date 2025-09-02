@@ -30,5 +30,4 @@ tracing = { workspace = true }
 anyhow = { workspace = true }
 serde = { workspace = true }
 async-trait = { workspace = true }
-ethabi = "18.0"
 layer-climb-address = { workspace = true }

@@ -1,7 +1,9 @@
-use alloy_primitives::{keccak256 as alloy_keccak256, Signature as AlloySignature, B256};
+use alloy_primitives::{keccak256 as alloy_keccak256, B256};
+use alloy_sol_types::{SolType, SolValue};
 use cosmwasm_std::{Binary, Uint256};
-use ethabi::{decode, encode, ParamType, Token};
-use k256::ecdsa::{signature::hazmat::PrehashSigner, Signature, SigningKey};
+use k256::ecdsa::{
+    signature::hazmat::PrehashSigner, RecoveryId, Signature, SigningKey, VerifyingKey,
+};
 use layer_climb_address::AddrEvm;
 use rand::thread_rng;
 use sdk::contract_kinds::mirror::{MirrorStakeRegistryExecutor, MirrorStakeRegistryQuerier};
@@ -87,15 +89,15 @@ pub async fn run_mirror_sanity_tests(
     let signature = sign_message_hash(&test_signing_key, digest.as_slice());
 
     // Create ABI-encoded signature data
-    let signers = vec![Token::Address(test_signing_addr.as_bytes().into())];
-    let signatures = vec![Token::Bytes(signature)];
-    let reference_block = Token::Uint(12345u32.into());
+    use alloy_sol_types::sol_data::*;
+    type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
 
-    let encoded_data = encode(&[
-        Token::Array(signers),
-        Token::Array(signatures),
-        reference_block,
-    ]);
+    let signers = vec![alloy_primitives::Address::from_slice(
+        &test_signing_addr.as_bytes(),
+    )];
+    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(&signature)];
+    let tuple_data = (signers, signatures, 12345u32);
+    let encoded_data = SignatureDataType::abi_encode(&tuple_data);
 
     // Test signature validation
     let result = querier
@@ -148,13 +150,27 @@ fn sign_message_hash(signing_key: &SigningKey, message_hash: &[u8]) -> Vec<u8> {
         signature_bytes.truncate(64);
         signature_bytes.push(recovery_id);
 
-        // Test if this recovery ID works with alloy (same as contract will use)
+        // Test if this recovery ID works with k256 (same as contract will use)
         if let Ok(hash) = B256::try_from(message_hash) {
-            if let Ok(alloy_sig) = AlloySignature::try_from(signature_bytes.as_slice()) {
-                if let Ok(recovered_addr) = alloy_sig.recover_address_from_prehash(&hash) {
-                    let expected_addr = derive_eth_address_from_signing_key(signing_key);
-                    if recovered_addr.as_slice() == expected_addr.as_bytes() {
-                        return signature_bytes;
+            // Extract r, s from signature_bytes
+            let r_bytes: [u8; 32] = signature_bytes[0..32].try_into().unwrap();
+            let s_bytes: [u8; 32] = signature_bytes[32..64].try_into().unwrap();
+
+            if let Ok(k256_sig) = k256::ecdsa::Signature::from_scalars(r_bytes, s_bytes) {
+                if let Ok(recovery_id) = RecoveryId::try_from(recovery_id) {
+                    if let Ok(verifying_key) =
+                        VerifyingKey::recover_from_prehash(hash.as_slice(), &k256_sig, recovery_id)
+                    {
+                        // Convert verifying key to Ethereum address
+                        let public_key_bytes = verifying_key.to_encoded_point(false);
+                        let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip 0x04 prefix
+                        let addr_hash = alloy_keccak256(public_key_uncompressed);
+                        let recovered_address = &addr_hash[12..]; // Last 20 bytes
+
+                        let expected_addr = derive_eth_address_from_signing_key(signing_key);
+                        if recovered_address == expected_addr.as_bytes() {
+                            return signature_bytes;
+                        }
                     }
                 }
             }
@@ -205,18 +221,16 @@ pub async fn run_mirror_abi_signature_validation_test(
 
     // Create ABI-encoded signature data
     let signers = vec![
-        Token::Address(signing_address1.as_bytes().into()),
-        Token::Address(signing_address2.as_bytes().into()),
+        alloy_primitives::Address::from_slice(&signing_address1.as_bytes()),
+        alloy_primitives::Address::from_slice(&signing_address2.as_bytes()),
     ];
 
-    let signatures = vec![Token::Bytes(sig1), Token::Bytes(sig2)];
-    let reference_block = Token::Uint(12345u32.into());
-
-    let encoded_data = encode(&[
-        Token::Array(signers),
-        Token::Array(signatures),
-        reference_block,
-    ]);
+    let signatures = vec![
+        alloy_primitives::Bytes::copy_from_slice(&sig1),
+        alloy_primitives::Bytes::copy_from_slice(&sig2),
+    ];
+    let tuple_data = (signers, signatures, 12345u32);
+    let encoded_data = (tuple_data).abi_encode();
 
     // Test signature validation
     let digest_binary = Binary::from(digest.to_vec());
@@ -249,70 +263,45 @@ pub async fn run_mirror_abi_binary_compatibility_test() {
 
     let original_block = 99999u32;
 
-    // Encode using ethabi (same as Solidity)
-    let tokens = vec![
-        Token::Array(
-            original_operators
-                .iter()
-                .map(|addr| Token::Address((*addr).into()))
-                .collect(),
-        ),
-        Token::Array(
-            original_signatures
-                .iter()
-                .map(|sig| Token::Bytes(sig.clone()))
-                .collect(),
-        ),
-        Token::Uint(original_block.into()),
-    ];
+    // Encode using alloy-sol-types (same as Solidity)
+    let signers: Vec<alloy_primitives::Address> = original_operators
+        .iter()
+        .map(|op| alloy_primitives::Address::from_slice(op))
+        .collect();
 
-    let encoded = encode(&tokens);
+    let signatures: Vec<alloy_primitives::Bytes> = original_signatures
+        .iter()
+        .map(|sig| alloy_primitives::Bytes::copy_from_slice(sig))
+        .collect();
+
+    let tuple_data = (signers.clone(), signatures.clone(), original_block);
+    let encoded = (tuple_data).abi_encode();
 
     // Decode it back
-    let param_types = vec![
-        ParamType::Array(Box::new(ParamType::Address)),
-        ParamType::Array(Box::new(ParamType::Bytes)),
-        ParamType::Uint(32),
-    ];
-
-    let decoded = decode(&param_types, &encoded).unwrap();
+    type SignatureDataType = (
+        alloy_sol_types::sol_data::Array<alloy_sol_types::sol_data::Address>,
+        alloy_sol_types::sol_data::Array<alloy_sol_types::sol_data::Bytes>,
+        alloy_sol_types::sol_data::Uint<32>,
+    );
+    let (decoded_addrs, decoded_sigs, decoded_block): (
+        Vec<alloy_primitives::Address>,
+        Vec<alloy_primitives::Bytes>,
+        u32,
+    ) = SignatureDataType::abi_decode(&encoded).unwrap();
 
     // Verify round-trip works
-    assert_eq!(decoded.len(), 3);
+    assert_eq!(decoded_addrs.len(), 3);
+    assert_eq!(decoded_sigs.len(), 3);
+    assert_eq!(decoded_block, original_block);
 
     // Check operators
-    if let Token::Array(addrs) = &decoded[0] {
-        assert_eq!(addrs.len(), 3);
-        for (i, addr) in addrs.iter().enumerate() {
-            if let Token::Address(addr_bytes) = addr {
-                assert_eq!(addr_bytes.as_bytes(), &original_operators[i]);
-            } else {
-                panic!("Expected address token");
-            }
-        }
-    } else {
-        panic!("Expected address array");
+    for (i, addr) in decoded_addrs.iter().enumerate() {
+        assert_eq!(addr.as_slice(), &original_operators[i]);
     }
 
     // Check signatures
-    if let Token::Array(sigs) = &decoded[1] {
-        assert_eq!(sigs.len(), 3);
-        for (i, sig) in sigs.iter().enumerate() {
-            if let Token::Bytes(sig_bytes) = sig {
-                assert_eq!(sig_bytes, &original_signatures[i]);
-            } else {
-                panic!("Expected bytes token");
-            }
-        }
-    } else {
-        panic!("Expected signature array");
-    }
-
-    // Check block number
-    if let Token::Uint(block_num) = &decoded[2] {
-        assert_eq!(block_num.as_u32(), original_block);
-    } else {
-        panic!("Expected uint32");
+    for (i, sig) in decoded_sigs.iter().enumerate() {
+        assert_eq!(sig.as_ref(), &original_signatures[i]);
     }
 }
 
@@ -403,15 +392,12 @@ pub async fn run_mirror_negative_test_scenarios(
     let wrong_digest = create_eip191_hash(wrong_message);
     let wrong_sig = sign_message_hash(&valid_key, wrong_digest.as_slice());
 
-    let signers = vec![Token::Address(valid_addr.as_bytes().into())];
-    let signatures = vec![Token::Bytes(wrong_sig)];
-    let reference_block = Token::Uint(54321u32.into());
-
-    let encoded_data = encode(&[
-        Token::Array(signers),
-        Token::Array(signatures),
-        reference_block,
-    ]);
+    let signers = vec![alloy_primitives::Address::from_slice(
+        &valid_addr.as_bytes(),
+    )];
+    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(&wrong_sig)];
+    let tuple_data = (signers, signatures, 54321u32);
+    let encoded_data = (tuple_data).abi_encode();
 
     let original_message = b"original message";
     let original_digest = create_eip191_hash(original_message);
@@ -425,5 +411,50 @@ pub async fn run_mirror_negative_test_scenarios(
     // This should either fail or return is_valid: false
     if let Ok(validation_result) = result {
         assert!(!validation_result.is_valid, "Should be invalid signature");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_signature_recovery_roundtrip() {
+        let mut rng = thread_rng();
+        let signing_key = SigningKey::random(&mut rng);
+        let test_message = b"test signature recovery";
+        let digest = create_eip191_hash(test_message);
+        
+        // Generate signature
+        let signature = sign_message_hash(&signing_key, digest.as_slice());
+        assert_eq!(signature.len(), 65);
+        assert!(!signature.iter().all(|&b| b == 0));
+        
+        // Test the round-trip: sign then recover
+        let expected_address = derive_eth_address_from_signing_key(&signing_key);
+        
+        // Extract components from signature
+        let r_bytes: [u8; 32] = signature[0..32].try_into().unwrap();
+        let s_bytes: [u8; 32] = signature[32..64].try_into().unwrap();
+        let recovery_id = signature[64];
+        
+        // Recover using the same method as the contract
+        let k256_sig = k256::ecdsa::Signature::from_scalars(r_bytes, s_bytes).unwrap();
+        let recovery_id = RecoveryId::try_from(recovery_id).unwrap();
+        let verifying_key = VerifyingKey::recover_from_prehash(digest.as_slice(), &k256_sig, recovery_id).unwrap();
+        
+        // Convert to Ethereum address
+        let public_key_bytes = verifying_key.to_encoded_point(false);
+        let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip 0x04 prefix
+        let addr_hash = alloy_keccak256(public_key_uncompressed);
+        let recovered_address = &addr_hash[12..]; // Last 20 bytes
+        
+        // Should match the expected address
+        assert_eq!(recovered_address, expected_address.as_bytes(), 
+                  "Recovered address should match expected address");
+        
+        println!("✅ Signature recovery test passed!");
+        println!("Expected:  {}", hex::encode(expected_address.as_bytes()));
+        println!("Recovered: {}", hex::encode(recovered_address));
     }
 }

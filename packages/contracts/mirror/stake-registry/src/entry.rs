@@ -1,10 +1,11 @@
-use alloy_primitives::{Signature, B256};
+use alloy_primitives::{keccak256, B256};
+use alloy_sol_types::SolType;
 use cosmwasm_std::{
     entry_point, instantiate2_address, to_json_binary, Addr, Binary, CodeInfoResponse, Deps,
     DepsMut, Env, MessageInfo, QueryResponse, Response, StdError, StdResult, Uint256, WasmMsg,
 };
 use cw2::set_contract_version;
-use ethabi::{decode, ParamType, Token};
+use k256::ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey};
 use layer_climb_address::AddrEvm;
 
 use crate::error::ContractError;
@@ -360,68 +361,21 @@ fn query_validate_signature(
 
 pub fn decode_signature_data(data: &Binary) -> Result<SignatureData, ContractError> {
     // Decode ABI-encoded data: (address[] operators, bytes[] signatures, uint32 referenceBlock)
-    let param_types = vec![
-        ParamType::Array(Box::new(ParamType::Address)),
-        ParamType::Array(Box::new(ParamType::Bytes)),
-        ParamType::Uint(32),
-    ];
+    use alloy_sol_types::sol_data::*;
+    type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
 
-    let tokens = decode(&param_types, data.as_slice())
-        .map_err(|_| ContractError::InvalidSignatureDataFormat {})?;
+    let (addresses, signatures_bytes, reference_block) =
+        SignatureDataType::abi_decode(data.as_slice())
+            .map_err(|_| ContractError::InvalidSignatureDataFormat {})?;
 
-    if tokens.len() != 3 {
-        return Err(ContractError::InvalidSignatureDataFormat {});
-    }
+    // Convert addresses to AddrEvm
+    let operators: Vec<AddrEvm> = addresses.into_iter().map(AddrEvm::from).collect();
 
-    // Extract operators
-    let operators = match &tokens[0] {
-        Token::Array(addresses) => {
-            let mut ops = Vec::new();
-            for addr in addresses {
-                if let Token::Address(addr_bytes) = addr {
-                    // Convert the 20-byte address to AddrEvm
-                    let addr_array: [u8; 20] = addr_bytes
-                        .as_bytes()
-                        .try_into()
-                        .map_err(|_| ContractError::InvalidSignatureDataFormat {})?;
-                    let addr_evm = AddrEvm::from(alloy_primitives::Address::from(addr_array));
-                    ops.push(addr_evm);
-                } else {
-                    return Err(ContractError::InvalidSignatureDataFormat {});
-                }
-            }
-            ops
-        }
-        _ => return Err(ContractError::InvalidSignatureDataFormat {}),
-    };
-
-    // Extract signatures
-    let signatures = match &tokens[1] {
-        Token::Array(signatures) => {
-            let mut sigs = Vec::new();
-            for sig in signatures {
-                if let Token::Bytes(sig_bytes) = sig {
-                    sigs.push(Binary::from(sig_bytes.clone()));
-                } else {
-                    return Err(ContractError::InvalidSignatureDataFormat {});
-                }
-            }
-            sigs
-        }
-        _ => return Err(ContractError::InvalidSignatureDataFormat {}),
-    };
-
-    // Extract reference block
-    let reference_block = match &tokens[2] {
-        Token::Uint(block_num) => {
-            let block_u64 = block_num.low_u64();
-            if block_u64 > u32::MAX as u64 {
-                return Err(ContractError::InvalidSignatureDataFormat {});
-            }
-            block_u64 as u32
-        }
-        _ => return Err(ContractError::InvalidSignatureDataFormat {}),
-    };
+    // Convert bytes to Binary
+    let signatures: Vec<Binary> = signatures_bytes
+        .into_iter()
+        .map(|bytes| Binary::from(bytes.as_ref()))
+        .collect();
 
     Ok(SignatureData {
         operators,
@@ -441,35 +395,46 @@ fn is_valid_signature(
         return Ok(false);
     }
 
-    // Convert to format expected by alloy
-    let hash = match B256::try_from(digest.as_slice()) {
-        Ok(h) => h,
-        Err(_) => return Ok(false),
-    };
-
-    let alloy_sig = match Signature::try_from(signature.as_slice()) {
-        Ok(sig) => sig,
-        Err(_) => return Ok(false),
-    };
-
-    // Perform ECDSA recovery to get the recovered address
-    let recovered_addr = match alloy_sig.recover_address_from_prehash(&hash) {
-        Ok(addr) => addr,
-        Err(_) => return Ok(false),
-    };
-
-    // Validate that recovered address matches the expected signer address
-    if recovered_addr.as_slice() != signer_address.as_bytes() {
-        return Ok(false);
-    }
-
     // Additional validation: signature must not be zero
     if signature.as_slice().iter().all(|&b| b == 0) {
         return Ok(false);
     }
 
-    // Signature is valid
-    Ok(true)
+    // Extract r, s, and recovery_id from signature
+    let sig_bytes = signature.as_slice();
+    let r_bytes: [u8; 32] = sig_bytes[0..32]
+        .try_into()
+        .map_err(|_| StdError::msg("Invalid signature format: r component"))?;
+    let s_bytes: [u8; 32] = sig_bytes[32..64]
+        .try_into()
+        .map_err(|_| StdError::msg("Invalid signature format: s component"))?;
+    let recovery_id = sig_bytes[64];
+
+    // Create k256 signature from r and s
+    let k256_sig = K256Signature::from_scalars(r_bytes, s_bytes)
+        .map_err(|_| StdError::msg("Invalid signature scalars"))?;
+
+    // Create recovery ID
+    let recovery_id =
+        RecoveryId::try_from(recovery_id).map_err(|_| StdError::msg("Invalid recovery ID"))?;
+
+    // Convert digest to B256 for recovery
+    let digest_hash =
+        B256::try_from(digest.as_slice()).map_err(|_| StdError::msg("Invalid digest length"))?;
+
+    // Recover the verifying key (public key) from signature
+    let verifying_key =
+        VerifyingKey::recover_from_prehash(digest_hash.as_slice(), &k256_sig, recovery_id)
+            .map_err(|_| StdError::msg("Failed to recover public key"))?;
+
+    // Convert verifying key to Ethereum address
+    let public_key_bytes = verifying_key.to_encoded_point(false);
+    let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip 0x04 prefix
+    let addr_hash = keccak256(public_key_uncompressed);
+    let recovered_address = &addr_hash[12..]; // Last 20 bytes
+
+    // Compare with expected signer address
+    Ok(recovered_address == signer_address.as_bytes())
 }
 
 fn query_operator_weight(deps: Deps, operator: AddrEvm) -> StdResult<Uint256> {

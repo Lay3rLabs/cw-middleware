@@ -20,4 +20,3 @@ alloy-sol-macro = { workspace = true }
 alloy-sol-types = { workspace = true }
 alloy-primitives = { workspace = true }
 layer-climb-address = { workspace = true }
-ethabi = { workspace = true }

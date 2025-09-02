@@ -10,7 +10,7 @@ use wavs_types::contracts::cosmwasm::service_manager::{
 
 use crate::state::{self, ADMIN, STAKE_REGISTRY};
 use alloy_primitives::keccak256 as alloy_keccak256;
-use ethabi::{encode, Token};
+use alloy_sol_types::SolType;
 use mirror_api::service_manager::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 // version info for migration info
@@ -103,21 +103,23 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
 
             // Build ABI-encoded signature data (address[] signers, bytes[] signatures, uint32 referenceBlock)
             // Use the provided reference_block from signature_data.
-            let signers_tokens: Vec<Token> = signature_data
+            let signers: Vec<alloy_primitives::Address> = signature_data
                 .signers
                 .iter()
-                .map(|s| Token::Address(s.as_bytes().into()))
+                .map(|s| alloy_primitives::Address::from_slice(&s.as_bytes()))
                 .collect();
-            let sigs_tokens: Vec<Token> = signature_data
+            let signatures: Vec<alloy_primitives::Bytes> = signature_data
                 .signatures
                 .iter()
-                .map(|sig| Token::Bytes(sig.to_vec()))
+                .map(|sig| alloy_primitives::Bytes::copy_from_slice(sig))
                 .collect();
-            let encoded = encode(&[
-                Token::Array(signers_tokens),
-                Token::Array(sigs_tokens),
-                Token::Uint(signature_data.reference_block.into()),
-            ]);
+
+            // Create a tuple type for (address[], bytes[], uint32)
+            use alloy_sol_types::sol_data::*;
+            type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
+
+            let tuple_data = (signers, signatures, signature_data.reference_block);
+            let encoded = SignatureDataType::abi_encode(&tuple_data);
             let encoded_bin = Binary::from(encoded);
 
             // Query stake registry

@@ -15,7 +15,8 @@ tracing-subscriber = { workspace = true }
 async-trait = { workspace = true }
 layer-climb = { workspace = true }
 layer-climb-address = { workspace = true }
-ethabi = { workspace = true }
-k256 = { workspace = true }
+alloy-sol-types = { workspace = true }
 alloy-primitives = { workspace = true }
+k256 = { workspace = true }
 rand = "0.8"
+hex = "0.4"
