@@ -53,9 +53,11 @@ impl EcdsaTestClient {
             test_client.querier.clone(),
             service_handler.clone().try_into().unwrap(),
         ));
-        let service_handler_executor = EcdsaServiceHandlerExecutor::new(
-            ServiceHandlerExecutor::new(client.clone().into(), service_handler.try_into().unwrap()),
-        );
+        let service_handler_executor =
+            EcdsaServiceHandlerExecutor::new(ServiceHandlerExecutor::new(
+                test_client.executor.clone(),
+                service_handler.try_into().unwrap(),
+            ));
         let service_manager_querier = EcdsaServiceManagerQuerier::new(ServiceManagerQuerier::new(
             test_client.querier.clone(),
             service_manager.clone().try_into().unwrap(),

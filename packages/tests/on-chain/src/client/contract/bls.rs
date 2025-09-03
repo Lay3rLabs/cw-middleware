@@ -54,7 +54,7 @@ impl BlsTestClient {
             service_handler.clone().try_into().unwrap(),
         ));
         let service_handler_executor = BlsServiceHandlerExecutor::new(ServiceHandlerExecutor::new(
-            client.clone().into(),
+            test_client.executor.clone(),
             service_handler.try_into().unwrap(),
         ));
         let service_manager_querier = BlsServiceManagerQuerier::new(ServiceManagerQuerier::new(

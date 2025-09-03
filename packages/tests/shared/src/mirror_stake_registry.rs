@@ -20,6 +20,69 @@ fn create_eip191_hash(message: &[u8]) -> B256 {
     alloy_keccak256(&full_message)
 }
 
+fn create_signing_key_and_address() -> (SigningKey, AddrEvm) {
+    let signing_key = SigningKey::random(&mut thread_rng());
+    let eth_address = derive_eth_address_from_signing_key(&signing_key);
+    (signing_key, eth_address)
+}
+
+fn derive_eth_address_from_signing_key(signing_key: &SigningKey) -> AddrEvm {
+    let public_key = signing_key.verifying_key();
+    let public_key_point = public_key.to_encoded_point(false);
+    let public_key_bytes = &public_key_point.as_bytes()[1..]; // Skip 0x04 prefix
+
+    let hash = alloy_keccak256(public_key_bytes);
+
+    // Take last 20 bytes as Ethereum address
+    let mut addr_bytes = [0u8; 20];
+    addr_bytes.copy_from_slice(&hash[12..32]);
+    AddrEvm::new(addr_bytes)
+}
+
+fn sign_message_hash(signing_key: &SigningKey, message_hash: &[u8]) -> Vec<u8> {
+    let signature: Signature = signing_key.sign_prehash(message_hash).unwrap();
+    let (r, s) = signature.split_bytes();
+
+    let mut signature_bytes = Vec::with_capacity(65);
+    signature_bytes.extend_from_slice(&r);
+    signature_bytes.extend_from_slice(&s);
+
+    // Find the correct recovery ID
+    for recovery_id in 0..4u8 {
+        signature_bytes.truncate(64);
+        signature_bytes.push(recovery_id);
+
+        // Test if this recovery ID works with k256 (same as contract will use)
+        if let Ok(hash) = B256::try_from(message_hash) {
+            // Extract r, s from signature_bytes
+            let r_bytes: [u8; 32] = signature_bytes[0..32].try_into().unwrap();
+            let s_bytes: [u8; 32] = signature_bytes[32..64].try_into().unwrap();
+
+            if let Ok(k256_sig) = k256::ecdsa::Signature::from_scalars(r_bytes, s_bytes) {
+                if let Ok(recovery_id) = RecoveryId::try_from(recovery_id) {
+                    if let Ok(verifying_key) =
+                        VerifyingKey::recover_from_prehash(hash.as_slice(), &k256_sig, recovery_id)
+                    {
+                        // Convert verifying key to Ethereum address
+                        let public_key_bytes = verifying_key.to_encoded_point(false);
+                        let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip 0x04 prefix
+                        let addr_hash = alloy_keccak256(public_key_uncompressed);
+                        let recovered_address = &addr_hash[12..]; // Last 20 bytes
+
+                        let expected_addr = derive_eth_address_from_signing_key(signing_key);
+                        if recovered_address == expected_addr.as_bytes() {
+                            return signature_bytes;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // If no valid recovery ID found, this is a cryptographic failure
+    panic!("Failed to find valid recovery ID for signature - this indicates a cryptographic error")
+}
+
 pub async fn run_mirror_sanity_tests(
     executor: &MirrorStakeRegistryExecutor,
     querier: &MirrorStakeRegistryQuerier,
@@ -116,69 +179,6 @@ pub async fn run_mirror_sanity_tests(
     );
 
     tracing::info!("Mirror sanity tests completed successfully");
-}
-
-fn create_signing_key_and_address() -> (SigningKey, AddrEvm) {
-    let signing_key = SigningKey::random(&mut thread_rng());
-    let eth_address = derive_eth_address_from_signing_key(&signing_key);
-    (signing_key, eth_address)
-}
-
-fn derive_eth_address_from_signing_key(signing_key: &SigningKey) -> AddrEvm {
-    let public_key = signing_key.verifying_key();
-    let public_key_point = public_key.to_encoded_point(false);
-    let public_key_bytes = &public_key_point.as_bytes()[1..]; // Skip 0x04 prefix
-
-    let hash = alloy_keccak256(public_key_bytes);
-
-    // Take last 20 bytes as Ethereum address
-    let mut addr_bytes = [0u8; 20];
-    addr_bytes.copy_from_slice(&hash[12..32]);
-    AddrEvm::new(addr_bytes)
-}
-
-fn sign_message_hash(signing_key: &SigningKey, message_hash: &[u8]) -> Vec<u8> {
-    let signature: Signature = signing_key.sign_prehash(message_hash).unwrap();
-    let (r, s) = signature.split_bytes();
-
-    let mut signature_bytes = Vec::with_capacity(65);
-    signature_bytes.extend_from_slice(&r);
-    signature_bytes.extend_from_slice(&s);
-
-    // Find the correct recovery ID
-    for recovery_id in 0..4u8 {
-        signature_bytes.truncate(64);
-        signature_bytes.push(recovery_id);
-
-        // Test if this recovery ID works with k256 (same as contract will use)
-        if let Ok(hash) = B256::try_from(message_hash) {
-            // Extract r, s from signature_bytes
-            let r_bytes: [u8; 32] = signature_bytes[0..32].try_into().unwrap();
-            let s_bytes: [u8; 32] = signature_bytes[32..64].try_into().unwrap();
-
-            if let Ok(k256_sig) = k256::ecdsa::Signature::from_scalars(r_bytes, s_bytes) {
-                if let Ok(recovery_id) = RecoveryId::try_from(recovery_id) {
-                    if let Ok(verifying_key) =
-                        VerifyingKey::recover_from_prehash(hash.as_slice(), &k256_sig, recovery_id)
-                    {
-                        // Convert verifying key to Ethereum address
-                        let public_key_bytes = verifying_key.to_encoded_point(false);
-                        let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip 0x04 prefix
-                        let addr_hash = alloy_keccak256(public_key_uncompressed);
-                        let recovered_address = &addr_hash[12..]; // Last 20 bytes
-
-                        let expected_addr = derive_eth_address_from_signing_key(signing_key);
-                        if recovered_address == expected_addr.as_bytes() {
-                            return signature_bytes;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // If no valid recovery ID found, this is a cryptographic failure
-    panic!("Failed to find valid recovery ID for signature - this indicates a cryptographic error")
 }
 
 pub async fn run_mirror_abi_signature_validation_test(
@@ -333,7 +333,6 @@ pub async fn run_mirror_negative_test_scenarios(
         )
         .await;
 
-    // Depending on contract logic, this might succeed or fail
     if result.is_ok() {
         let weight = querier
             .get_operator_weight(zero_weight_operator)
