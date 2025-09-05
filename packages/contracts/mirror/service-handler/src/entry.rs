@@ -77,16 +77,20 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             }
         },
 
-        QueryMsg::TriggerValidated { trigger_id } => {
-            to_json_binary(&state::TRIGGER_MESSAGE.has(deps.storage, trigger_id))
-        }
+        QueryMsg::Mirror(mirror) => match mirror {
+            mirror_api::service_handler::MirrorServiceHandlerQueryMessages::TriggerValidated {
+                trigger_id,
+            } => to_json_binary(&state::TRIGGER_MESSAGE.has(deps.storage, trigger_id)),
 
-        QueryMsg::TriggerMessage { trigger_id } => to_json_binary(&TriggerMessageResponse {
-            message: state::TRIGGER_MESSAGE.load(deps.storage, trigger_id)?,
-        }),
+            mirror_api::service_handler::MirrorServiceHandlerQueryMessages::TriggerMessage {
+                trigger_id,
+            } => to_json_binary(&TriggerMessageResponse {
+                message: state::TRIGGER_MESSAGE.load(deps.storage, trigger_id)?,
+            }),
 
-        QueryMsg::SignatureData { trigger_id } => {
-            to_json_binary(&state::SIGNATURE_DATA.load(deps.storage, trigger_id)?)
-        }
+            mirror_api::service_handler::MirrorServiceHandlerQueryMessages::SignatureData {
+                trigger_id,
+            } => to_json_binary(&state::SIGNATURE_DATA.load(deps.storage, trigger_id)?),
+        },
     }
 }

@@ -1,7 +1,9 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Uint256};
 use layer_climb_address::AddrEvm;
-use wavs_types::contracts::cosmwasm::service_manager::ServiceManagerExecuteMessages;
+use wavs_types::contracts::cosmwasm::service_manager::{
+    ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
+};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -24,27 +26,19 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 #[schemaifier(mute_warnings)]
-pub enum QueryMsg {
+pub enum MirrorServiceManagerQueryMessages {
     /// Get the current admin address
     #[returns(Addr)]
     Admin {},
-    /// WAVS operator weight query
-    #[returns(cosmwasm_std::Uint256)]
-    WavsOperatorWeight {
-        operator_address: layer_climb_address::AddrEvm,
-    },
-    /// WAVS signature validation
-    #[returns(wavs_types::contracts::cosmwasm::service_manager::WavsValidateResult)]
-    WavsValidate {
-        envelope: wavs_types::contracts::cosmwasm::service_handler::WavsEnvelope,
-        signature_data: wavs_types::contracts::cosmwasm::service_handler::WavsSignatureData,
-    },
-    /// WAVS service URI query
-    #[returns(String)]
-    WavsServiceUri {},
-    /// WAVS latest operator for signing key
-    #[returns(Option<layer_climb_address::AddrEvm>)]
-    WavsLatestOperatorForSigningKey {
-        signing_key_addr: layer_climb_address::AddrEvm,
-    },
+}
+
+#[cw_serde]
+#[derive(QueryResponses)]
+#[query_responses(nested)]
+#[schemaifier(mute_warnings)]
+pub enum QueryMsg {
+    #[serde(untagged)]
+    Mirror(MirrorServiceManagerQueryMessages),
+    #[serde(untagged)]
+    Wavs(ServiceManagerQueryMessages),
 }

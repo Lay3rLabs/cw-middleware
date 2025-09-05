@@ -5,7 +5,7 @@ use cosmwasm_std::{
 use cw2::set_contract_version;
 use wavs_types::contracts::cosmwasm::service_manager::{
     error::WavsValidateError, event::WavsServiceUriUpdatedEvent, ServiceManagerExecuteMessages,
-    WavsValidateResult,
+    ServiceManagerQueryMessages, WavsValidateResult,
 };
 
 use crate::state::{self, ADMIN, STAKE_REGISTRY};
@@ -67,81 +67,90 @@ pub fn execute(
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
-        QueryMsg::Admin {} => {
-            let admin = ADMIN.load(deps.storage)?;
-            to_json_binary(&admin)
-        }
-        QueryMsg::WavsOperatorWeight { operator_address } => {
-            // TODO: integrate with mirror stake registry for operator weight queries
-            to_json_binary(&state::OPERATOR_WEIGHTS.load(deps.storage, &operator_address)?)
-        }
-        QueryMsg::WavsValidate {
-            envelope,
-            signature_data,
-        } => {
-            // Validate signatures via stake registry, if configured
-            let stake_registry = match state::STAKE_REGISTRY.may_load(deps.storage)? {
-                Some(addr) => addr,
-                None => {
-                    return to_json_binary(&WavsValidateResult::Err(
-                        WavsValidateError::InvalidSignature,
-                    ))
-                }
-            };
-
-            // Compute digest from envelope payload (keccak256 of payload bytes)
-            let decoded = match envelope.decode() {
-                Ok(d) => d,
-                Err(_) => {
-                    return to_json_binary(&WavsValidateResult::Err(
-                        WavsValidateError::InvalidSignature,
-                    ))
-                }
-            };
-            let digest_b256 = alloy_keccak256(&decoded.payload);
-            let digest_bin = Binary::from(digest_b256.to_vec());
-
-            // Build ABI-encoded signature data (address[] signers, bytes[] signatures, uint32 referenceBlock)
-            // Use the provided reference_block from signature_data.
-            let signers: Vec<alloy_primitives::Address> = signature_data
-                .signers
-                .iter()
-                .map(|s| alloy_primitives::Address::from_slice(&s.as_bytes()))
-                .collect();
-            let signatures: Vec<alloy_primitives::Bytes> = signature_data
-                .signatures
-                .iter()
-                .map(|sig| alloy_primitives::Bytes::copy_from_slice(sig))
-                .collect();
-
-            // Create a tuple type for (address[], bytes[], uint32)
-            use alloy_sol_types::sol_data::*;
-            type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
-
-            let tuple_data = (signers, signatures, signature_data.reference_block);
-            let encoded = SignatureDataType::abi_encode(&tuple_data);
-            let encoded_bin = Binary::from(encoded);
-
-            // Query stake registry
-            let res: mirror_api::stake_registry::ValidationResult = deps.querier.query_wasm_smart(
-                stake_registry,
-                &mirror_api::stake_registry::QueryMsg::ValidateSignature {
-                    digest: digest_bin,
-                    signature_data: encoded_bin,
-                },
-            )?;
-
-            if res.is_valid {
-                to_json_binary(&WavsValidateResult::Ok)
-            } else {
-                to_json_binary(&WavsValidateResult::Err(
-                    WavsValidateError::InvalidSignature,
-                ))
+        QueryMsg::Mirror(msg) => match msg {
+            mirror_api::service_manager::MirrorServiceManagerQueryMessages::Admin {} => {
+                let admin = ADMIN.load(deps.storage)?;
+                to_json_binary(&admin)
             }
-        }
-        QueryMsg::WavsServiceUri {} => to_json_binary(&state::SERVICE_URI.load(deps.storage)?),
-        QueryMsg::WavsLatestOperatorForSigningKey { signing_key_addr } => to_json_binary(
-            &state::OPERATOR_SIGNING_KEY_ADDRS.may_load(deps.storage, &signing_key_addr)?,
-        ),
+        },
+        QueryMsg::Wavs(msg) => match msg {
+            ServiceManagerQueryMessages::WavsOperatorWeight { operator_address } => {
+                // TODO: integrate with mirror stake registry for operator weight queries
+                to_json_binary(&state::OPERATOR_WEIGHTS.load(deps.storage, &operator_address)?)
+            }
+            ServiceManagerQueryMessages::WavsValidate {
+                envelope,
+                signature_data,
+            } => {
+                // Validate signatures via stake registry, if configured
+                let stake_registry = match state::STAKE_REGISTRY.may_load(deps.storage)? {
+                    Some(addr) => addr,
+                    None => {
+                        return to_json_binary(&WavsValidateResult::Err(
+                            WavsValidateError::InvalidSignature,
+                        ))
+                    }
+                };
+
+                // Compute digest from envelope payload (keccak256 of payload bytes)
+                let decoded = match envelope.decode() {
+                    Ok(d) => d,
+                    Err(_) => {
+                        return to_json_binary(&WavsValidateResult::Err(
+                            WavsValidateError::InvalidSignature,
+                        ))
+                    }
+                };
+                let digest_b256 = alloy_keccak256(&decoded.payload);
+                let digest_bin = Binary::from(digest_b256.to_vec());
+
+                // Build ABI-encoded signature data (address[] signers, bytes[] signatures, uint32 referenceBlock)
+                // Use the provided reference_block from signature_data.
+                let signers: Vec<alloy_primitives::Address> = signature_data
+                    .signers
+                    .iter()
+                    .map(|s| alloy_primitives::Address::from_slice(&s.as_bytes()))
+                    .collect();
+                let signatures: Vec<alloy_primitives::Bytes> = signature_data
+                    .signatures
+                    .iter()
+                    .map(|sig| alloy_primitives::Bytes::copy_from_slice(sig))
+                    .collect();
+
+                // Create a tuple type for (address[], bytes[], uint32)
+                use alloy_sol_types::sol_data::*;
+                type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
+
+                let tuple_data = (signers, signatures, signature_data.reference_block);
+                let encoded = SignatureDataType::abi_encode(&tuple_data);
+                let encoded_bin = Binary::from(encoded);
+
+                // Query stake registry
+                let res: mirror_api::stake_registry::ValidationResult =
+                    deps.querier.query_wasm_smart(
+                        stake_registry,
+                        &mirror_api::stake_registry::QueryMsg::ValidateSignature {
+                            digest: digest_bin,
+                            signature_data: encoded_bin,
+                        },
+                    )?;
+
+                if res.is_valid {
+                    to_json_binary(&WavsValidateResult::Ok)
+                } else {
+                    to_json_binary(&WavsValidateResult::Err(
+                        WavsValidateError::InvalidSignature,
+                    ))
+                }
+            }
+            ServiceManagerQueryMessages::WavsServiceUri {} => {
+                to_json_binary(&state::SERVICE_URI.load(deps.storage)?)
+            }
+            ServiceManagerQueryMessages::WavsLatestOperatorForSigningKey { signing_key_addr } => {
+                to_json_binary(
+                    &state::OPERATOR_SIGNING_KEY_ADDRS.may_load(deps.storage, &signing_key_addr)?,
+                )
+            }
+        },
     }
 }

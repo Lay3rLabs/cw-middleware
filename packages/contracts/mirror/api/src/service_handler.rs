@@ -19,7 +19,7 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[derive(QueryResponses)]
 #[schemaifier(mute_warnings)]
-pub enum QueryMsg {
+pub enum MirrorServiceHandlerQueryMessages {
     #[returns(bool)]
     TriggerValidated { trigger_id: Uint64 },
 
@@ -28,9 +28,16 @@ pub enum QueryMsg {
 
     #[returns(wavs_types::contracts::cosmwasm::service_handler::WavsSignatureData)]
     SignatureData { trigger_id: Uint64 },
+}
 
+#[cw_serde]
+#[derive(QueryResponses)]
+#[query_responses(nested)]
+#[schemaifier(mute_warnings)]
+pub enum QueryMsg {
     #[serde(untagged)]
-    #[returns(())]
+    Mirror(MirrorServiceHandlerQueryMessages),
+    #[serde(untagged)]
     Wavs(ServiceHandlerQueryMessages),
 }
 
