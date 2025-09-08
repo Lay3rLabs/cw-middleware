@@ -86,6 +86,10 @@ tasks:
       - task: build-service-manager
         vars:
           CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+      - |
+        if [ "{{.CONTRACT_KIND}}" = "mirror" ]; then
+          task contracts:build-stake-registry CONTRACT_KIND={{.CONTRACT_KIND}}
+        fi
 
   build-service-handler:
     - task: inner-build-contract
@@ -99,6 +103,13 @@ tasks:
       vars:
         NAME: "service_manager"
         SRC: "service-manager"
+        CONTRACT_KIND: "{{.CONTRACT_KIND}}"
+
+  build-stake-registry:
+    - task: inner-build-contract
+      vars:
+        NAME: "stake_registry"
+        SRC: "stake-registry"
         CONTRACT_KIND: "{{.CONTRACT_KIND}}"
 
   build-trigger-simple:
@@ -121,7 +132,7 @@ tasks:
       - echo "Building contract {{.CONTRACT_NAME}} at {{.CONTRACT_PATH}}"
       - |
         {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
-      - rm -f "{{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}" || true
+      - mkdir -p "./artifacts"
       - >
         {{.DOCKER_SUDO}} docker run --rm
         -v "{{.REPO_ROOT}}:/code"

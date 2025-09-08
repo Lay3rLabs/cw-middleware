@@ -4,13 +4,19 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = {workspace = true}
-wavs-types = {workspace = true}
-cosmwasm-std = {workspace = true}
-utils = {workspace = true}
-anyhow = {workspace = true}
-serde = {workspace = true}
-tracing = {workspace = true}
-tracing-subscriber = {workspace = true}
-async-trait = {workspace = true}
-layer-climb = {workspace = true}
+sdk = { workspace = true }
+wavs-types = { workspace = true }
+cosmwasm-std = { workspace = true }
+utils = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+async-trait = { workspace = true }
+layer-climb = { workspace = true }
+layer-climb-address = { workspace = true }
+alloy-sol-types = { workspace = true }
+alloy-primitives = { workspace = true }
+k256 = { workspace = true }
+rand = "0.8"
+hex = "0.4"

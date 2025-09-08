@@ -17,6 +17,7 @@ tasks:
       - echo "All off-chain tests"
       - cd packages/tests/off-chain && cargo test
 
+  # Currently fails - https://github.com/Lay3rLabs/cw-middleware/issues/26
   all-on-chain:
     cmds:
       - echo "All on-chain tests"

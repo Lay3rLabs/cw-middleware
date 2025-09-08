@@ -2,7 +2,7 @@ version: "3"
 
 vars:
   ALL_COMPONENTS: ["echo-with-id"]
-  ALL_CONTRACT_KINDS: ["mock", "ecdsa", "bls"]
+  ALL_CONTRACT_KINDS: ["mock", "ecdsa", "bls", "mirror"]
 
   REPO_ROOT:
     # find the root directory of the repository by looking for the `.git` directory.

@@ -30,10 +30,8 @@ impl SimpleTriggerTestClient {
             test_client.querier.clone(),
             address.clone().try_into().unwrap(),
         );
-        let executor = SimpleTriggerExecutor::new(
-            test_client.executor.clone(),
-            address.clone().try_into().unwrap(),
-        );
+        let executor =
+            SimpleTriggerExecutor::new(client.clone().into(), address.clone().try_into().unwrap());
 
         Self { querier, executor }
     }

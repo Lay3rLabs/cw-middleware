@@ -62,11 +62,9 @@ impl MockTestClient {
             test_client.querier.clone(),
             service_manager.clone().try_into().unwrap(),
         ));
-        let service_manager_executor =
-            MockServiceManagerExecutor::new(ServiceManagerExecutor::new(
-                test_client.executor.clone(),
-                service_manager.try_into().unwrap(),
-            ));
+        let service_manager_executor = MockServiceManagerExecutor::new(
+            ServiceManagerExecutor::new(client.clone().into(), service_manager.try_into().unwrap()),
+        );
         Self {
             service_handler_querier,
             service_handler_executor,

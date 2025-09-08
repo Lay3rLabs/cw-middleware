@@ -1,5 +1,6 @@
 pub mod bls;
 pub mod ecdsa;
+pub mod mirror;
 pub mod mock;
 pub mod trigger;
 
@@ -16,13 +17,13 @@ pub struct ContractTestClient {
 }
 
 impl ContractTestClient {
-    pub fn new(admin: Addr) -> Self {
-        let app = Rc::new(RefCell::new(App::new(|router, _, storage| {
+    pub fn new(admin: &str) -> Self {
+        let app = Rc::new(RefCell::new(App::new(|router, api, storage| {
             router
                 .bank
                 .init_balance(
                     storage,
-                    &admin,
+                    &api.addr_make(admin),
                     vec![Coin {
                         denom: "utoken".to_string(),
                         amount: 1_000_000u128.into(),
@@ -30,6 +31,8 @@ impl ContractTestClient {
                 )
                 .unwrap();
         })));
+
+        let admin = app.borrow().api().addr_make(admin);
 
         Self {
             querier: app.clone().into(),

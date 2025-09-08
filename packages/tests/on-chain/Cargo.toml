@@ -9,6 +9,7 @@ trigger-api = {workspace = true}
 mock-api = {workspace = true}
 ecdsa-api = {workspace = true}
 bls-api = {workspace = true}
+mirror-api = {workspace = true}
 tokio = {workspace = true}
 shared-tests = {workspace = true}
 tracing = {workspace = true}

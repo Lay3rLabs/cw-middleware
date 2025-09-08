@@ -62,7 +62,7 @@ impl BlsTestClient {
             service_manager.clone().try_into().unwrap(),
         ));
         let service_manager_executor = BlsServiceManagerExecutor::new(ServiceManagerExecutor::new(
-            test_client.executor.clone(),
+            client.clone().into(),
             service_manager.try_into().unwrap(),
         ));
         Self {
