@@ -1,5 +1,5 @@
 use cw_multi_test::{ContractWrapper, Executor};
-use sdk::contract_kinds::trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
+use cw_wavs_sdk::contract_kinds::trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
 
 use crate::client::ContractTestClient;
 
@@ -15,9 +15,9 @@ impl SimpleTriggerTestClient {
         let admin = client.admin();
 
         let contract = ContractWrapper::new(
-            trigger_simple::entry::execute,
-            trigger_simple::entry::instantiate,
-            trigger_simple::entry::query,
+            cw_wavs_trigger_simple::entry::execute,
+            cw_wavs_trigger_simple::entry::instantiate,
+            cw_wavs_trigger_simple::entry::query,
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 
@@ -26,7 +26,7 @@ impl SimpleTriggerTestClient {
             .instantiate_contract(
                 code_id,
                 admin.clone(),
-                &bls_api::service_manager::InstantiateMsg {},
+                &cw_wavs_bls_api::service_manager::InstantiateMsg {},
                 &[],
                 "BLS Service Manager",
                 None,

@@ -8,14 +8,14 @@ async fn mirror_sanity() {
     tracing_tests_init();
 
     let client = ContractTestClient::new().await;
-    let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+    let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
     let contract = MirrorTestClient::new(client.clone()).await;
 
-    contracts_sanity::run_sanity_tests(&contract.wrap_test(&trigger_simple)).await;
+    contracts_sanity::run_sanity_tests(&contract.wrap_test(&cw_wavs_trigger_simple)).await;
 }
 
 #[tokio::test]
-async fn test_mirror_stake_registry_sanity() {
+async fn test_cw_wavs_mirror_stake_registry_sanity() {
     tracing_tests_init();
 
     let client = ContractTestClient::new().await;

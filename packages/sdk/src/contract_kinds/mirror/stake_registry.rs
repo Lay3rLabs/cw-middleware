@@ -1,7 +1,7 @@
 use crate::client::{WavsExecutor, WavsQuerier, WavsTxResponse};
 use cosmwasm_std::{Addr, Binary, Uint256};
+use cw_wavs_mirror_api::stake_registry::{ExecuteMsg, QueryMsg, ValidationResult};
 use layer_climb::prelude::AddrEvm;
-use mirror_api::stake_registry::{ExecuteMsg, QueryMsg, ValidationResult};
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 
@@ -16,7 +16,9 @@ impl MirrorStakeRegistryQuerier {
         Self { inner, addr }
     }
 
-    pub async fn mirror_stake_registry_query<RESP: DeserializeOwned + Send + Sync + Debug>(
+    pub async fn cw_wavs_mirror_stake_registry_query<
+        RESP: DeserializeOwned + Send + Sync + Debug,
+    >(
         &self,
         msg: &QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
@@ -32,7 +34,7 @@ impl MirrorStakeRegistryQuerier {
         digest: Binary,
         signature_data: Binary,
     ) -> Result<ValidationResult, cosmwasm_std::StdError> {
-        self.mirror_stake_registry_query(&QueryMsg::ValidateSignature {
+        self.cw_wavs_mirror_stake_registry_query(&QueryMsg::ValidateSignature {
             digest,
             signature_data,
         })
@@ -43,7 +45,7 @@ impl MirrorStakeRegistryQuerier {
         &self,
         operator: AddrEvm,
     ) -> Result<Uint256, cosmwasm_std::StdError> {
-        self.mirror_stake_registry_query(&QueryMsg::GetOperatorWeight { operator })
+        self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetOperatorWeight { operator })
             .await
     }
 
@@ -51,7 +53,7 @@ impl MirrorStakeRegistryQuerier {
         &self,
         operator: AddrEvm,
     ) -> Result<Option<AddrEvm>, cosmwasm_std::StdError> {
-        self.mirror_stake_registry_query(&QueryMsg::GetOperatorSigningKey { operator })
+        self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetOperatorSigningKey { operator })
             .await
     }
 
@@ -59,17 +61,19 @@ impl MirrorStakeRegistryQuerier {
         &self,
         signing_key: AddrEvm,
     ) -> Result<Option<AddrEvm>, cosmwasm_std::StdError> {
-        self.mirror_stake_registry_query(&QueryMsg::GetLatestOperatorForSigningKey { signing_key })
-            .await
+        self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetLatestOperatorForSigningKey {
+            signing_key,
+        })
+        .await
     }
 
     pub async fn get_service_manager(&self) -> Result<String, cosmwasm_std::StdError> {
-        self.mirror_stake_registry_query(&QueryMsg::GetServiceManager {})
+        self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetServiceManager {})
             .await
     }
 
     pub async fn get_total_weight(&self) -> Result<Uint256, cosmwasm_std::StdError> {
-        self.mirror_stake_registry_query(&QueryMsg::GetTotalWeight {})
+        self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetTotalWeight {})
             .await
     }
 }

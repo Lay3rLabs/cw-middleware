@@ -9,7 +9,7 @@ use wavs_types::contracts::cosmwasm::service_manager::{
 };
 
 use crate::state;
-use ecdsa_api::service_manager::{ExecuteMsg, QueryMsg};
+use cw_wavs_ecdsa_api::service_manager::{ExecuteMsg, QueryMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");

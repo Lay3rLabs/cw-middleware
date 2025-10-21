@@ -11,7 +11,7 @@ use wavs_types::contracts::cosmwasm::service_manager::{
 use crate::state::{self, ADMIN, STAKE_REGISTRY};
 use alloy_primitives::keccak256 as alloy_keccak256;
 use alloy_sol_types::SolType;
-use mirror_api::service_manager::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cw_wavs_mirror_api::service_manager::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -68,7 +68,7 @@ pub fn execute(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
         QueryMsg::Mirror(msg) => match msg {
-            mirror_api::service_manager::MirrorServiceManagerQueryMessages::Admin {} => {
+            cw_wavs_mirror_api::service_manager::MirrorServiceManagerQueryMessages::Admin {} => {
                 let admin = ADMIN.load(deps.storage)?;
                 to_json_binary(&admin)
             }
@@ -126,10 +126,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 let encoded_bin = Binary::from(encoded);
 
                 // Query stake registry
-                let res: mirror_api::stake_registry::ValidationResult =
+                let res: cw_wavs_mirror_api::stake_registry::ValidationResult =
                     deps.querier.query_wasm_smart(
                         stake_registry,
-                        &mirror_api::stake_registry::QueryMsg::ValidateSignature {
+                        &cw_wavs_mirror_api::stake_registry::QueryMsg::ValidateSignature {
                             digest: digest_bin,
                             signature_data: encoded_bin,
                         },

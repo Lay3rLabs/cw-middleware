@@ -4,8 +4,8 @@ use crate::{
     service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
 };
 use cosmwasm_std::Uint64;
+use cw_wavs_mock_api::service_handler::TriggerMessageResponse;
 use layer_climb::prelude::AddrEvm;
-use mock_api::service_handler::TriggerMessageResponse;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 
@@ -21,7 +21,7 @@ impl MockServiceHandlerQuerier {
 
     pub async fn mock_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &mock_api::service_handler::QueryMsg,
+        msg: &cw_wavs_mock_api::service_handler::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.querier()
             .contract_query(&self.service_handler().addr, msg)
@@ -41,7 +41,7 @@ impl MockServiceHandlerQuerier {
         trigger_id: Uint64,
     ) -> Result<String, cosmwasm_std::StdError> {
         let resp: TriggerMessageResponse = self
-            .mock_query(&mock_api::service_handler::QueryMsg::TriggerMessage { trigger_id })
+            .mock_query(&cw_wavs_mock_api::service_handler::QueryMsg::TriggerMessage { trigger_id })
             .await?;
 
         Ok(resp.message)
@@ -60,7 +60,7 @@ impl MockServiceHandlerExecutor {
 
     pub async fn mock_exec(
         &self,
-        msg: &mock_api::service_handler::ExecuteMsg,
+        msg: &cw_wavs_mock_api::service_handler::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.executor()
@@ -82,7 +82,7 @@ impl MockServiceHandlerExecutor {
         message: impl ToString,
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.mock_exec(
-            &mock_api::service_handler::ExecuteMsg::SetTriggerMessage {
+            &cw_wavs_mock_api::service_handler::ExecuteMsg::SetTriggerMessage {
                 trigger_id,
                 message: message.to_string(),
             },
@@ -104,7 +104,7 @@ impl MockServiceManagerQuerier {
 
     pub async fn mock_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &mock_api::service_manager::QueryMsg,
+        msg: &cw_wavs_mock_api::service_manager::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.querier()
             .contract_query(&self.service_manager().addr, msg)
@@ -132,7 +132,7 @@ impl MockServiceManagerExecutor {
 
     pub async fn mock_exec(
         &self,
-        msg: &mock_api::service_manager::ExecuteMsg,
+        msg: &cw_wavs_mock_api::service_manager::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.executor()
@@ -155,7 +155,7 @@ impl MockServiceManagerExecutor {
         weight: u64,
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.mock_exec(
-            &mock_api::service_manager::ExecuteMsg::SetSigningKey {
+            &cw_wavs_mock_api::service_manager::ExecuteMsg::SetSigningKey {
                 operator: operator_addr,
                 signing_key: signing_key_addr,
                 weight: weight.into(),

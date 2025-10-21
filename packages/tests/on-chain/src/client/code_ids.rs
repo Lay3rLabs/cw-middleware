@@ -20,15 +20,15 @@ pub struct CodeId {}
 
 impl CodeId {
     #[instrument]
-    pub async fn new_mock_service_handler() -> u64 {
+    pub async fn new_cw_wavs_mock_service_handler() -> u64 {
         *MOCK_SERVICE_HANDLER_CODE_ID
-            .get_or_init(upload_mock_service_handler)
+            .get_or_init(upload_cw_wavs_mock_service_handler)
             .await
     }
     #[instrument]
-    pub async fn new_mock_service_manager() -> u64 {
+    pub async fn new_cw_wavs_mock_service_manager() -> u64 {
         *MOCK_SERVICE_MANAGER_CODE_ID
-            .get_or_init(upload_mock_service_manager)
+            .get_or_init(upload_cw_wavs_mock_service_manager)
             .await
     }
 
@@ -60,9 +60,9 @@ impl CodeId {
     }
 
     #[instrument]
-    pub async fn new_mirror_service_handler() -> u64 {
+    pub async fn new_cw_wavs_mirror_service_handler() -> u64 {
         *MIRROR_SERVICE_HANDLER_CODE_ID
-            .get_or_init(upload_mirror_service_handler)
+            .get_or_init(upload_cw_wavs_mirror_service_handler)
             .await
     }
 
@@ -74,37 +74,37 @@ impl CodeId {
     }
 
     #[instrument]
-    pub async fn new_mirror_stake_registry() -> u64 {
+    pub async fn new_cw_wavs_mirror_stake_registry() -> u64 {
         *MIRROR_STAKE_REGISTRY_CODE_ID
-            .get_or_init(upload_mirror_stake_registry)
+            .get_or_init(upload_cw_wavs_mirror_stake_registry)
             .await
     }
 
     #[instrument]
-    pub async fn new_trigger_simple() -> u64 {
+    pub async fn new_cw_wavs_trigger_simple() -> u64 {
         *TRIGGER_SIMPLE_CODE_ID
-            .get_or_init(upload_trigger_simple)
+            .get_or_init(upload_cw_wavs_trigger_simple)
             .await
     }
 }
 
-async fn upload_trigger_simple() -> u64 {
+async fn upload_cw_wavs_trigger_simple() -> u64 {
     let wasm_path = repo_root()
         .unwrap()
         .join("packages")
         .join("contracts")
         .join("trigger")
         .join("artifacts")
-        .join("trigger_simple.wasm");
+        .join("cw_wavs_trigger_simple.wasm");
 
     upload(wasm_path).await
 }
 
-async fn upload_mock_service_handler() -> u64 {
+async fn upload_cw_wavs_mock_service_handler() -> u64 {
     upload(service_wasm_path("mock", "service_handler")).await
 }
 
-async fn upload_mock_service_manager() -> u64 {
+async fn upload_cw_wavs_mock_service_manager() -> u64 {
     upload(service_wasm_path("mock", "service_manager")).await
 }
 
@@ -124,7 +124,7 @@ async fn upload_bls_service_manager() -> u64 {
     upload(service_wasm_path("bls", "service_manager")).await
 }
 
-async fn upload_mirror_service_handler() -> u64 {
+async fn upload_cw_wavs_mirror_service_handler() -> u64 {
     upload(service_wasm_path("mirror", "service_handler")).await
 }
 
@@ -132,14 +132,14 @@ async fn upload_mirror_service_manager() -> u64 {
     upload(service_wasm_path("mirror", "service_manager")).await
 }
 
-async fn upload_mirror_stake_registry() -> u64 {
+async fn upload_cw_wavs_mirror_stake_registry() -> u64 {
     let wasm_path = repo_root()
         .unwrap()
         .join("packages")
         .join("contracts")
         .join("mirror")
         .join("artifacts")
-        .join("mirror_stake_registry.wasm");
+        .join("cw_wavs_mirror_stake_registry.wasm");
 
     upload(wasm_path).await
 }
@@ -178,5 +178,5 @@ fn service_wasm_path(contract_kind: &str, service_kind: &str) -> PathBuf {
         .join(contract_kind)
         .join("artifacts");
 
-    artifacts_path.join(format!("{contract_kind}_{service_kind}.wasm"))
+    artifacts_path.join(format!("cw_wavs_{contract_kind}_{service_kind}.wasm"))
 }

@@ -10,9 +10,9 @@ license.workspace = true
 publish = false
 
 [dependencies]
-mock-api = {workspace = true}
-bls-api = {workspace = true}
-ecdsa-api = {workspace = true}
+cw-wavs-mock-api = {workspace = true}
+cw-wavs-bls-api = {workspace = true}
+cw-wavs-ecdsa-api = {workspace = true}
 serde = {workspace = true}
 layer-climb = {workspace = true}
 wavs-types = {workspace = true}

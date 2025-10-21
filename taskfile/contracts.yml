@@ -50,6 +50,9 @@ tasks:
     cmds:
       - for: { var: ALL_CONTRACT_KINDS }
         cmd: task contracts:clean-inner CONTRACT_KIND={{.ITEM}}
+      - echo "Cleaning artifacts directory"
+      - |
+        {{.DOCKER_SUDO}} rm -rf "./artifacts" || true
 
   clean-inner:
     requires:
@@ -127,7 +130,7 @@ tasks:
       CONTRACT_ARTIFACTS_PATH:
         sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
       CONTRACT_PATH: "packages/contracts/{{.CONTRACT_KIND}}/{{.SRC}}"
-      CONTRACT_NAME: "{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
+      CONTRACT_NAME: "cw_wavs_{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
     cmds:
       - echo "Building contract {{.CONTRACT_NAME}} at {{.CONTRACT_PATH}}"
       - |

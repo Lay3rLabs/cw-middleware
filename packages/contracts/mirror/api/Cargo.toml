@@ -1,5 +1,5 @@
 [package]
-name = "mirror-api"
+name = "cw-wavs-mirror-api"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,4 +1,4 @@
-use sdk::contract_kinds::trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
+use cw_wavs_sdk::contract_kinds::trigger::{SimpleTriggerExecutor, SimpleTriggerQuerier};
 
 use crate::client::code_ids::CodeId;
 use crate::client::contract::ContractTestClient;
@@ -17,9 +17,9 @@ impl SimpleTriggerTestClient {
         let (address, _) = client
             .contract_instantiate(
                 None,
-                CodeId::new_trigger_simple().await,
+                CodeId::new_cw_wavs_trigger_simple().await,
                 "Simple Trigger",
-                &trigger_api::simple::InstantiateMsg {},
+                &cw_wavs_trigger_api::simple::InstantiateMsg {},
                 vec![],
                 None,
             )

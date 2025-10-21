@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = {workspace = true}
-trigger-api = {workspace = true}
-mock-api = {workspace = true}
-ecdsa-api = {workspace = true}
-bls-api = {workspace = true}
-mirror-api = {workspace = true}
+cw-wavs-sdk = {workspace = true}
+cw-wavs-trigger-api = {workspace = true}
+cw-wavs-mock-api = {workspace = true}
+cw-wavs-ecdsa-api = {workspace = true}
+cw-wavs-bls-api = {workspace = true}
+cw-wavs-mirror-api = {workspace = true}
 tokio = {workspace = true}
 shared-tests = {workspace = true}
 tracing = {workspace = true}
