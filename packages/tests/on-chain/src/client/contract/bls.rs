@@ -1,9 +1,9 @@
-use sdk::contract_kinds::bls::{
+use cw_wavs_sdk::contract_kinds::bls::{
     BlsServiceHandlerExecutor, BlsServiceHandlerQuerier, BlsServiceManagerExecutor,
     BlsServiceManagerQuerier,
 };
-use sdk::service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier};
-use sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
+use cw_wavs_sdk::service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier};
+use cw_wavs_sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
 use shared_tests::wrapper::ContractTestWrapper;
 
 use crate::client::code_ids::CodeId;
@@ -28,7 +28,7 @@ impl BlsTestClient {
                 None,
                 CodeId::new_bls_service_manager().await,
                 "BLS Service Manager",
-                &bls_api::service_manager::InstantiateMsg {},
+                &cw_wavs_bls_api::service_manager::InstantiateMsg {},
                 vec![],
                 None,
             )
@@ -40,7 +40,7 @@ impl BlsTestClient {
                 None,
                 CodeId::new_bls_service_handler().await,
                 "BLS Service Handler",
-                &bls_api::service_handler::InstantiateMsg {
+                &cw_wavs_bls_api::service_handler::InstantiateMsg {
                     service_manager: service_manager.to_string(),
                 },
                 vec![],
@@ -73,14 +73,17 @@ impl BlsTestClient {
         }
     }
 
-    pub fn wrap_test(&self, trigger_simple: &SimpleTriggerTestClient) -> ContractTestWrapper {
+    pub fn wrap_test(
+        &self,
+        cw_wavs_trigger_simple: &SimpleTriggerTestClient,
+    ) -> ContractTestWrapper {
         ContractTestWrapper {
             service_handler_querier: self.service_handler_querier.service_handler().clone(),
             service_handler_executor: self.service_handler_executor.service_handler().clone(),
             service_manager_querier: self.service_manager_querier.service_manager().clone(),
             service_manager_executor: self.service_manager_executor.service_manager().clone(),
-            trigger_simple_querier: trigger_simple.querier.clone(),
-            trigger_simple_executor: trigger_simple.executor.clone(),
+            cw_wavs_trigger_simple_querier: cw_wavs_trigger_simple.querier.clone(),
+            cw_wavs_trigger_simple_executor: cw_wavs_trigger_simple.executor.clone(),
         }
     }
 }

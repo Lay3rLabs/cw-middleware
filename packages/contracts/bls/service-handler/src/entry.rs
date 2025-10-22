@@ -9,7 +9,7 @@ use wavs_types::contracts::cosmwasm::{
     service_handler::ServiceHandlerExecuteMessages, service_manager::WavsValidateResult,
 };
 
-use bls_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use cw_wavs_bls_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 use crate::state;
 

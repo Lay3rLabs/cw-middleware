@@ -10,7 +10,9 @@ use wavs_types::contracts::cosmwasm::{
 };
 
 use crate::state;
-use mirror_api::service_handler::{ExecuteMsg, InstantiateMsg, QueryMsg, TriggerMessageResponse};
+use cw_wavs_mirror_api::service_handler::{
+    ExecuteMsg, InstantiateMsg, QueryMsg, TriggerMessageResponse,
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -78,17 +80,17 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
         },
 
         QueryMsg::Mirror(mirror) => match mirror {
-            mirror_api::service_handler::MirrorServiceHandlerQueryMessages::TriggerValidated {
+            cw_wavs_mirror_api::service_handler::MirrorServiceHandlerQueryMessages::TriggerValidated {
                 trigger_id,
             } => to_json_binary(&state::TRIGGER_MESSAGE.has(deps.storage, trigger_id)),
 
-            mirror_api::service_handler::MirrorServiceHandlerQueryMessages::TriggerMessage {
+            cw_wavs_mirror_api::service_handler::MirrorServiceHandlerQueryMessages::TriggerMessage {
                 trigger_id,
             } => to_json_binary(&TriggerMessageResponse {
                 message: state::TRIGGER_MESSAGE.load(deps.storage, trigger_id)?,
             }),
 
-            mirror_api::service_handler::MirrorServiceHandlerQueryMessages::SignatureData {
+            cw_wavs_mirror_api::service_handler::MirrorServiceHandlerQueryMessages::SignatureData {
                 trigger_id,
             } => to_json_binary(&state::SIGNATURE_DATA.load(deps.storage, trigger_id)?),
         },

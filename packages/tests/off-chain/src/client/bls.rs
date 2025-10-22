@@ -1,10 +1,10 @@
 use cw_multi_test::{ContractWrapper, Executor};
-use sdk::contract_kinds::bls::{
+use cw_wavs_sdk::contract_kinds::bls::{
     BlsServiceHandlerExecutor, BlsServiceHandlerQuerier, BlsServiceManagerExecutor,
     BlsServiceManagerQuerier,
 };
-use sdk::service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier};
-use sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
+use cw_wavs_sdk::service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier};
+use cw_wavs_sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
 use shared_tests::wrapper::ContractTestWrapper;
 
 use crate::client::trigger::SimpleTriggerTestClient;
@@ -24,9 +24,9 @@ impl BlsTestClient {
         let admin = client.admin();
 
         let contract = ContractWrapper::new(
-            bls_service_manager::entry::execute,
-            bls_service_manager::entry::instantiate,
-            bls_service_manager::entry::query,
+            cw_wavs_bls_service_manager::entry::execute,
+            cw_wavs_bls_service_manager::entry::instantiate,
+            cw_wavs_bls_service_manager::entry::query,
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 
@@ -35,7 +35,7 @@ impl BlsTestClient {
             .instantiate_contract(
                 code_id,
                 admin.clone(),
-                &bls_api::service_manager::InstantiateMsg {},
+                &cw_wavs_bls_api::service_manager::InstantiateMsg {},
                 &[],
                 "BLS Service Manager",
                 None,
@@ -43,9 +43,9 @@ impl BlsTestClient {
             .unwrap();
 
         let contract = ContractWrapper::new(
-            bls_service_handler::entry::execute,
-            bls_service_handler::entry::instantiate,
-            bls_service_handler::entry::query,
+            cw_wavs_bls_service_handler::entry::execute,
+            cw_wavs_bls_service_handler::entry::instantiate,
+            cw_wavs_bls_service_handler::entry::query,
         );
         let code_id = app.borrow_mut().store_code(Box::new(contract));
 
@@ -54,7 +54,7 @@ impl BlsTestClient {
             .instantiate_contract(
                 code_id,
                 admin,
-                &bls_api::service_handler::InstantiateMsg {
+                &cw_wavs_bls_api::service_handler::InstantiateMsg {
                     service_manager: service_manager.to_string(),
                 },
                 &[],
@@ -87,14 +87,17 @@ impl BlsTestClient {
         }
     }
 
-    pub fn wrap_test(&self, trigger_simple: &SimpleTriggerTestClient) -> ContractTestWrapper {
+    pub fn wrap_test(
+        &self,
+        cw_wavs_trigger_simple: &SimpleTriggerTestClient,
+    ) -> ContractTestWrapper {
         ContractTestWrapper {
             service_handler_querier: self.service_handler_querier.service_handler().clone(),
             service_handler_executor: self.service_handler_executor.service_handler().clone(),
             service_manager_querier: self.service_manager_querier.service_manager().clone(),
             service_manager_executor: self.service_manager_executor.service_manager().clone(),
-            trigger_simple_querier: trigger_simple.querier.clone(),
-            trigger_simple_executor: trigger_simple.executor.clone(),
+            cw_wavs_trigger_simple_querier: cw_wavs_trigger_simple.querier.clone(),
+            cw_wavs_trigger_simple_executor: cw_wavs_trigger_simple.executor.clone(),
         }
     }
 }

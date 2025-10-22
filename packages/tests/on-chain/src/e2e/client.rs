@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sdk::{
+use cw_wavs_sdk::{
     service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier},
     service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
 };

@@ -72,7 +72,7 @@ async fn main() {
                             None,
                             code_id,
                             "Mock Service Manager",
-                            &mock_api::service_manager::InstantiateMsg {},
+                            &cw_wavs_mock_api::service_manager::InstantiateMsg {},
                             Vec::new(),
                             None,
                         )
@@ -83,7 +83,7 @@ async fn main() {
                             None,
                             code_id,
                             "Ecdsa Service Manager",
-                            &ecdsa_api::service_manager::InstantiateMsg {},
+                            &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {},
                             Vec::new(),
                             None,
                         )
@@ -94,7 +94,7 @@ async fn main() {
                             None,
                             code_id,
                             "Bls Service Manager",
-                            &bls_api::service_manager::InstantiateMsg {},
+                            &cw_wavs_bls_api::service_manager::InstantiateMsg {},
                             Vec::new(),
                             None,
                         )
@@ -133,7 +133,7 @@ async fn main() {
                             None,
                             code_id,
                             "Mock Service Handler",
-                            &mock_api::service_handler::InstantiateMsg { service_manager },
+                            &cw_wavs_mock_api::service_handler::InstantiateMsg { service_manager },
                             Vec::new(),
                             None,
                         )
@@ -144,7 +144,7 @@ async fn main() {
                             None,
                             code_id,
                             "Ecdsa Service Handler",
-                            &ecdsa_api::service_handler::InstantiateMsg { service_manager },
+                            &cw_wavs_ecdsa_api::service_handler::InstantiateMsg { service_manager },
                             Vec::new(),
                             None,
                         )
@@ -155,7 +155,7 @@ async fn main() {
                             None,
                             code_id,
                             "Bls Service Handler",
-                            &bls_api::service_handler::InstantiateMsg { service_manager },
+                            &cw_wavs_bls_api::service_handler::InstantiateMsg { service_manager },
                             Vec::new(),
                             None,
                         )

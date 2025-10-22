@@ -4,8 +4,8 @@ pub mod mirror;
 pub mod mock;
 pub mod trigger;
 
+use cw_wavs_sdk::client::{WavsExecutor, WavsQuerier};
 use layer_climb::pool::SigningClientPool;
-use sdk::client::{WavsExecutor, WavsQuerier};
 
 use crate::client::pool::TestPool;
 

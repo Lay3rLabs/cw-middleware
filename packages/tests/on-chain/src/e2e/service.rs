@@ -1,5 +1,5 @@
+use cw_wavs_trigger_api::simple::PushMessageEvent;
 use std::collections::BTreeMap;
-use trigger_api::simple::PushMessageEvent;
 use wavs_types::{
     AllowedHostPermission, Component, ComponentSource, CosmosContractSubmission, Service,
     ServiceManager, Submit, Trigger, Workflow,

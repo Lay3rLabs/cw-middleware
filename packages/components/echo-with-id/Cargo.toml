@@ -8,7 +8,7 @@ repository.workspace = true
 
 [dependencies]
 # Use explicit no-features sdk
-sdk = { path = "../../sdk", default-features = false }
+cw-wavs-sdk = { path = "../../sdk", default-features = false }
 layer-climb = { workspace = true }
 serde = { workspace = true }
 bincode = { workspace = true }
@@ -18,8 +18,8 @@ wavs-wasi-utils = { workspace = true }
 wit-bindgen-rt = { workspace = true }
 thiserror = { workspace = true }
 cosmwasm-std = { workspace = true }
-mock-api = {workspace = true }
-trigger-api = {workspace = true }
+cw-wavs-mock-api = {workspace = true }
+cw-wavs-trigger-api = {workspace = true }
 wavs-types = {workspace = true}
 
 [lib]

@@ -18,7 +18,7 @@ impl BlsServiceHandlerQuerier {
 
     pub async fn bls_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &bls_api::service_handler::QueryMsg,
+        msg: &cw_wavs_bls_api::service_handler::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.querier()
             .contract_query(&self.service_handler().addr, msg)
@@ -46,7 +46,7 @@ impl BlsServiceHandlerExecutor {
 
     pub async fn bls_exec(
         &self,
-        msg: &bls_api::service_handler::ExecuteMsg,
+        msg: &cw_wavs_bls_api::service_handler::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.executor()
@@ -75,7 +75,7 @@ impl BlsServiceManagerQuerier {
 
     pub async fn bls_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &bls_api::service_manager::QueryMsg,
+        msg: &cw_wavs_bls_api::service_manager::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.querier()
             .contract_query(&self.service_manager().addr, msg)
@@ -103,7 +103,7 @@ impl BlsServiceManagerExecutor {
 
     pub async fn bls_exec(
         &self,
-        msg: &bls_api::service_manager::ExecuteMsg,
+        msg: &cw_wavs_bls_api::service_manager::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.executor()

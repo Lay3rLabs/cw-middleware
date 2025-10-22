@@ -1,8 +1,8 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint256};
 use cw_storage_plus::{Item, Map, SnapshotMap, Strategy};
+use cw_wavs_mirror_api::stake_registry::QuorumConfig;
 use layer_climb_address::AddrEvm;
-use mirror_api::stake_registry::QuorumConfig;
 
 // Contract configuration
 pub const CONFIG: Item<Config> = Item::new("config");

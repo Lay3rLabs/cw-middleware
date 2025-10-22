@@ -1,5 +1,5 @@
 [package]
-name = "mirror-stake-registry"
+name = "cw-wavs-mirror-stake-registry"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,7 +16,7 @@ cw-storage-plus = { workspace = true }
 cw2 = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
-mirror-api = { workspace = true }
+cw-wavs-mirror-api = { workspace = true }
 layer-climb-address = { workspace = true }
 hex = "0.4"
 

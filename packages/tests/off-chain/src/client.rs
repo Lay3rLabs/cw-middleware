@@ -8,7 +8,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use cosmwasm_std::{Addr, Coin};
 use cw_multi_test::App;
-use sdk::client::{WavsExecutor, WavsQuerier};
+use cw_wavs_sdk::client::{WavsExecutor, WavsQuerier};
 
 #[derive(Clone)]
 pub struct ContractTestClient {

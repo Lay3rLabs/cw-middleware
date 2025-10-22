@@ -13,9 +13,9 @@ async fn mock_sanity_1() {
     for _ in 0..5 {
         futures.push(async {
             let client = ContractTestClient::new().await;
-            let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+            let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
             let contract = MockTestClient::new(client.clone()).await;
-            let wrapped = contract.wrap_test(&trigger_simple);
+            let wrapped = contract.wrap_test(&cw_wavs_trigger_simple);
             contracts_sanity::run_sanity_tests_with_id(&wrapped, "1").await;
         });
     }
@@ -32,9 +32,9 @@ async fn mock_sanity_2() {
     for _ in 0..5 {
         futures.push(async {
             let client = ContractTestClient::new().await;
-            let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+            let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
             let contract = MockTestClient::new(client.clone()).await;
-            let wrapped = contract.wrap_test(&trigger_simple);
+            let wrapped = contract.wrap_test(&cw_wavs_trigger_simple);
             contracts_sanity::run_sanity_tests_with_id(&wrapped, "2").await;
         });
     }
@@ -51,9 +51,9 @@ async fn mock_sanity_3() {
     for _ in 0..5 {
         futures.push(async {
             let client = ContractTestClient::new().await;
-            let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+            let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
             let contract = MockTestClient::new(client.clone()).await;
-            let wrapped = contract.wrap_test(&trigger_simple);
+            let wrapped = contract.wrap_test(&cw_wavs_trigger_simple);
             contracts_sanity::run_sanity_tests_with_id(&wrapped, "3").await;
         });
     }

@@ -1,12 +1,12 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use layer_climb::prelude::*;
-use layer_climb_cli::command::WalletCommand;
-use rand::prelude::*;
-use sdk::{
+use cw_wavs_sdk::{
     service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier},
     service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
 };
+use layer_climb::prelude::*;
+use layer_climb_cli::command::WalletCommand;
+use rand::prelude::*;
 use utils::config::ChainConfigs;
 
 use crate::command::{CliArgs, Command, WalletArgs};

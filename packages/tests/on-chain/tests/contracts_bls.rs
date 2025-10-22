@@ -8,8 +8,8 @@ async fn mock_sanity() {
     tracing_tests_init();
 
     let client = ContractTestClient::new().await;
-    let trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
+    let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
     let contract = BlsTestClient::new(client.clone()).await;
 
-    contracts_sanity::run_sanity_tests(&contract.wrap_test(&trigger_simple)).await;
+    contracts_sanity::run_sanity_tests(&contract.wrap_test(&cw_wavs_trigger_simple)).await;
 }

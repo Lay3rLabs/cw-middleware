@@ -36,23 +36,23 @@ rust-version = "1.88.0"
 
 [workspace.dependencies]
 # Local
-sdk = { path = "packages/sdk" }
-mock-api = { path = "packages/contracts/mock/api" }
-ecdsa-api = { path = "packages/contracts/ecdsa/api" }
-bls-api = { path = "packages/contracts/bls/api" }
-trigger-api = { path = "packages/contracts/trigger/api" }
-mirror-api = { path = "packages/contracts/mirror/api" }
-mirror-service-handler = { path = "packages/contracts/mirror/service-handler" }
-mirror-service-manager = { path = "packages/contracts/mirror/service-manager" }
+cw-wavs-sdk = { path = "packages/sdk" }
+cw-wavs-mock-api = { path = "packages/contracts/mock/api" }
+cw-wavs-ecdsa-api = { path = "packages/contracts/ecdsa/api" }
+cw-wavs-bls-api = { path = "packages/contracts/bls/api" }
+cw-wavs-trigger-api = { path = "packages/contracts/trigger/api" }
+cw-wavs-mirror-api = { path = "packages/contracts/mirror/api" }
+cw-wavs-mirror-service-handler = { path = "packages/contracts/mirror/service-handler" }
+cw-wavs-mirror-service-manager = { path = "packages/contracts/mirror/service-manager" }
+cw-wavs-mock-service-handler = { path = "packages/contracts/mock/service-handler" }
+cw-wavs-mock-service-manager = { path = "packages/contracts/mock/service-manager" }
+cw-wavs-trigger-simple = { path = "packages/contracts/trigger/simple" }
+cw-wavs-ecdsa-service-handler = { path = "packages/contracts/ecdsa/service-handler" }
+cw-wavs-ecdsa-service-manager = { path = "packages/contracts/ecdsa/service-manager" }
+cw-wavs-bls-service-handler = { path = "packages/contracts/bls/service-handler" }
+cw-wavs-bls-service-manager = { path = "packages/contracts/bls/service-manager" }
+cw-wavs-mirror-stake-registry = { path = "packages/contracts/mirror/stake-registry" }
 utils = { path = "packages/utils" }
-mock-service-handler = { path = "packages/contracts/mock/service-handler" }
-mock-service-manager = { path = "packages/contracts/mock/service-manager" }
-trigger-simple = { path = "packages/contracts/trigger/simple" }
-ecdsa-service-handler = { path = "packages/contracts/ecdsa/service-handler" }
-ecdsa-service-manager = { path = "packages/contracts/ecdsa/service-manager" }
-bls-service-handler = { path = "packages/contracts/bls/service-handler" }
-bls-service-manager = { path = "packages/contracts/bls/service-manager" }
-mirror-stake-registry = { path = "packages/contracts/mirror/stake-registry" }
 shared-tests = { path = "packages/tests/shared" }
 
 # WAVS

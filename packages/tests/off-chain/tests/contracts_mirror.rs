@@ -64,7 +64,7 @@ async fn mirror_service_manager_admin_only() {
     let result = mirror_client
         .service_manager_executor
         .mirror_exec(
-            &mirror_api::service_manager::ExecuteMsg::SetSigningKey {
+            &cw_wavs_mirror_api::service_manager::ExecuteMsg::SetSigningKey {
                 operator: operator.clone(),
                 signing_key: signing_key.clone(),
                 weight,
@@ -77,7 +77,7 @@ async fn mirror_service_manager_admin_only() {
 
     // Non-admin trying to set signing key should fail
     let non_admin_client = ContractTestClient::new("not_admin");
-    let non_admin_executor = sdk::service_manager::ServiceManagerExecutor::new(
+    let non_admin_executor = cw_wavs_sdk::service_manager::ServiceManagerExecutor::new(
         non_admin_client.executor,
         mirror_client
             .service_manager_executor
@@ -86,11 +86,11 @@ async fn mirror_service_manager_admin_only() {
             .clone(),
     );
     let non_admin_mirror_executor =
-        sdk::contract_kinds::mirror::MirrorServiceManagerExecutor::new(non_admin_executor);
+        cw_wavs_sdk::contract_kinds::mirror::MirrorServiceManagerExecutor::new(non_admin_executor);
 
     let result = non_admin_mirror_executor
         .mirror_exec(
-            &mirror_api::service_manager::ExecuteMsg::SetSigningKey {
+            &cw_wavs_mirror_api::service_manager::ExecuteMsg::SetSigningKey {
                 operator,
                 signing_key,
                 weight,

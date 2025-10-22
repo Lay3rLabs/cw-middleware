@@ -13,7 +13,7 @@ use crate::state::{
     Config, CONFIG, OPERATOR_REGISTERED, OPERATOR_SIGNING_KEYS, OPERATOR_WEIGHTS, OWNER,
     SIGNING_KEY_TO_OPERATOR, TOTAL_WEIGHT,
 };
-use mirror_api::stake_registry::{
+use cw_wavs_mirror_api::stake_registry::{
     ExecuteMsg, InstantiateMsg, OperatorWeightUpdatedEvent, QueryMsg, SignatureData,
     SigningKeyUpdateEvent, TotalWeightUpdatedEvent, ValidationResult,
 };
@@ -466,7 +466,7 @@ fn query_total_weight(deps: Deps) -> StdResult<Uint256> {
     TOTAL_WEIGHT.load(deps.storage)
 }
 
-fn query_quorum(deps: Deps) -> StdResult<mirror_api::stake_registry::QuorumConfig> {
+fn query_quorum(deps: Deps) -> StdResult<cw_wavs_mirror_api::stake_registry::QuorumConfig> {
     let config = CONFIG.load(deps.storage)?;
     Ok(config.quorum)
 }

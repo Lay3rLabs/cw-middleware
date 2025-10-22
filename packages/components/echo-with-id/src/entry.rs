@@ -1,6 +1,6 @@
-use mock_api::message_with_id::MessageWithId;
-use sdk::contract_kinds::trigger::SimpleTriggerQuerier;
-use trigger_api::simple::PushMessageEvent;
+use cw_wavs_mock_api::message_with_id::MessageWithId;
+use cw_wavs_sdk::contract_kinds::trigger::SimpleTriggerQuerier;
+use cw_wavs_trigger_api::simple::PushMessageEvent;
 
 use layer_climb::prelude::*;
 

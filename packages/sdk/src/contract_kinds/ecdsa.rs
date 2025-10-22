@@ -18,7 +18,7 @@ impl EcdsaServiceHandlerQuerier {
 
     pub async fn ecdsa_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &ecdsa_api::service_handler::QueryMsg,
+        msg: &cw_wavs_ecdsa_api::service_handler::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.querier()
             .contract_query(&self.service_handler().addr, msg)
@@ -46,7 +46,7 @@ impl EcdsaServiceHandlerExecutor {
 
     pub async fn ecdsa_exec(
         &self,
-        msg: &ecdsa_api::service_handler::ExecuteMsg,
+        msg: &cw_wavs_ecdsa_api::service_handler::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.executor()
@@ -75,7 +75,7 @@ impl EcdsaServiceManagerQuerier {
 
     pub async fn ecdsa_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &ecdsa_api::service_manager::QueryMsg,
+        msg: &cw_wavs_ecdsa_api::service_manager::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.querier()
             .contract_query(&self.service_manager().addr, msg)
@@ -103,7 +103,7 @@ impl EcdsaServiceManagerExecutor {
 
     pub async fn ecdsa_exec(
         &self,
-        msg: &ecdsa_api::service_manager::ExecuteMsg,
+        msg: &cw_wavs_ecdsa_api::service_manager::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.executor()

@@ -17,7 +17,7 @@ impl MirrorServiceHandlerQuerier {
 
     pub async fn mirror_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &mirror_api::service_handler::QueryMsg,
+        msg: &cw_wavs_mirror_api::service_handler::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.querier()
             .contract_query(&self.service_handler().addr, msg)
@@ -45,7 +45,7 @@ impl MirrorServiceHandlerExecutor {
 
     pub async fn mirror_exec(
         &self,
-        msg: &mirror_api::service_handler::ExecuteMsg,
+        msg: &cw_wavs_mirror_api::service_handler::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.executor()

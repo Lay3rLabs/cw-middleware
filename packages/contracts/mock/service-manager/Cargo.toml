@@ -1,5 +1,5 @@
 [package]
-name = "mock-service-manager"
+name = "cw-wavs-mock-service-manager"
 version = "0.0.0"
 edition = "2021"
 license = "Apache-2.0"
@@ -8,13 +8,12 @@ license = "Apache-2.0"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-mock-api= { workspace = true }
-# The workspace `wavs-types` has features, we need to disable them, overriding with `worksace = true` doesn't work
-wavs-types = { workspace = true } 
+cw-wavs-mock-api= { workspace = true }
+wavs-types = { workspace = true }
 layer-climb-address = { workspace = true }
 cosmwasm-std = {workspace = true}
-anyhow = {workspace = true} 
-cw-storage-plus = {workspace = true} 
-cw2 = {workspace = true} 
+anyhow = {workspace = true}
+cw-storage-plus = {workspace = true}
+cw2 = {workspace = true}
 cosmwasm-schema = {workspace = true}
 const-hex = {workspace = true}

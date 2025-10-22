@@ -34,7 +34,7 @@ tasks:
         sh: task contracts:env-kind
       CONTRACT_ARTIFACTS_PATH:
         sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
-      CONTRACT_NAME: "{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
+      CONTRACT_NAME: "cw_wavs_{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
       CONTRACT_PATH: "{{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"
     cmds:
       - cd packages/cli && cargo run contract upload --wasm-file "{{.CONTRACT_PATH}}"

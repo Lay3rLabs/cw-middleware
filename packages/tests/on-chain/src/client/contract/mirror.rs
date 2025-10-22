@@ -1,9 +1,9 @@
-use sdk::contract_kinds::mirror::{
+use cw_wavs_sdk::contract_kinds::mirror::{
     MirrorServiceHandlerExecutor, MirrorServiceHandlerQuerier, MirrorServiceManagerExecutor,
     MirrorServiceManagerQuerier, MirrorStakeRegistryExecutor, MirrorStakeRegistryQuerier,
 };
-use sdk::service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier};
-use sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
+use cw_wavs_sdk::service_handler::{ServiceHandlerExecutor, ServiceHandlerQuerier};
+use cw_wavs_sdk::service_manager::{ServiceManagerExecutor, ServiceManagerQuerier};
 use shared_tests::wrapper::ContractTestWrapper;
 
 use crate::client::code_ids::CodeId;
@@ -31,9 +31,11 @@ impl MirrorTestClient {
         let service_manager_instantiate_msg = cosmwasm_std::WasmMsg::Instantiate2 {
             admin: Some(admin.to_string()),
             code_id: service_manager_code_id,
-            msg: cosmwasm_std::to_json_binary(&mirror_api::service_manager::InstantiateMsg {
-                owner: admin.to_string(),
-            })
+            msg: cosmwasm_std::to_json_binary(
+                &cw_wavs_mirror_api::service_manager::InstantiateMsg {
+                    owner: admin.to_string(),
+                },
+            )
             .unwrap(),
             funds: vec![],
             label: "Mirror Service Manager".to_string(),
@@ -43,13 +45,13 @@ impl MirrorTestClient {
         let (stake_registry, _) = client
             .contract_instantiate(
                 None,
-                CodeId::new_mirror_stake_registry().await,
+                CodeId::new_cw_wavs_mirror_stake_registry().await,
                 "Mirror Stake Registry",
-                &mirror_api::stake_registry::InstantiateMsg {
+                &cw_wavs_mirror_api::stake_registry::InstantiateMsg {
                     service_manager_instantiate: service_manager_instantiate_msg,
                     threshold_weight: cosmwasm_std::Uint256::from(1000u128),
-                    quorum: mirror_api::stake_registry::QuorumConfig {
-                        strategies: vec![mirror_api::stake_registry::StrategyParams {
+                    quorum: cw_wavs_mirror_api::stake_registry::QuorumConfig {
+                        strategies: vec![cw_wavs_mirror_api::stake_registry::StrategyParams {
                             strategy: "test_strategy".to_string(),
                             multiplier: cosmwasm_std::Uint256::from(100u128),
                         }],
@@ -66,7 +68,7 @@ impl MirrorTestClient {
             .querier
             .contract_query(
                 &stake_registry.clone().try_into().unwrap(),
-                &mirror_api::stake_registry::QueryMsg::GetServiceManager {},
+                &cw_wavs_mirror_api::stake_registry::QueryMsg::GetServiceManager {},
             )
             .await
             .unwrap();
@@ -75,9 +77,9 @@ impl MirrorTestClient {
         let (service_handler, _) = client
             .contract_instantiate(
                 None,
-                CodeId::new_mirror_service_handler().await,
+                CodeId::new_cw_wavs_mirror_service_handler().await,
                 "Mirror Service Handler",
-                &mirror_api::service_handler::InstantiateMsg {
+                &cw_wavs_mirror_api::service_handler::InstantiateMsg {
                     service_manager: service_manager_addr.to_string(),
                 },
                 vec![],
@@ -121,14 +123,17 @@ impl MirrorTestClient {
         }
     }
 
-    pub fn wrap_test(&self, trigger_simple: &SimpleTriggerTestClient) -> ContractTestWrapper {
+    pub fn wrap_test(
+        &self,
+        cw_wavs_trigger_simple: &SimpleTriggerTestClient,
+    ) -> ContractTestWrapper {
         ContractTestWrapper {
             service_handler_querier: self.service_handler_querier.service_handler().clone(),
             service_handler_executor: self.service_handler_executor.service_handler().clone(),
             service_manager_querier: self.service_manager_querier.service_manager().clone(),
             service_manager_executor: self.service_manager_executor.service_manager().clone(),
-            trigger_simple_querier: trigger_simple.querier.clone(),
-            trigger_simple_executor: trigger_simple.executor.clone(),
+            cw_wavs_trigger_simple_querier: cw_wavs_trigger_simple.querier.clone(),
+            cw_wavs_trigger_simple_executor: cw_wavs_trigger_simple.executor.clone(),
         }
     }
 }

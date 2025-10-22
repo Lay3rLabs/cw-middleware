@@ -1,8 +1,8 @@
 use cosmwasm_std::{Addr, Uint64};
+use cw_wavs_trigger_api::simple::PushMessageEvent;
 use layer_climb::events::CosmosTxEvents;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
-use trigger_api::simple::PushMessageEvent;
 
 use crate::client::{WavsExecutor, WavsQuerier, WavsTxResponse};
 
@@ -16,9 +16,9 @@ impl SimpleTriggerQuerier {
     pub fn new(inner: WavsQuerier, addr: Addr) -> Self {
         Self { inner, addr }
     }
-    pub async fn trigger_simple_query<RESP: DeserializeOwned + Send + Sync + Debug>(
+    pub async fn cw_wavs_trigger_simple_query<RESP: DeserializeOwned + Send + Sync + Debug>(
         &self,
-        msg: &trigger_api::simple::QueryMsg,
+        msg: &cw_wavs_trigger_api::simple::QueryMsg,
     ) -> Result<RESP, cosmwasm_std::StdError> {
         self.inner.contract_query(&self.addr, msg).await
     }
@@ -31,7 +31,7 @@ impl SimpleTriggerQuerier {
         &self,
         trigger_id: impl Into<Uint64>,
     ) -> Result<String, cosmwasm_std::StdError> {
-        self.trigger_simple_query(&trigger_api::simple::QueryMsg::TriggerMessage {
+        self.cw_wavs_trigger_simple_query(&cw_wavs_trigger_api::simple::QueryMsg::TriggerMessage {
             trigger_id: trigger_id.into(),
         })
         .await
@@ -48,9 +48,9 @@ impl SimpleTriggerExecutor {
     pub fn new(inner: WavsExecutor, addr: Addr) -> Self {
         Self { inner, addr }
     }
-    pub async fn trigger_simple_exec(
+    pub async fn cw_wavs_trigger_simple_exec(
         &self,
-        msg: &trigger_api::simple::ExecuteMsg,
+        msg: &cw_wavs_trigger_api::simple::ExecuteMsg,
         funds: &[cosmwasm_std::Coin],
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.inner.contract_exec(&self.addr, msg, funds).await
@@ -64,10 +64,10 @@ impl SimpleTriggerExecutor {
         &self,
         message: impl ToString,
     ) -> Result<Uint64, cosmwasm_std::StdError> {
-        let msg = trigger_api::simple::ExecuteMsg::Push {
+        let msg = cw_wavs_trigger_api::simple::ExecuteMsg::Push {
             message: message.to_string(),
         };
-        let resp = self.trigger_simple_exec(&msg, &[]).await?;
+        let resp = self.cw_wavs_trigger_simple_exec(&msg, &[]).await?;
         let events = CosmosTxEvents::from(&resp);
 
         let event = events

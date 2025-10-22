@@ -1,12 +1,14 @@
 use alloy_primitives::{keccak256 as alloy_keccak256, B256};
 use alloy_sol_types::{SolType, SolValue};
 use cosmwasm_std::{Binary, Uint256};
+use cw_wavs_sdk::contract_kinds::mirror::{
+    MirrorStakeRegistryExecutor, MirrorStakeRegistryQuerier,
+};
 use k256::ecdsa::{
     signature::hazmat::PrehashSigner, RecoveryId, Signature, SigningKey, VerifyingKey,
 };
 use layer_climb_address::AddrEvm;
 use rand::thread_rng;
-use sdk::contract_kinds::mirror::{MirrorStakeRegistryExecutor, MirrorStakeRegistryQuerier};
 
 fn create_eip191_hash(message: &[u8]) -> B256 {
     let prefix = b"\x19Ethereum Signed Message:\n";
