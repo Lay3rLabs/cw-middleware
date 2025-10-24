@@ -1,6 +1,8 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Uint256};
-use layer_climb_address::AddrEvm;
+#[allow(unused_imports)]
+use cosmwasm_std::Addr;
+use cosmwasm_std::Uint256;
+use layer_climb_address::EvmAddr;
 use wavs_types::contracts::cosmwasm::service_manager::{
     ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
 };
@@ -15,8 +17,8 @@ pub struct InstantiateMsg {
 pub enum ExecuteMsg {
     /// Admin-only: Set signing key for mirror service operators
     SetSigningKey {
-        operator: AddrEvm,
-        signing_key: AddrEvm,
+        operator: EvmAddr,
+        signing_key: EvmAddr,
         weight: Uint256,
     },
     #[serde(untagged)]

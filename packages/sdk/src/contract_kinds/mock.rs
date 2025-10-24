@@ -5,7 +5,7 @@ use crate::{
 };
 use cosmwasm_std::Uint64;
 use cw_wavs_mock_api::service_handler::TriggerMessageResponse;
-use layer_climb::prelude::AddrEvm;
+use layer_climb::prelude::EvmAddr;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 
@@ -150,8 +150,8 @@ impl MockServiceManagerExecutor {
 
     pub async fn set_signing_key(
         &self,
-        operator_addr: AddrEvm,
-        signing_key_addr: AddrEvm,
+        operator_addr: EvmAddr,
+        signing_key_addr: EvmAddr,
         weight: u64,
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.mock_exec(

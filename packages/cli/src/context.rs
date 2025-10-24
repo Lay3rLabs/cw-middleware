@@ -39,12 +39,9 @@ impl CliContext {
         let chain_config = self
             .chain_configs
             .cosmos
-            .get(&self.args.chain_name)
+            .get(&self.args.chain)
             .cloned()
-            .context(format!(
-                "Chain config not found for {}",
-                self.args.chain_name
-            ))?;
+            .context(format!("Chain config not found for {}", self.args.chain))?;
         Ok(chain_config.into())
     }
 

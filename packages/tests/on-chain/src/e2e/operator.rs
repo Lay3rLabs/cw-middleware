@@ -1,4 +1,4 @@
-use wavs_types::Service;
+use wavs_types_full::Service;
 
 use crate::e2e::client::{TestClient, TestService};
 

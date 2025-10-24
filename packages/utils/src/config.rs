@@ -2,13 +2,13 @@ use std::{collections::BTreeMap, path::Path};
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use wavs_types::{ChainName, CosmosChainConfig};
+use wavs_types_full::{ChainKey, CosmosChainConfig};
 
 use crate::path::repo_wavs_home;
 
 #[derive(Debug, Default, Deserialize, Serialize, Clone)]
 pub struct ChainConfigs {
-    pub cosmos: BTreeMap<ChainName, CosmosChainConfig>,
+    pub cosmos: BTreeMap<ChainKey, CosmosChainConfig>,
 }
 
 impl ChainConfigs {

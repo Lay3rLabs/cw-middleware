@@ -1,6 +1,8 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Addr, Binary, Uint256, WasmMsg};
-use layer_climb_address::AddrEvm;
+#[allow(unused_imports)]
+use cosmwasm_std::Addr;
+use cosmwasm_std::{Binary, Uint256, WasmMsg};
+use layer_climb_address::EvmAddr;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -25,14 +27,14 @@ pub struct StrategyParams {
 pub enum ExecuteMsg {
     /// Set operator details (owner only)
     SetOperatorDetails {
-        operator: AddrEvm,
-        signing_key: AddrEvm,
+        operator: EvmAddr,
+        signing_key: EvmAddr,
         weight: Uint256,
     },
     /// Batch set multiple operator details (owner only)
     BatchSetOperatorDetails {
-        operators: Vec<AddrEvm>,
-        signing_keys: Vec<AddrEvm>,
+        operators: Vec<EvmAddr>,
+        signing_keys: Vec<EvmAddr>,
         weights: Vec<Uint256>,
     },
 }
@@ -50,13 +52,13 @@ pub enum QueryMsg {
     },
     /// Get operator weight
     #[returns(Uint256)]
-    GetOperatorWeight { operator: AddrEvm },
+    GetOperatorWeight { operator: EvmAddr },
     /// Get operator signing key
-    #[returns(Option<AddrEvm>)]
-    GetOperatorSigningKey { operator: AddrEvm },
+    #[returns(Option<EvmAddr>)]
+    GetOperatorSigningKey { operator: EvmAddr },
     /// Get latest operator for signing key
-    #[returns(Option<AddrEvm>)]
-    GetLatestOperatorForSigningKey { signing_key: AddrEvm },
+    #[returns(Option<EvmAddr>)]
+    GetLatestOperatorForSigningKey { signing_key: EvmAddr },
     /// Get service manager address
     #[returns(Addr)]
     GetServiceManager {},
@@ -78,15 +80,15 @@ pub struct ValidationResult {
 
 #[cw_serde]
 pub struct SignatureData {
-    pub operators: Vec<AddrEvm>,
+    pub operators: Vec<EvmAddr>,
     pub signatures: Vec<Binary>,
     pub reference_block: u32,
 }
 
 #[cw_serde]
 pub struct OperatorDetails {
-    pub operator: AddrEvm,
-    pub signing_key: AddrEvm,
+    pub operator: EvmAddr,
+    pub signing_key: EvmAddr,
     pub weight: Uint256,
     pub registered: bool,
 }
@@ -94,7 +96,7 @@ pub struct OperatorDetails {
 // Events to match Solidity contract
 #[cw_serde]
 pub struct OperatorWeightUpdatedEvent {
-    pub operator: AddrEvm,
+    pub operator: EvmAddr,
     pub old_weight: Uint256,
     pub new_weight: Uint256,
 }
@@ -152,10 +154,10 @@ impl From<TotalWeightUpdatedEvent> for cosmwasm_std::Event {
 
 #[cw_serde]
 pub struct SigningKeyUpdateEvent {
-    pub operator: AddrEvm,
+    pub operator: EvmAddr,
     pub block_number: u64,
-    pub new_signing_key: AddrEvm,
-    pub old_signing_key: Option<AddrEvm>,
+    pub new_signing_key: EvmAddr,
+    pub old_signing_key: Option<EvmAddr>,
 }
 
 impl SigningKeyUpdateEvent {

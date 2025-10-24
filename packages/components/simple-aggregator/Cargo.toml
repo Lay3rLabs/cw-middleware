@@ -1,5 +1,5 @@
 [package]
-name = "echo-with-id"
+name = "simple-aggregator"
 edition.workspace = true
 version.workspace = true
 authors.workspace = true
@@ -7,7 +7,6 @@ rust-version.workspace = true
 repository.workspace = true
 
 [dependencies]
-# Use explicit no-features sdk
 cw-wavs-sdk = { path = "../../sdk", default-features = false }
 layer-climb = { workspace = true }
 serde = { workspace = true }
@@ -22,9 +21,10 @@ cw-wavs-mock-api = {workspace = true }
 cw-wavs-trigger-api = {workspace = true }
 wavs-types = {workspace = true}
 
+
 [lib]
 crate-type = ["cdylib"]
 
 [package.metadata.component]
-package = "component:echo-with-id"
-target = "wavs:operator/wavs-world@2.0.0"
+package = "component:simple-aggregator"
+target = "wavs:aggregator/aggregator-world@2.0.0"

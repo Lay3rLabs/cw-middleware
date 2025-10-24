@@ -4,8 +4,8 @@ use cw_wavs_trigger_api::simple::PushMessageEvent;
 
 use layer_climb::prelude::*;
 
-use crate::bindings::wavs::worker::helpers::LogLevel;
-use crate::bindings::wavs::worker::input::TriggerData;
+use crate::bindings::wavs::operator::input::TriggerData;
+use crate::bindings::wavs::types::core::LogLevel;
 use crate::bindings::{host, Guest, TriggerAction, WasmResponse};
 use crate::error::EchoResult;
 
@@ -29,8 +29,8 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
 
             let event = PushMessageEvent::try_from(&cosmos_event).map_err(|e| e.to_string())?;
 
-            let chain_config = host::get_cosmos_chain_config(&data.chain_name)
-                .ok_or_else(|| format!("No chain config found for {}", data.chain_name))?;
+            let chain_config = host::get_cosmos_chain_config(&data.chain)
+                .ok_or_else(|| format!("No chain config found for {}", data.chain))?;
 
             let message = wstd::runtime::block_on(async move {
                 let client = QueryClient::new(
@@ -53,14 +53,8 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                 .await
                 .map_err(|e| e.to_string())?;
 
-                let address = Address::Cosmos {
-                    bech32_addr: data.contract_address.bech32_addr,
-                    prefix_len: data
-                        .contract_address
-                        .prefix_len
-                        .try_into()
-                        .map_err(|_| "Invalid prefix length")?,
-                };
+                let address = CosmosAddr::new_str(&data.contract_address.bech32_addr, None)
+                    .map_err(|_| "Invalid prefix length")?;
 
                 let trigger = SimpleTriggerQuerier::new(
                     client.into(),

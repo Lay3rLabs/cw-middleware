@@ -1,7 +1,7 @@
 use crate::client::{WavsExecutor, WavsQuerier, WavsTxResponse};
 use cosmwasm_std::{Addr, Binary, Uint256};
 use cw_wavs_mirror_api::stake_registry::{ExecuteMsg, QueryMsg, ValidationResult};
-use layer_climb::prelude::AddrEvm;
+use layer_climb::prelude::EvmAddr;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 
@@ -43,7 +43,7 @@ impl MirrorStakeRegistryQuerier {
 
     pub async fn get_operator_weight(
         &self,
-        operator: AddrEvm,
+        operator: EvmAddr,
     ) -> Result<Uint256, cosmwasm_std::StdError> {
         self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetOperatorWeight { operator })
             .await
@@ -51,16 +51,16 @@ impl MirrorStakeRegistryQuerier {
 
     pub async fn get_operator_signing_key(
         &self,
-        operator: AddrEvm,
-    ) -> Result<Option<AddrEvm>, cosmwasm_std::StdError> {
+        operator: EvmAddr,
+    ) -> Result<Option<EvmAddr>, cosmwasm_std::StdError> {
         self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetOperatorSigningKey { operator })
             .await
     }
 
     pub async fn get_latest_operator_for_signing_key(
         &self,
-        signing_key: AddrEvm,
-    ) -> Result<Option<AddrEvm>, cosmwasm_std::StdError> {
+        signing_key: EvmAddr,
+    ) -> Result<Option<EvmAddr>, cosmwasm_std::StdError> {
         self.cw_wavs_mirror_stake_registry_query(&QueryMsg::GetLatestOperatorForSigningKey {
             signing_key,
         })
@@ -103,8 +103,8 @@ impl MirrorStakeRegistryExecutor {
 
     pub async fn set_operator_details(
         &self,
-        operator: AddrEvm,
-        signing_key: AddrEvm,
+        operator: EvmAddr,
+        signing_key: EvmAddr,
         weight: Uint256,
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.mirror_exec(
@@ -120,8 +120,8 @@ impl MirrorStakeRegistryExecutor {
 
     pub async fn batch_set_operator_details(
         &self,
-        operators: Vec<AddrEvm>,
-        signing_keys: Vec<AddrEvm>,
+        operators: Vec<EvmAddr>,
+        signing_keys: Vec<EvmAddr>,
         weights: Vec<Uint256>,
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.mirror_exec(

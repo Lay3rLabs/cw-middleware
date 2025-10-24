@@ -2,7 +2,7 @@ use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint256};
 use cw_storage_plus::{Item, Map, SnapshotMap, Strategy};
 use cw_wavs_mirror_api::stake_registry::QuorumConfig;
-use layer_climb_address::AddrEvm;
+use layer_climb_address::EvmAddr;
 
 // Contract configuration
 pub const CONFIG: Item<Config> = Item::new("config");
@@ -15,13 +15,13 @@ pub const OPERATOR_WEIGHTS: SnapshotMap<String, Uint256> = SnapshotMap::new(
     "operator_weights__changelog",
     Strategy::EveryBlock,
 );
-pub const OPERATOR_SIGNING_KEYS: SnapshotMap<String, AddrEvm> = SnapshotMap::new(
+pub const OPERATOR_SIGNING_KEYS: SnapshotMap<String, EvmAddr> = SnapshotMap::new(
     "operator_signing_keys",
     "operator_signing_keys__checkpoints",
     "operator_signing_keys__changelog",
     Strategy::EveryBlock,
 );
-pub const SIGNING_KEY_TO_OPERATOR: SnapshotMap<String, AddrEvm> = SnapshotMap::new(
+pub const SIGNING_KEY_TO_OPERATOR: SnapshotMap<String, EvmAddr> = SnapshotMap::new(
     "signing_key_to_operator",
     "signing_key_to_operator__checkpoints",
     "signing_key_to_operator__changelog",

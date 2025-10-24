@@ -1,7 +1,7 @@
 use layer_climb::prelude::ChainConfig;
 use tokio::sync::OnceCell;
 use utils::{config::ChainConfigs, path::repo_wavs_home};
-use wavs_types::ChainName;
+use wavs_types_full::ChainKey;
 
 pub(super) const WAVS_BASE_PORT: u32 = 8123;
 pub(super) const WAVS_AGGREGATOR_PORT: u32 = 8200;
@@ -11,7 +11,7 @@ static TEST_CONFIG: OnceCell<TestConfig> = OnceCell::const_new();
 
 #[derive(Clone)]
 pub struct TestConfig {
-    pub chain_name: ChainName,
+    pub chain: ChainKey,
     pub chain_config: ChainConfig,
 }
 
@@ -36,21 +36,21 @@ impl TestConfig {
             .await
             .expect("Failed to load chain configurations");
 
-        let chain_name =
-            ChainName::new(std::env::var("CHAIN_NAME").expect("CHAIN_NAME must be set")).unwrap();
+        let chain =
+            ChainKey::new(std::env::var("CHAIN_KEY").expect("CHAIN_KEY must be set")).unwrap();
 
         let mut chain_config = chain_configs
             .cosmos
-            .get(&chain_name)
-            .unwrap_or_else(|| panic!("No cosmos chain config found for {chain_name}"))
+            .get(&chain)
+            .unwrap_or_else(|| panic!("No cosmos chain config found for {chain}"))
             .clone();
 
         chain_config.grpc_endpoint = None;
 
-        tracing::info!("Using chain config for {}", chain_name);
+        tracing::info!("Using chain config for {}", chain);
 
         Self {
-            chain_name,
+            chain,
             chain_config: chain_config.into(),
         }
     }

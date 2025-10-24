@@ -57,8 +57,8 @@ async fn mirror_service_manager_admin_only() {
     let mirror_client = MirrorTestClient::new(client.clone());
 
     // Admin should be able to set signing key
-    let operator = layer_climb_address::AddrEvm::new([0x01; 20]);
-    let signing_key = layer_climb_address::AddrEvm::new([0x02; 20]);
+    let operator = layer_climb_address::EvmAddr::new([0x01; 20]);
+    let signing_key = layer_climb_address::EvmAddr::new([0x02; 20]);
     let weight = cosmwasm_std::Uint256::from(100u64);
 
     let result = mirror_client
