@@ -6,6 +6,8 @@ on:
     workflows: ["Lint", "Test"]
     types:
       - completed
+    tags:
+      - "v*"
   # Allow running on pull requests (comment out to disable)
   # pull_request:
 
