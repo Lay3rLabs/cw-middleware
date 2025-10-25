@@ -8,9 +8,7 @@ on:
       - main
   # Uncomment below to build on each PR push for testing
   # Warning: This will build and push Docker images for every PR
-  # pull_request:
-  #   branches:
-  #     - main
+  pull_request:
 
 env:
   REGISTRY: ghcr.io
