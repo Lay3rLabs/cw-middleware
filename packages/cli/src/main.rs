@@ -174,7 +174,7 @@ async fn main() {
             }
         },
 
-        Command::FaucetTap { addr } => {
+        Command::FaucetTap { addr, url } => {
             let client = ctx.query_client().await.unwrap();
             let addr = match addr {
                 Some(addr) => ctx.parse_address(&addr).unwrap(),
@@ -185,7 +185,7 @@ async fn main() {
                 .await
                 .unwrap()
                 .unwrap_or_default();
-            faucet::tap(&addr, &client.chain_config.gas_denom)
+            faucet::tap(&addr, &client.chain_config.gas_denom, Some(&url))
                 .await
                 .unwrap();
             let balance_after = client

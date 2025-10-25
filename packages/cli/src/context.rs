@@ -5,12 +5,11 @@ use cw_wavs_sdk::{
     service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
 };
 use layer_climb::prelude::*;
-use layer_climb_cli::command::WalletCommand;
 use rand::prelude::*;
 use utils::config::load_chain_configs_from_wavs;
 use wavs_types::ChainConfigs;
 
-use crate::command::{CliArgs, Command, WalletArgs};
+use crate::command::CliArgs;
 
 pub struct CliContext {
     pub args: CliArgs,
@@ -84,21 +83,11 @@ impl CliContext {
     }
 
     pub async fn climb_command_any_client(&self) -> Result<AnyClient> {
-        if matches!(
-            &self.args.command,
-            Command::Wallet(WalletArgs {
-                command: WalletCommand::Create
-            })
-        ) {
-            tracing::info!("Using QueryClient");
-        } else {
+        if self.client_mnemonic().is_ok() {
             tracing::info!("Using SigningClient");
-        }
-        let is_signing = !matches!(&self.args.command, Command::Wallet(_));
-
-        if is_signing && self.client_mnemonic().is_ok() {
             Ok(AnyClient::Signing(self.signing_client().await?))
         } else {
+            tracing::info!("Using QueryClient");
             Ok(AnyClient::Query(self.query_client().await?))
         }
     }
