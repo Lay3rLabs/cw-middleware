@@ -7,7 +7,7 @@ on:
     types:
       - completed
   # Allow running on pull requests (comment out to disable)
-  pull_request:
+  # pull_request:
 
 env:
   REGISTRY: ghcr.io
