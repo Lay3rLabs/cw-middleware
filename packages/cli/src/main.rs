@@ -17,6 +17,9 @@ use crate::{
 
 #[tokio::main]
 async fn main() {
+    // Install rustls crypto provider before any TLS operations
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     // setup tracing
     tracing_subscriber::registry()
         .with(
