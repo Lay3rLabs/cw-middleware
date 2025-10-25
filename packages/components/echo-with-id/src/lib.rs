@@ -1,4 +1,4 @@
-#![allow(clippy::identity_op)]
+#[allow(clippy::all)]
 mod bindings;
 mod entry;
 mod error;

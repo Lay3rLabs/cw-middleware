@@ -56,10 +56,8 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                 let address = CosmosAddr::new_str(&data.contract_address.bech32_addr, None)
                     .map_err(|_| "Invalid prefix length")?;
 
-                let trigger = SimpleTriggerQuerier::new(
-                    client.into(),
-                    cosmwasm_std::Addr::try_from(address).map_err(|e| e.to_string())?,
-                );
+                let trigger =
+                    SimpleTriggerQuerier::new(client.into(), cosmwasm_std::Addr::from(address));
 
                 let message = trigger
                     .get_trigger_message(event.trigger_id)

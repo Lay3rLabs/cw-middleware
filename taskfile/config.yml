@@ -16,6 +16,7 @@ vars:
   STARSHIP_CHAIN_FILE: '{{joinPath .STARSHIP_DIR "chains.yml"}}'
   DOCKER_DIR: '{{joinPath .BACKEND_DIR "docker"}}'
   COMPONENTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/components/artifacts"}}'
+  CONTRACTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/contracts/artifacts"}}'
 
   # Changing this requires a change in `packages/tests/on-chain/src/client/config.rs`
   WAVS_BASE_PORT: 8123 # Base port for WAVS, subsequent ports will be incremented by 1 for each instance

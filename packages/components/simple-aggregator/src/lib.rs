@@ -1,3 +1,6 @@
+#[allow(clippy::all)]
+mod bindings;
+
 use std::str::FromStr;
 
 use wavs_types::ChainKey;
@@ -11,8 +14,6 @@ use crate::bindings::{
     },
     AggregatorAction, AnyTxHash, Guest, Packet,
 };
-
-mod bindings;
 struct Component;
 
 impl Guest for Component {

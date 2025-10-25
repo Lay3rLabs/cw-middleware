@@ -218,7 +218,7 @@ async fn upload_aggregator_component_digest() -> ComponentDigest {
         .join("packages")
         .join("components")
         .join("artifacts")
-        .join("TODO.wasm")
+        .join("simple-aggregator.wasm")
         .to_path_buf();
 
     let wasm_bytes = tokio::fs::read(&wasm_path)

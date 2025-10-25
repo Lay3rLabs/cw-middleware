@@ -7,7 +7,8 @@ use cw_wavs_sdk::{
 use layer_climb::prelude::*;
 use layer_climb_cli::command::WalletCommand;
 use rand::prelude::*;
-use utils::config::ChainConfigs;
+use utils::config::load_chain_configs_from_wavs;
+use wavs_types::ChainConfigs;
 
 use crate::command::{CliArgs, Command, WalletArgs};
 
@@ -24,7 +25,7 @@ impl CliContext {
         }
         let args = CliArgs::parse();
 
-        let chain_configs = ChainConfigs::load_from_wavs(args.wavs_home.as_ref())
+        let chain_configs = load_chain_configs_from_wavs(args.wavs_home.as_ref())
             .await
             .expect("Failed to load chain configurations");
 
@@ -38,10 +39,11 @@ impl CliContext {
     pub fn chain_config(&self) -> Result<ChainConfig> {
         let chain_config = self
             .chain_configs
-            .cosmos
-            .get(&self.args.chain)
-            .cloned()
-            .context(format!("Chain config not found for {}", self.args.chain))?;
+            .get_chain(&self.args.chain)
+            .clone()
+            .context(format!("Chain config not found for {}", self.args.chain))?
+            .to_cosmos_config()?;
+
         Ok(chain_config.into())
     }
 

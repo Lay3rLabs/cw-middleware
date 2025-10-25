@@ -6396,9 +6396,9 @@ dependencies = [
 
 [[package]]
 name = "wavs-types"
-version = "2.0.0-alpha.4"
+version = "2.0.0-alpha.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49238bca86be06ff9109c1f7275f2cfd345db6b75d04f2537b21fb21ca5f5577"
+checksum = "e7e60f432c2c3b8aee59724a7567542ae7cffb9a501079380779b39b25bcbda1"
 dependencies = [
  "alloy-contract",
  "alloy-primitives",

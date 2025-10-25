@@ -11,10 +11,10 @@ use wavs_types::ChainKey;
 #[command(version, about, long_about = None)]
 pub struct CliArgs {
     /// If not set, will be backend/wavs-home in the repo root
-    #[clap(long)]
+    #[clap(long, env = "WAVS_HOME")]
     pub wavs_home: Option<PathBuf>,
 
-    #[clap(long, default_value = "local")]
+    #[clap(long, default_value = "local", env = "CHAIN_KEY")]
     pub chain: ChainKey,
 
     #[command(subcommand)]

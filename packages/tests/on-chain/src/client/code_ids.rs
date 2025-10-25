@@ -89,15 +89,7 @@ impl CodeId {
 }
 
 async fn upload_cw_wavs_trigger_simple() -> u64 {
-    let wasm_path = repo_root()
-        .unwrap()
-        .join("packages")
-        .join("contracts")
-        .join("trigger")
-        .join("artifacts")
-        .join("cw_wavs_trigger_simple.wasm");
-
-    upload(wasm_path).await
+    upload(service_wasm_path("trigger", "simple")).await
 }
 
 async fn upload_cw_wavs_mock_service_handler() -> u64 {
@@ -133,15 +125,7 @@ async fn upload_mirror_service_manager() -> u64 {
 }
 
 async fn upload_cw_wavs_mirror_stake_registry() -> u64 {
-    let wasm_path = repo_root()
-        .unwrap()
-        .join("packages")
-        .join("contracts")
-        .join("mirror")
-        .join("artifacts")
-        .join("cw_wavs_mirror_stake_registry.wasm");
-
-    upload(wasm_path).await
+    upload(service_wasm_path("mirror", "stake_registry")).await
 }
 
 #[instrument(skip(wasm_path), fields(path = %wasm_path.as_ref().display()))]
@@ -175,7 +159,6 @@ fn service_wasm_path(contract_kind: &str, service_kind: &str) -> PathBuf {
         .unwrap()
         .join("packages")
         .join("contracts")
-        .join(contract_kind)
         .join("artifacts");
 
     artifacts_path.join(format!("cw_wavs_{contract_kind}_{service_kind}.wasm"))
