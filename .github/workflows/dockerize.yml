@@ -6,6 +6,8 @@ on:
     workflows: ["Lint", "Test"]
     types:
       - completed
+  # Wheneve there's an explicit tag
+  push:
     tags:
       - "v*"
   # Allow running on pull requests (comment out to disable)
