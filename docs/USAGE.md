@@ -1,8 +1,8 @@
 # Using the Middleware
 
-The middleware CLI and compiled contracts are made available via a docker image at `lay3rlabs/cw-middleware:latest`
+The middleware CLI and compiled contracts are made available via a docker image at `ghcr.io/lay3rlabs/cw-middleware:{TAG}` where `{TAG}` is the version tag or `latest` for the most recent merged-to-main build.
 
-Built-in contracts are available in the image's `/wasm/built-in` directory
+All required contracts are pre-built and available in the image's `/wasm/built-in` directory
 
 > _Tip:_ This package does not include any backend services or component tooling; it focuses purely on middleware functionality. See the [README.md](../README.md) for how to start a chain for on-chain testing.
 
@@ -14,7 +14,7 @@ Using the middleware usually consists of:
 4. set the `FAUCET_URL` to tap the faucet (if needed)
 5. running the command
 
-For the sake of convenience, we've put the typical env vars in a `.docker.env`
+For the sake of convenience, we've put the typical env vars in a `.docker.env` and so the following commands just use that.
 
 ## Examples
 
@@ -24,7 +24,7 @@ For the sake of convenience, we've put the typical env vars in a `.docker.env`
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
-    cw-middleware:latest \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     faucet-tap
 ```
 
@@ -34,7 +34,7 @@ docker run --rm \
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
-    cw-middleware:latest \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     wallet show
 ```
 
@@ -44,7 +44,7 @@ docker run --rm \
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
-    cw-middleware:latest \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     contract upload --wasm-file /wasm/built-in/cw_wavs_mock_service_manager.wasm
 ```
 
@@ -54,7 +54,7 @@ docker run --rm \
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
-    cw-middleware:latest \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     service-manager deploy --code-id <CODE_ID> --contract-kind mock
 ```
 
@@ -64,7 +64,7 @@ docker run --rm \
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
-    cw-middleware:latest \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     contract upload --wasm-file /wasm/built-in/cw_wavs_mock_service_handler.wasm
 ```
 
@@ -74,7 +74,7 @@ docker run --rm \
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
-    cw-middleware:latest \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     service-handler deploy --code-id <CODE_ID> --service-manager <SERVICE_MANAGER_ADDR> --contract-kind mock
 ```
 
