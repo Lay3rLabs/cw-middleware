@@ -5,6 +5,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use layer_climb_cli::command::{ContractCommand, WalletCommand};
+use serde::{Deserialize, Serialize};
 use wavs_types::ChainKey;
 
 #[derive(Clone, Debug, Parser)]
@@ -15,6 +16,21 @@ pub struct CliArgs {
 
     #[clap(long, default_value = "local", env = "CHAIN_KEY")]
     pub chain: ChainKey,
+
+    /// Filepath for commands which know how to generate formatted output
+    /// if not set, none of the formatted output will be written to disk
+    #[clap(long, env = "OUTPUT_PATH")]
+    pub output_path: Option<PathBuf>,
+
+    /// Output format for any generated files
+    #[clap(long, env = "OUTPUT_FORMAT", value_enum, default_value_t = OutputFormat::Json)]
+    pub output_format: OutputFormat,
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum, PartialEq, Eq)]
+#[clap(rename_all = "snake_case")]
+pub enum OutputFormat {
+    Json,
 }
 
 #[derive(Clone, Parser)]
@@ -280,8 +296,9 @@ pub enum RegistryCommand {
     },
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Serialize, Deserialize, Debug, Clone, ValueEnum)]
 #[clap(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum ServiceHandlerContractKind {
     Mock,
     Ecdsa,
@@ -289,8 +306,9 @@ pub enum ServiceHandlerContractKind {
     Mirror,
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Serialize, Deserialize, Debug, Clone, ValueEnum)]
 #[clap(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum ServiceManagerContractKind {
     Mock,
     Ecdsa,
@@ -298,8 +316,9 @@ pub enum ServiceManagerContractKind {
     Mirror,
 }
 
-#[derive(Debug, Clone, ValueEnum)]
+#[derive(Serialize, Deserialize, Debug, Clone, ValueEnum)]
 #[clap(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case")]
 pub enum RegistryContractKind {
     MirrorStake,
 }
