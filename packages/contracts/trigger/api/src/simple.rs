@@ -25,7 +25,7 @@ pub struct PushMessageEvent {
 impl PushMessageEvent {
     pub const EVENT_TYPE: &'static str = "push-message";
     pub const EVENT_ATTR_KEY_TRIGGER_ID: &'static str = "trigger-id";
-    pub const EVENT_ATTR_KEY_DATA: &'static str = "message";
+    pub const EVENT_ATTR_KEY_DATA: &'static str = "data";
 }
 
 impl From<PushMessageEvent> for cosmwasm_std::Event {
