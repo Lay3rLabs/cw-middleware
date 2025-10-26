@@ -169,3 +169,4 @@ If you want to build and test changes locally, you can build the docker image yo
 
 ```bash
 docker build -t cw-middleware:local .
+```

@@ -65,7 +65,7 @@ impl SimpleTriggerExecutor {
         message: impl ToString,
     ) -> Result<Uint64, cosmwasm_std::StdError> {
         let msg = cw_wavs_trigger_api::simple::ExecuteMsg::Push {
-            message: message.to_string(),
+            data: message.to_string().as_bytes().into(),
         };
         let resp = self.cw_wavs_trigger_simple_exec(&msg, &[]).await?;
         let events = CosmosTxEvents::from(&resp);

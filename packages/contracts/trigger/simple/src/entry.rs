@@ -31,19 +31,16 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
     match msg {
-        ExecuteMsg::Push { message } => {
+        ExecuteMsg::Push { data } => {
             let trigger_id: u64 = state::TRIGGER_MESSAGE_COUNT
                 .may_load(deps.storage)?
                 .unwrap_or_default()
                 + 1;
             let trigger_id = Uint64::new(trigger_id);
 
-            state::TRIGGER_MESSAGES.save(deps.storage, trigger_id, &message)?;
+            state::TRIGGER_MESSAGES.save(deps.storage, trigger_id, &data)?;
 
-            Ok(Response::new().add_event(PushMessageEvent {
-                trigger_id,
-                message,
-            }))
+            Ok(Response::new().add_event(PushMessageEvent { trigger_id, data }))
         }
     }
 }

@@ -124,7 +124,7 @@ tasks:
       - >
         {{.DOCKER_SUDO}} docker run --rm
         -v "{{.REPO_ROOT}}:/code"
-        --mount type=volume,source="layer_wavs_cache",target=/target
+        --mount type=volume,source="cw_middleware_cache",target=/target
         --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry
         {{.COSMWASM_OPTIMIZER_IMAGE}} "{{.CONTRACT_PATH}}"
       - mkdir -p "{{.CONTRACTS_ARTIFACTS_PATH}}"
