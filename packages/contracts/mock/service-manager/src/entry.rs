@@ -48,6 +48,7 @@ pub fn execute(
             weight,
         } => {
             state::OPERATOR_SIGNING_KEY_ADDRS.save(deps.storage, &operator, &signing_key)?;
+            state::SIGNING_KEY_OPERATOR_ADDRS.save(deps.storage, &signing_key, &operator)?;
             state::OPERATOR_WEIGHTS.save(deps.storage, &operator, &weight)?;
             Ok(Response::default())
         }
@@ -68,15 +69,11 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             } => {
                 // TODO: real validation logic
                 for signer in &signature_data.signers {
-                    let _operator_addr =
-                        match state::OPERATOR_SIGNING_KEY_ADDRS.load(deps.storage, signer) {
-                            Ok(addr) => addr,
-                            Err(_) => {
-                                return to_json_binary(&WavsValidateResult::Err(
-                                    WavsValidateError::InvalidSignature,
-                                ));
-                            }
-                        };
+                    if !state::SIGNING_KEY_OPERATOR_ADDRS.has(deps.storage, signer) {
+                        return to_json_binary(&WavsValidateResult::Err(
+                            WavsValidateError::InvalidSignature,
+                        ));
+                    };
                 }
                 to_json_binary(&WavsValidateResult::Ok)
             }
@@ -85,7 +82,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             }
             ServiceManagerQueryMessages::WavsLatestOperatorForSigningKey { signing_key_addr } => {
                 to_json_binary(
-                    &state::OPERATOR_SIGNING_KEY_ADDRS.may_load(deps.storage, &signing_key_addr)?,
+                    &state::SIGNING_KEY_OPERATOR_ADDRS.may_load(deps.storage, &signing_key_addr)?,
                 )
             }
         },

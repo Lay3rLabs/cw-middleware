@@ -40,7 +40,10 @@ pub fn execute(
 
             state::TRIGGER_MESSAGES.save(deps.storage, trigger_id, &message)?;
 
-            Ok(Response::new().add_event(PushMessageEvent { trigger_id }))
+            Ok(Response::new().add_event(PushMessageEvent {
+                trigger_id,
+                message,
+            }))
         }
     }
 }

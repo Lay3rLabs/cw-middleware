@@ -19,19 +19,23 @@ pub enum QueryMsg {
 
 pub struct PushMessageEvent {
     pub trigger_id: Uint64,
+    pub message: String,
 }
 
 impl PushMessageEvent {
     pub const EVENT_TYPE: &'static str = "push-message";
     pub const EVENT_ATTR_KEY_TRIGGER_ID: &'static str = "trigger-id";
+    pub const EVENT_ATTR_KEY_MESSAGE: &'static str = "message";
 }
 
 impl From<PushMessageEvent> for cosmwasm_std::Event {
     fn from(src: PushMessageEvent) -> Self {
-        cosmwasm_std::Event::new(PushMessageEvent::EVENT_TYPE).add_attribute(
-            PushMessageEvent::EVENT_ATTR_KEY_TRIGGER_ID,
-            src.trigger_id.to_string(),
-        )
+        cosmwasm_std::Event::new(PushMessageEvent::EVENT_TYPE)
+            .add_attribute(
+                PushMessageEvent::EVENT_ATTR_KEY_TRIGGER_ID,
+                src.trigger_id.to_string(),
+            )
+            .add_attribute(PushMessageEvent::EVENT_ATTR_KEY_MESSAGE, src.message)
     }
 }
 
@@ -56,6 +60,13 @@ impl TryFrom<&cosmwasm_std::Event> for PushMessageEvent {
                 anyhow::anyhow!("Missing attribute {}", Self::EVENT_ATTR_KEY_TRIGGER_ID)
             })?;
 
+        let message = event
+            .attributes
+            .iter()
+            .find(|attr| attr.key == Self::EVENT_ATTR_KEY_MESSAGE)
+            .map(|attr| attr.value.to_string())
+            .ok_or_else(|| anyhow::anyhow!("Missing attribute {}", Self::EVENT_ATTR_KEY_MESSAGE))?;
+
         let trigger_id = trigger_id.parse::<u64>().map_err(|_| {
             anyhow::anyhow!(
                 "Invalid attribute {}: {}",
@@ -66,6 +77,7 @@ impl TryFrom<&cosmwasm_std::Event> for PushMessageEvent {
 
         Ok(Self {
             trigger_id: trigger_id.into(),
+            message,
         })
     }
 }
