@@ -4,6 +4,8 @@ This repo is for Wavs Cosmwasm middleware
 
 It's constructed so that developing and testing any combination of the following is as smooth as possible
 
+This README is focused on the testing/development story, for information on how to use the middleware in your own project via the docker image, see [USAGE.md](docs/USAGE.md)
+
 **Contracts**
 
 * Mock (Service Handler and Service Manager)

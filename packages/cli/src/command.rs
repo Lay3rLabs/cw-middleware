@@ -37,6 +37,12 @@ pub enum Command {
     FaucetTap {
         /// If none, will be CLI wallet
         addr: Option<String>,
+        #[arg(
+            long,
+            env = "FAUCET_URL",
+            default_value = "http://localhost:8001/credit"
+        )]
+        url: String,
     },
 }
 
