@@ -32,6 +32,22 @@ tasks:
       vars:
         NAME: "echo_with_id"
 
+  build-simple-aggregator:
+    - task: build-component-inner
+      vars:
+        NAME: "simple_aggregator"
+        SRC: "simple-aggregator"
+
+  bindings-simple-aggregator:
+    - task: bindings-component-inner
+      vars:
+        SRC: "simple-aggregator"
+
+  exec-simple-aggregator:
+    - task: exec-component-inner
+      vars:
+        NAME: "simple_aggregator"
+
   build-component-inner:
     internal: true
     requires:
@@ -69,6 +85,6 @@ tasks:
       - >
         {{.DOCKER_SUDO}} docker run --rm --network host
         -v "{{.REPO_ROOT}}":/repo
-        -v "{{.WAVS_HOME_DIR}}":/wavs-home 
+        -v "{{.WAVS_HOME_DIR}}":/wavs-home
         {{.WAVS_DOCKER_IMAGE}}
         wavs-cli exec --home /wavs-home --log-level {{.LOG_LEVEL}} --component "/repo/{{.COMPONENT_PATH}}" --input "{{.CLI_ARGS}}"

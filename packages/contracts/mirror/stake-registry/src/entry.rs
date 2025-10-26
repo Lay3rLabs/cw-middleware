@@ -6,7 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use k256::ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey};
-use layer_climb_address::AddrEvm;
+use layer_climb_address::EvmAddr;
 
 use crate::error::ContractError;
 use crate::state::{
@@ -104,8 +104,8 @@ fn execute_set_operator_details(
     deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    operator: AddrEvm,
-    signing_key: AddrEvm,
+    operator: EvmAddr,
+    signing_key: EvmAddr,
     weight: Uint256,
 ) -> Result<Response, ContractError> {
     let owner = OWNER.load(deps.storage)?;
@@ -136,8 +136,8 @@ fn execute_batch_set_operator_details(
     mut deps: DepsMut,
     env: Env,
     info: MessageInfo,
-    operators: Vec<AddrEvm>,
-    signing_keys: Vec<AddrEvm>,
+    operators: Vec<EvmAddr>,
+    signing_keys: Vec<EvmAddr>,
     weights: Vec<Uint256>,
 ) -> Result<Response, ContractError> {
     let owner = OWNER.load(deps.storage)?;
@@ -180,8 +180,8 @@ fn execute_batch_set_operator_details(
 fn set_operator_details_at(
     deps: DepsMut,
     snapshot_height: u64,
-    operator: &AddrEvm,
-    signing_key: &AddrEvm,
+    operator: &EvmAddr,
+    signing_key: &EvmAddr,
     weight: Uint256,
 ) -> Result<(Vec<cosmwasm_std::Event>, Uint256, Uint256), ContractError> {
     // Get current weight
@@ -368,8 +368,8 @@ pub fn decode_signature_data(data: &Binary) -> Result<SignatureData, ContractErr
         SignatureDataType::abi_decode(data.as_slice())
             .map_err(|_| ContractError::InvalidSignatureDataFormat {})?;
 
-    // Convert addresses to AddrEvm
-    let operators: Vec<AddrEvm> = addresses.into_iter().map(AddrEvm::from).collect();
+    // Convert addresses to EvmAddr
+    let operators: Vec<EvmAddr> = addresses.into_iter().map(EvmAddr::from).collect();
 
     // Convert bytes to Binary
     let signatures: Vec<Binary> = signatures_bytes
@@ -388,7 +388,7 @@ pub fn decode_signature_data(data: &Binary) -> Result<SignatureData, ContractErr
 fn is_valid_signature(
     digest: &Binary,
     signature: &Binary,
-    signer_address: &AddrEvm,
+    signer_address: &EvmAddr,
 ) -> StdResult<bool> {
     // Validate signature length (must be 65 bytes for ECDSA)
     if signature.len() != 65 {
@@ -437,22 +437,22 @@ fn is_valid_signature(
     Ok(recovered_address == signer_address.as_bytes())
 }
 
-fn query_operator_weight(deps: Deps, operator: AddrEvm) -> StdResult<Uint256> {
+fn query_operator_weight(deps: Deps, operator: EvmAddr) -> StdResult<Uint256> {
     let operator_key = operator.to_string();
     OPERATOR_WEIGHTS
         .may_load(deps.storage, operator_key)
         .map(|w| w.unwrap_or_default())
 }
 
-fn query_operator_signing_key(deps: Deps, operator: AddrEvm) -> StdResult<Option<AddrEvm>> {
+fn query_operator_signing_key(deps: Deps, operator: EvmAddr) -> StdResult<Option<EvmAddr>> {
     let operator_key = operator.to_string();
     OPERATOR_SIGNING_KEYS.may_load(deps.storage, operator_key)
 }
 
 fn query_latest_operator_for_signing_key(
     deps: Deps,
-    signing_key: AddrEvm,
-) -> StdResult<Option<AddrEvm>> {
+    signing_key: EvmAddr,
+) -> StdResult<Option<EvmAddr>> {
     let signing_key_str = signing_key.to_string();
     SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)
 }

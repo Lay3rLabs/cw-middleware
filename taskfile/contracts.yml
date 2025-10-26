@@ -29,16 +29,6 @@ tasks:
             ;;
         esac
 
-  artifacts-path:
-    vars:
-      # If CONTRACT_KIND is explicitly provided, use that, otherwise load from env
-      CONTRACT_KIND_DEFAULT:
-        sh: task contracts:env-kind
-      CONTRACT_KIND: "{{if .CONTRACT_KIND}}{{.CONTRACT_KIND}}{{else}}{{.CONTRACT_KIND_DEFAULT}}{{end}}"
-      CONTRACT_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages" "contracts" .CONTRACT_KIND "artifacts"}}'
-    cmds:
-      - echo "{{.CONTRACT_ARTIFACTS_PATH}}"
-
   clean:
     cmds:
       - task: clean-inner
@@ -57,12 +47,9 @@ tasks:
   clean-inner:
     requires:
       vars: [CONTRACT_KIND]
-    vars:
-      CONTRACT_ARTIFACTS_PATH:
-        sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
     cmds:
       - echo "Cleaning {{.CONTRACT_KIND}} contracts"
-      - rm -rf "{{.CONTRACT_ARTIFACTS_PATH}}"
+      - rm -rf "{{.CONTRACTS_ARTIFACTS_PATH}}/cw_wavs_{{.CONTRACT_KIND}}_*"
 
   build:
     cmds:
@@ -127,8 +114,6 @@ tasks:
     requires:
       vars: [NAME, SRC, CONTRACT_KIND]
     vars:
-      CONTRACT_ARTIFACTS_PATH:
-        sh: task contracts:artifacts-path CONTRACT_KIND={{.CONTRACT_KIND}}
       CONTRACT_PATH: "packages/contracts/{{.CONTRACT_KIND}}/{{.SRC}}"
       CONTRACT_NAME: "cw_wavs_{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
     cmds:
@@ -142,8 +127,8 @@ tasks:
         --mount type=volume,source="layer_wavs_cache",target=/target
         --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry
         {{.COSMWASM_OPTIMIZER_IMAGE}} "{{.CONTRACT_PATH}}"
-      - mkdir -p "{{.CONTRACT_ARTIFACTS_PATH}}"
-      - cp -r "./artifacts/{{.CONTRACT_NAME}}" "{{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"
+      - mkdir -p "{{.CONTRACTS_ARTIFACTS_PATH}}"
+      - cp -r "./artifacts/{{.CONTRACT_NAME}}" "{{.CONTRACTS_ARTIFACTS_PATH}}/"
       - |
         {{.DOCKER_SUDO}} rm -rf "./artifacts/{{.CONTRACT_NAME}}" || true
-      - echo "Built contract at {{.CONTRACT_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"
+      - echo "Built contract at {{.CONTRACTS_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"

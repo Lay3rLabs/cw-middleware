@@ -2,15 +2,16 @@ use anyhow::{Context, Result};
 use layer_climb::prelude::*;
 use tokio::sync::OnceCell;
 use utils::{faucet, path::repo_root};
-use wavs_types::{
-    aggregator::RegisterServiceRequest, AddServiceRequest, ComponentDigest, GetServiceKeyRequest,
-    SaveServiceResponse, Service, ServiceManager, SigningKeyResponse, UploadComponentResponse,
+use wavs_types_full::{
+    aggregator::RegisterServiceRequest, AddServiceRequest, ComponentDigest, GetSignerRequest,
+    SaveServiceResponse, Service, ServiceManager, SignerResponse, UploadComponentResponse,
 };
 
 use crate::client::config::TestConfig;
 
 // TODO - register the digest for each additional operator
-static COMPONENT_DIGEST: OnceCell<ComponentDigest> = OnceCell::const_new();
+static OPERATOR_COMPONENT_DIGEST: OnceCell<ComponentDigest> = OnceCell::const_new();
+static AGGREGATOR_COMPONENT_DIGEST: OnceCell<ComponentDigest> = OnceCell::const_new();
 static CLIENT: OnceCell<WavsNodeClient> = OnceCell::const_new();
 
 #[derive(Clone)]
@@ -73,9 +74,16 @@ impl WavsNodeClient {
         }
     }
 
-    pub async fn component_digest() -> ComponentDigest {
-        COMPONENT_DIGEST
-            .get_or_init(upload_component_digest)
+    pub async fn operator_component_digest() -> ComponentDigest {
+        OPERATOR_COMPONENT_DIGEST
+            .get_or_init(upload_operator_component_digest)
+            .await
+            .clone()
+    }
+
+    pub async fn aggregator_component_digest() -> ComponentDigest {
+        AGGREGATOR_COMPONENT_DIGEST
+            .get_or_init(upload_aggregator_component_digest)
             .await
             .clone()
     }
@@ -153,14 +161,14 @@ impl WavsNodeClient {
         Ok(())
     }
 
-    pub async fn get_service_signing_key_addr(&self, service: &Service) -> anyhow::Result<AddrEvm> {
-        let body = serde_json::to_string(&GetServiceKeyRequest {
+    pub async fn get_service_signing_key_addr(&self, service: &Service) -> anyhow::Result<EvmAddr> {
+        let body = serde_json::to_string(&GetSignerRequest {
             service_manager: service.manager.clone(),
         })?;
 
         let url = format!("{}/service-key", TestConfig::wavs_endpoint(None));
 
-        let response: SigningKeyResponse = self
+        let response: SignerResponse = self
             .inner
             .post(&url)
             .header("Content-Type", "application/json")
@@ -172,19 +180,45 @@ impl WavsNodeClient {
             .await
             .with_context(|| format!("Failed to parse response from {url}"))?;
 
-        let SigningKeyResponse::Secp256k1 { evm_address, .. } = response;
+        let SignerResponse::Secp256k1 { evm_address, .. } = response;
 
         evm_address.parse()
     }
 }
 
-async fn upload_component_digest() -> ComponentDigest {
+async fn upload_operator_component_digest() -> ComponentDigest {
     let wasm_path = repo_root()
         .unwrap()
         .join("packages")
         .join("components")
         .join("artifacts")
         .join("echo_with_id.wasm")
+        .to_path_buf();
+
+    let wasm_bytes = tokio::fs::read(&wasm_path)
+        .await
+        .unwrap_or_else(|_| panic!("Failed to read {}", wasm_path.display()));
+
+    let response: UploadComponentResponse = reqwest::Client::new()
+        .post(format!("{}/upload", TestConfig::wavs_endpoint(None)))
+        .body(wasm_bytes)
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+
+    response.digest
+}
+
+async fn upload_aggregator_component_digest() -> ComponentDigest {
+    let wasm_path = repo_root()
+        .unwrap()
+        .join("packages")
+        .join("components")
+        .join("artifacts")
+        .join("simple-aggregator.wasm")
         .to_path_buf();
 
     let wasm_bytes = tokio::fs::read(&wasm_path)

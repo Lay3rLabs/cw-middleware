@@ -1,7 +1,7 @@
 version: "3"
 
 vars:
-  ALL_COMPONENTS: ["echo-with-id"]
+  ALL_COMPONENTS: ["echo-with-id", "simple-aggregator"]
   ALL_CONTRACT_KINDS: ["mock", "ecdsa", "bls", "mirror"]
 
   REPO_ROOT:
@@ -16,6 +16,7 @@ vars:
   STARSHIP_CHAIN_FILE: '{{joinPath .STARSHIP_DIR "chains.yml"}}'
   DOCKER_DIR: '{{joinPath .BACKEND_DIR "docker"}}'
   COMPONENTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/components/artifacts"}}'
+  CONTRACTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/contracts/artifacts"}}'
 
   # Changing this requires a change in `packages/tests/on-chain/src/client/config.rs`
   WAVS_BASE_PORT: 8123 # Base port for WAVS, subsequent ports will be incremented by 1 for each instance
@@ -24,9 +25,9 @@ vars:
 
   DOCKER_SUDO:
     sh: |
-      if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then 
+      if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
         echo ""
-      else 
+      else
         echo "sudo"
       fi
   HEALTH_CHECK_TIMEOUT: 5 # seconds to wait for service health checks

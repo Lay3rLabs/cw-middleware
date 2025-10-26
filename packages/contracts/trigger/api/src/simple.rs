@@ -42,8 +42,8 @@ impl TryFrom<&cosmwasm_std::Event> for PushMessageEvent {
         if event.ty != Self::EVENT_TYPE && event.ty != format!("wasm-{}", Self::EVENT_TYPE) {
             return Err(anyhow::anyhow!(
                 "Expected event type {}, found {}",
-                Self::EVENT_TYPE.to_string(),
-                event.ty.to_string()
+                Self::EVENT_TYPE,
+                event.ty
             ));
         }
 

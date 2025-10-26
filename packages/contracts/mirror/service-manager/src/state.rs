@@ -1,10 +1,10 @@
 use cosmwasm_std::{Addr, Uint256};
 use cw_storage_plus::{Item, Map};
-use layer_climb_address::AddrEvm;
+use layer_climb_address::EvmAddr;
 
 pub const ADMIN: Item<Addr> = Item::new("admin");
 pub const SERVICE_URI: Item<String> = Item::new("service-uri");
 pub const STAKE_REGISTRY: Item<Addr> = Item::new("stake-registry");
-pub const OPERATOR_SIGNING_KEY_ADDRS: Map<&AddrEvm, AddrEvm> =
+pub const OPERATOR_SIGNING_KEY_ADDRS: Map<&EvmAddr, EvmAddr> =
     Map::new("operator-signing-key-addrs");
-pub const OPERATOR_WEIGHTS: Map<&AddrEvm, Uint256> = Map::new("operator-weight");
+pub const OPERATOR_WEIGHTS: Map<&EvmAddr, Uint256> = Map::new("operator-weight");

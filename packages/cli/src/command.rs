@@ -5,17 +5,17 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use layer_climb_cli::command::{ContractCommand, WalletCommand};
-use wavs_types::ChainName;
+use wavs_types::ChainKey;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct CliArgs {
     /// If not set, will be backend/wavs-home in the repo root
-    #[clap(long)]
+    #[clap(long, env = "WAVS_HOME")]
     pub wavs_home: Option<PathBuf>,
 
-    #[clap(long, default_value = "local")]
-    pub chain_name: ChainName,
+    #[clap(long, default_value = "local", env = "CHAIN_KEY")]
+    pub chain: ChainKey,
 
     #[command(subcommand)]
     pub command: Command,

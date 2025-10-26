@@ -1,4 +1,4 @@
-# What it is 
+# What it is
 
 This repo is for Wavs Cosmwasm middleware
 
@@ -56,7 +56,7 @@ Copy `.example.env` to `.env` and replace the values
 These are set in [.env](.example.env) to support local development workflows without committing to the repo.
 
 * `CONTRACT_KIND` will affect build and test commands
-* `CHAIN_NAME` will affect on-chain test commands
+* `CHAIN_KEY` will affect on-chain test commands
 
 ## Building
 
@@ -71,7 +71,7 @@ Some more contract building commands:
 * `task contracts:build-all`: build all the different kinds of contracts
 * `task contracts:build-service-handler`: build just the service handler for the current kind
 * `task contracts:build-service-manager`: build just the service handler for the current kind
-* `task contracts:build-trigger-simple`: build just the mock trigger (this is re-used for all kinds of tests) 
+* `task contracts:build-trigger-simple`: build just the mock trigger (this is re-used for all kinds of tests)
 
 
 #### Components
@@ -92,7 +92,7 @@ Some more component building commands:
 ## Testing
 
 
-### Contracts 
+### Contracts
 
 *off-chain*
 
@@ -122,7 +122,7 @@ helm repo remove starship
 helm delete cw-middleware
 ```
 
-### Components 
+### Components
 
 Usually you just `cargo test` as needed. However, for convenience, this will test all the component packages:
 
@@ -137,7 +137,7 @@ task components:exec-echo-with-id -- "Hello World"
 ```
 
 
-### End-to-end services 
+### End-to-end services
 
 The flow is similar to on-chain tests, and assumes the contracts are already built
 

@@ -7,7 +7,7 @@ use cw_wavs_sdk::contract_kinds::mirror::{
 use k256::ecdsa::{
     signature::hazmat::PrehashSigner, RecoveryId, Signature, SigningKey, VerifyingKey,
 };
-use layer_climb_address::AddrEvm;
+use layer_climb_address::EvmAddr;
 use rand::thread_rng;
 
 fn create_eip191_hash(message: &[u8]) -> B256 {
@@ -22,13 +22,13 @@ fn create_eip191_hash(message: &[u8]) -> B256 {
     alloy_keccak256(&full_message)
 }
 
-fn create_signing_key_and_address() -> (SigningKey, AddrEvm) {
+fn create_signing_key_and_address() -> (SigningKey, EvmAddr) {
     let signing_key = SigningKey::random(&mut thread_rng());
     let eth_address = derive_eth_address_from_signing_key(&signing_key);
     (signing_key, eth_address)
 }
 
-fn derive_eth_address_from_signing_key(signing_key: &SigningKey) -> AddrEvm {
+fn derive_eth_address_from_signing_key(signing_key: &SigningKey) -> EvmAddr {
     let public_key = signing_key.verifying_key();
     let public_key_point = public_key.to_encoded_point(false);
     let public_key_bytes = &public_key_point.as_bytes()[1..]; // Skip 0x04 prefix
@@ -38,7 +38,7 @@ fn derive_eth_address_from_signing_key(signing_key: &SigningKey) -> AddrEvm {
     // Take last 20 bytes as Ethereum address
     let mut addr_bytes = [0u8; 20];
     addr_bytes.copy_from_slice(&hash[12..32]);
-    AddrEvm::new(addr_bytes)
+    EvmAddr::new(addr_bytes)
 }
 
 fn sign_message_hash(signing_key: &SigningKey, message_hash: &[u8]) -> Vec<u8> {
@@ -90,8 +90,8 @@ pub async fn run_mirror_sanity_tests(
     querier: &MirrorStakeRegistryQuerier,
 ) {
     // Test: Basic operator registration and querying
-    let operator = AddrEvm::new([0xaa; 20]);
-    let signing_key = AddrEvm::new([0xbb; 20]);
+    let operator = EvmAddr::new([0xaa; 20]);
+    let signing_key = EvmAddr::new([0xbb; 20]);
     let weight = Uint256::from(1000u128);
 
     executor
@@ -115,8 +115,8 @@ pub async fn run_mirror_sanity_tests(
     );
 
     // Test: Batch operator management
-    let batch_operators = vec![AddrEvm::new([0xdd; 20]), AddrEvm::new([0xee; 20])];
-    let batch_keys = vec![AddrEvm::new([0xff; 20]), AddrEvm::new([0x00; 20])];
+    let batch_operators = vec![EvmAddr::new([0xdd; 20]), EvmAddr::new([0xee; 20])];
+    let batch_keys = vec![EvmAddr::new([0xff; 20]), EvmAddr::new([0x00; 20])];
     let batch_weights = vec![Uint256::from(300u128), Uint256::from(200u128)];
 
     executor
@@ -140,7 +140,7 @@ pub async fn run_mirror_sanity_tests(
     // Test: Real signature validation with cryptography
     // Use a much higher weight to ensure signature validation passes even with state pollution
     let (test_signing_key, test_signing_addr) = create_signing_key_and_address();
-    let test_operator = AddrEvm::new([0x11; 20]);
+    let test_operator = EvmAddr::new([0x11; 20]);
     let test_weight = Uint256::from(5000u128); // Higher weight to dominate any existing operators
 
     executor
@@ -192,8 +192,8 @@ pub async fn run_mirror_abi_signature_validation_test(
     let (signing_key2, signing_address2) = create_signing_key_and_address();
 
     // Use unique operator addresses to avoid conflicts with sanity test
-    let operator1 = AddrEvm::new([0x33; 20]);
-    let operator2 = AddrEvm::new([0x44; 20]);
+    let operator1 = EvmAddr::new([0x33; 20]);
+    let operator2 = EvmAddr::new([0x44; 20]);
 
     executor
         .set_operator_details(
@@ -324,8 +324,8 @@ pub async fn run_mirror_negative_test_scenarios(
     assert!(result.is_err(), "Should fail with malformed signature data");
 
     // Test: Zero weight operator handling
-    let zero_weight_operator = AddrEvm::new([0x99; 20]);
-    let zero_signing_key = AddrEvm::new([0x88; 20]);
+    let zero_weight_operator = EvmAddr::new([0x99; 20]);
+    let zero_signing_key = EvmAddr::new([0x88; 20]);
 
     let result = executor
         .set_operator_details(
@@ -344,9 +344,9 @@ pub async fn run_mirror_negative_test_scenarios(
     }
 
     // Test: Duplicate operator registration (should update, not error)
-    let duplicate_operator = AddrEvm::new([0x77; 20]);
-    let first_key = AddrEvm::new([0x66; 20]);
-    let second_key = AddrEvm::new([0x55; 20]);
+    let duplicate_operator = EvmAddr::new([0x77; 20]);
+    let first_key = EvmAddr::new([0x66; 20]);
+    let second_key = EvmAddr::new([0x55; 20]);
     let first_weight = Uint256::from(100u128);
     let second_weight = Uint256::from(200u128);
 
@@ -381,7 +381,7 @@ pub async fn run_mirror_negative_test_scenarios(
 
     // Test: Invalid signature with correct ABI format but wrong signature
     let (valid_key, valid_addr) = create_signing_key_and_address();
-    let invalid_operator = AddrEvm::new([0x45; 20]);
+    let invalid_operator = EvmAddr::new([0x45; 20]);
 
     executor
         .set_operator_details(invalid_operator, valid_addr.clone(), Uint256::from(300u128))
