@@ -48,7 +48,7 @@ docker run --rm \
     contract upload --wasm-file /wasm/built-in/cw_wavs_mock_service_manager.wasm
 ```
 
-#### Deploy the mock service manager contract (replace `<CODE_ID>` with the actual code ID from the upload step)
+#### Instantiate the mock service manager contract (replace `<CODE_ID>` with the actual code ID from the upload step)
 
 ```bash
 docker run --rm \
@@ -68,7 +68,7 @@ docker run --rm \
     contract upload --wasm-file /wasm/built-in/cw_wavs_mock_service_handler.wasm
 ```
 
-#### Deploy the mock service manager contract (replace `<CODE_ID>` and `<SERVICE_MANAGER_ADDR>` from the previous steps)
+#### Instantiate the mock service manager contract (replace `<CODE_ID>` and `<SERVICE_MANAGER_ADDR>` from the previous steps)
 
 ```bash
 docker run --rm \

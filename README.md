@@ -189,14 +189,14 @@ task cli:tap-faucet
 # Upload the service manager WASM to get a code id
 task cli:service-manager-upload
 
-# Deploy an instance of the service manager to get an address
-task cli:service-manager-deploy CODE_ID={value}
+# Instantiate an instance of the service manager to get an address
+task cli:service-manager-instantiate CODE_ID={value}
 
 # Upload the service handler WASM to get a code id
 task cli:service-handler-upload
 
-# Deploy an instance of the service handler to get an address
-task cli:service-handler-deploy CODE_ID={value} SERVICE_MANAGER_ADDR={value}
+# Instantiate an instance of the service handler to get an address
+task cli:service-handler-instantiate CODE_ID={value} SERVICE_MANAGER_ADDR={value}
 
 # Set the service uri on a service manager
 task cli:service-manager-set-service-uri ADDR={value} URI={value}

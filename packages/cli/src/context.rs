@@ -7,14 +7,12 @@ use cw_wavs_sdk::{
 use layer_climb::prelude::*;
 use rand::prelude::*;
 use utils::config::load_chain_configs_from_wavs;
-use wavs_types::ChainConfigs;
 
-use crate::command::CliArgs;
+use crate::command::Command;
 
 pub struct CliContext {
-    pub args: CliArgs,
+    pub command: Command,
     pub rng: ThreadRng,
-    pub chain_configs: ChainConfigs,
 }
 
 impl CliContext {
@@ -22,25 +20,27 @@ impl CliContext {
         if dotenvy::dotenv().is_err() {
             tracing::debug!("Failed to load .env file");
         }
-        let args = CliArgs::parse();
 
-        let chain_configs = load_chain_configs_from_wavs(args.wavs_home.as_ref())
-            .await
-            .expect("Failed to load chain configurations");
+        let command = Command::parse();
 
         Self {
-            args,
+            command,
             rng: rand::rng(),
-            chain_configs,
         }
     }
 
-    pub fn chain_config(&self) -> Result<ChainConfig> {
-        let chain_config = self
-            .chain_configs
-            .get_chain(&self.args.chain)
+    pub async fn chain_config(&self) -> Result<ChainConfig> {
+        let chain_configs = load_chain_configs_from_wavs(self.command.args().wavs_home.as_ref())
+            .await
+            .expect("Failed to load chain configurations");
+
+        let chain_config = chain_configs
+            .get_chain(&self.command.args().chain)
             .clone()
-            .context(format!("Chain config not found for {}", self.args.chain))?
+            .context(format!(
+                "Chain config not found for {}",
+                self.command.args().chain
+            ))?
             .to_cosmos_config()?;
 
         Ok(chain_config.into())
@@ -59,7 +59,7 @@ impl CliContext {
     }
 
     pub async fn query_client(&self) -> Result<QueryClient> {
-        QueryClient::new(self.chain_config()?, None).await
+        QueryClient::new(self.chain_config().await?, None).await
     }
 
     pub async fn signing_client(&self) -> Result<SigningClient> {
@@ -67,7 +67,8 @@ impl CliContext {
 
         let signer = KeySigner::new_mnemonic_str(&self.client_mnemonic()?, None)?;
         let address = self
-            .chain_config()?
+            .chain_config()
+            .await?
             .address_from_pub_key(&signer.public_key().await?)?;
 
         let balance = query_client
@@ -77,7 +78,7 @@ impl CliContext {
         if balance == 0 {
             tracing::warn!("Balance is ZERO, maybe tap the faucet!");
         }
-        let signing_client = SigningClient::new(self.chain_config()?, signer, None).await?;
+        let signing_client = SigningClient::new(self.chain_config().await?, signer, None).await?;
 
         Ok(signing_client)
     }
@@ -96,7 +97,8 @@ impl CliContext {
         let mnemonic = self.client_mnemonic()?;
         let signer = KeySigner::new_mnemonic_str(&mnemonic, None)?;
         let address = self
-            .chain_config()?
+            .chain_config()
+            .await?
             .address_from_pub_key(&signer.public_key().await?)?;
         Ok(address)
     }
@@ -104,14 +106,14 @@ impl CliContext {
     pub async fn wavs_service_handler_querier(&self, addr: &str) -> Result<ServiceHandlerQuerier> {
         Ok(ServiceHandlerQuerier::new(
             self.query_client().await?.into(),
-            self.parse_address(addr)?.try_into()?,
+            self.parse_address(addr).await?.try_into()?,
         ))
     }
 
     pub async fn wavs_service_manager_querier(&self, addr: &str) -> Result<ServiceManagerQuerier> {
         Ok(ServiceManagerQuerier::new(
             self.query_client().await?.into(),
-            self.parse_address(addr)?.try_into()?,
+            self.parse_address(addr).await?.try_into()?,
         ))
     }
 
@@ -122,7 +124,7 @@ impl CliContext {
     ) -> Result<ServiceHandlerExecutor> {
         Ok(ServiceHandlerExecutor::new(
             self.signing_client().await?.into(),
-            self.parse_address(addr)?.try_into()?,
+            self.parse_address(addr).await?.try_into()?,
         ))
     }
 
@@ -133,11 +135,11 @@ impl CliContext {
     ) -> Result<ServiceManagerExecutor> {
         Ok(ServiceManagerExecutor::new(
             self.signing_client().await?.into(),
-            self.parse_address(addr)?.try_into()?,
+            self.parse_address(addr).await?.try_into()?,
         ))
     }
 
-    pub fn parse_address(&self, addr: &str) -> Result<Address> {
-        self.chain_config()?.parse_address(addr)
+    pub async fn parse_address(&self, addr: &str) -> Result<Address> {
+        self.chain_config().await?.parse_address(addr)
     }
 }

@@ -16,7 +16,7 @@ pub async fn handle_wallet_generate_env(ctx: &mut CliContext, operator_count: us
     println!("Copy/paste this into your .env:\n");
 
     for key in keys {
-        let (addr, mnemonic) = create_wallet(ctx.chain_config().unwrap(), &mut ctx.rng)
+        let (addr, mnemonic) = create_wallet(ctx.chain_config().await.unwrap(), &mut ctx.rng)
             .await
             .unwrap();
         println!("# Address: {addr}");
@@ -25,7 +25,7 @@ pub async fn handle_wallet_generate_env(ctx: &mut CliContext, operator_count: us
 }
 
 pub async fn handle_wallet_generate_single(ctx: &mut CliContext) {
-    let (addr, mnemonic) = create_wallet(ctx.chain_config().unwrap(), &mut ctx.rng)
+    let (addr, mnemonic) = create_wallet(ctx.chain_config().await.unwrap(), &mut ctx.rng)
         .await
         .unwrap();
     handle_wallet_log(WalletLog::Create { addr, mnemonic });
