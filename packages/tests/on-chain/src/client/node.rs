@@ -51,7 +51,9 @@ impl WavsNodeClient {
                 addr,
                 balance
             );
-            faucet::tap(&addr, &chain_config.gas_denom).await.unwrap();
+            faucet::tap(&addr, &chain_config.gas_denom, None)
+                .await
+                .unwrap();
             let new_balance = querier
                 .balance(addr, None)
                 .await
