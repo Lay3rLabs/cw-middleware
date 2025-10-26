@@ -9,7 +9,8 @@ use crate::{
     command::{
         contract::handle_contract_log,
         wallet::{handle_wallet_generate_env, handle_wallet_generate_single, handle_wallet_log},
-        Command, RegistryCommand, ServiceHandlerCommand, ServiceManagerCommand,
+        Command, RegistryCommand, RegistryContractKind, ServiceHandlerCommand,
+        ServiceManagerCommand,
     },
     context::CliContext,
 };
@@ -285,90 +286,108 @@ async fn main() {
             }
         },
 
-        Command::Registry { command } => match command {
-            RegistryCommand::Upload {
-                wasm_directory,
-                contract_kind,
-                args: _,
-            } => {
-                let client = ctx.signing_client().await.unwrap();
-                let wasm_path = contract_kind.wasm_path(&wasm_directory);
-                let wasm_bytes = tokio::fs::read(&wasm_path)
-                    .await
-                    .unwrap_or_else(|_| panic!("Failed to read wasm file at {wasm_path}"));
-                let (code_id, tx_resp) =
-                    client.contract_upload_file(wasm_bytes, None).await.unwrap();
+        Command::Registry { command } => {
+            match command {
+                RegistryCommand::Upload {
+                    wasm_directory,
+                    contract_kind,
+                    args: _,
+                } => {
+                    let client = ctx.signing_client().await.unwrap();
+                    let wasm_path = contract_kind.wasm_path(&wasm_directory);
+                    let wasm_bytes = tokio::fs::read(&wasm_path)
+                        .await
+                        .unwrap_or_else(|_| panic!("Failed to read wasm file at {wasm_path}"));
+                    let (code_id, tx_resp) =
+                        client.contract_upload_file(wasm_bytes, None).await.unwrap();
 
-                println!("Uploaded {contract_kind} registry");
-                println!("Code ID: {code_id}");
-                println!("Tx Hash: {}", tx_resp.txhash)
-            }
-            RegistryCommand::InstantiateMirrorStake {
-                code_id,
-                service_manager_code_id,
-                threshold_weight,
-                strategy,
-                args: _,
-            } => {
-                let client = ctx.signing_client().await.unwrap();
+                    println!("Uploaded {contract_kind} registry");
+                    println!("Code ID: {code_id}");
+                    println!("Tx Hash: {}", tx_resp.txhash)
+                }
+                RegistryCommand::InstantiateMirrorStake {
+                    code_id,
+                    service_manager_code_id,
+                    threshold_weight,
+                    strategy,
+                    args: _,
+                } => {
+                    let client = ctx.signing_client().await.unwrap();
 
-                let service_manager_instantiate = cosmwasm_std::WasmMsg::Instantiate2 {
-                    admin: Some(client.addr.to_string()),
-                    code_id: service_manager_code_id,
-                    msg: cosmwasm_std::to_json_binary(
-                        &cw_wavs_mirror_api::service_manager::InstantiateMsg {
-                            owner: client.addr.to_string(),
-                        },
-                    )
-                    .unwrap(),
-                    funds: vec![],
-                    label: "Mirror Service Manager".to_string(),
-                    salt: cosmwasm_std::Binary::from(b"service_manager"),
-                };
+                    let service_manager_instantiate = cosmwasm_std::WasmMsg::Instantiate2 {
+                        admin: Some(client.addr.to_string()),
+                        code_id: service_manager_code_id,
+                        msg: cosmwasm_std::to_json_binary(
+                            &cw_wavs_mirror_api::service_manager::InstantiateMsg {
+                                owner: client.addr.to_string(),
+                            },
+                        )
+                        .unwrap(),
+                        funds: vec![],
+                        label: "Mirror Service Manager".to_string(),
+                        salt: cosmwasm_std::Binary::from(b"service_manager"),
+                    };
 
-                let strategies = strategy
-                    .into_iter()
-                    .map(|s| {
-                        let (strategy, multiplier) = s.split_once('=').unwrap_or_else(|| {
-                            panic!(
-                                "Strategy must be in the format strategy=multiplier, got: {}",
-                                s
-                            )
-                        });
-
-                        let multiplier: cosmwasm_std::Uint256 =
-                            multiplier.parse().unwrap_or_else(|_| {
+                    let strategies = strategy
+                        .into_iter()
+                        .map(|s| {
+                            let (strategy, multiplier) = s.split_once('=').unwrap_or_else(|| {
                                 panic!(
-                                    "Multiplier must be a valid u128 integer, got: {}",
-                                    multiplier
+                                    "Strategy must be in the format strategy=multiplier, got: {}",
+                                    s
                                 )
                             });
-                        cw_wavs_mirror_api::stake_registry::StrategyParams {
-                            strategy: strategy.to_string(),
-                            multiplier,
-                        }
-                    })
-                    .collect();
 
-                let (address, tx_resp) = client
-                    .contract_instantiate(
-                        None,
-                        code_id,
-                        "Mirror Stake Registry",
-                        &cw_wavs_mirror_api::stake_registry::InstantiateMsg {
-                            service_manager_instantiate,
-                            threshold_weight: threshold_weight.into(),
-                            quorum: cw_wavs_mirror_api::stake_registry::QuorumConfig { strategies },
-                        },
-                        Vec::new(),
-                        None,
-                    )
-                    .await
-                    .unwrap();
-                println!("Mirror Stake Registry instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                            let multiplier: cosmwasm_std::Uint256 =
+                                multiplier.parse().unwrap_or_else(|_| {
+                                    panic!(
+                                        "Multiplier must be a valid u128 integer, got: {}",
+                                        multiplier
+                                    )
+                                });
+                            cw_wavs_mirror_api::stake_registry::StrategyParams {
+                                strategy: strategy.to_string(),
+                                multiplier,
+                            }
+                        })
+                        .collect();
+
+                    let (address, tx_resp) = client
+                        .contract_instantiate(
+                            None,
+                            code_id,
+                            "Mirror Stake Registry",
+                            &cw_wavs_mirror_api::stake_registry::InstantiateMsg {
+                                service_manager_instantiate,
+                                threshold_weight: threshold_weight.into(),
+                                quorum: cw_wavs_mirror_api::stake_registry::QuorumConfig {
+                                    strategies,
+                                },
+                            },
+                            Vec::new(),
+                            None,
+                        )
+                        .await
+                        .unwrap();
+                    println!("Mirror Stake Registry instantiated at: {address}");
+                    println!("Tx Hash: {}", tx_resp.txhash)
+                }
+                RegistryCommand::GetServiceManager {
+                    address,
+                    contract_kind,
+                    args: _,
+                } => {
+                    let manager: cosmwasm_std::Addr = match contract_kind {
+                        RegistryContractKind::MirrorStake => {
+                            let client = ctx.query_client().await.unwrap();
+                            let address = client.chain_config.parse_address(&address).unwrap();
+                            client.contract_smart(&address, &cw_wavs_mirror_api::stake_registry::QueryMsg::GetServiceManager {  }).await.unwrap()
+                        }
+                    };
+                    println!("Service Manager: {manager}");
+                }
             }
-        },
+        }
 
         Command::FaucetTap { addr, url, .. } => {
             let client = ctx.query_client().await.unwrap();

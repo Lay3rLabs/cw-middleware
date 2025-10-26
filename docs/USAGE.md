@@ -18,7 +18,7 @@ For the sake of convenience, we've put the typical env vars in a `.docker.env` a
 
 ## Examples
 
-#### Tap the faucet
+#### Tap the faucet (assumes you've started a faucet e.g. via Starship)
 
 ```bash
 docker run --rm \
@@ -38,46 +38,116 @@ docker run --rm \
     wallet show
 ```
 
-#### Upload the mock service manager contract
+#### Upload the mirror service manager contract
 
 ```bash
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
     ghcr.io/lay3rlabs/cw-middleware:{TAG} \
-    contract upload --wasm-file /wasm/built-in/cw_wavs_mock_service_manager.wasm
+    service-manager upload --contract-kind mirror
 ```
 
-#### Instantiate the mock service manager contract (replace `<CODE_ID>` with the actual code ID from the upload step)
+#### Upload the mirror stake registry contract
 
 ```bash
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
     ghcr.io/lay3rlabs/cw-middleware:{TAG} \
-    service-manager deploy --code-id <CODE_ID> --contract-kind mock
+    registry upload --contract-kind mirror_stake
 ```
 
-#### Upload the mock service handler contract
+#### Instantiate the mirror stake registry contract
+
+Replace `<CODE_ID>` and `<SERVICE_MANAGER_CODE_ID>` with the code IDs returned from the previous step.
+Replace `<THRESHOLD_WEIGHT>`, `<STRATEGY_NAME>` and `<STRATEGY_VALUE>` with your desired values.
+
 
 ```bash
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
     ghcr.io/lay3rlabs/cw-middleware:{TAG} \
-    contract upload --wasm-file /wasm/built-in/cw_wavs_mock_service_handler.wasm
+    registry instantiate-mirror-stake \
+    --code-id <CODE_ID> \
+    --service-manager-code-id <SERVICE_MANAGER_CODE_ID> \
+    --threshold-weight <THRESHOLD_WEIGHT> \
+    --strategy <STRATEGY_NAME>=<STRATEGY_VALUE>
 ```
 
-#### Instantiate the mock service manager contract (replace `<CODE_ID>` and `<SERVICE_MANAGER_ADDR>` from the previous steps)
+For example of threshhold-weight and strategy, try:
+```
+--threshold-weight 1000 \
+--strategy test_strategy=100
+```
+
+#### Get the address of the mirror service manager contract from the registry
+
+Replace `<ADDR>` with the address of the registry contract instantiated in the previous step.
 
 ```bash
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
     --env-file .docker.env \
     ghcr.io/lay3rlabs/cw-middleware:{TAG} \
-    service-handler deploy --code-id <CODE_ID> --service-manager <SERVICE_MANAGER_ADDR> --contract-kind mock
+    registry get-service-manager \
+    --contract-kind mirror_stake \
+    --address juno1w27ekqvvtzfanfxnkw4jx2f8gdfeqwd3drkee3e64xat6phwjg0sgauq9a
 ```
 
+#### Upload the mirror service handler contract
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-handler upload --contract-kind mirror
+```
+
+#### Instantiate the example mirror service handler contract
+
+Replace `<CODE_ID>` with the code ID returned from the previous step.
+Replace `<SERVICE_MANAGER_ADDR>` with the service manager address obtained from the registry in the previous step.
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-handler instantiate-mirror \
+    --code-id 8 \
+    --service-manager juno1m6g7dckc0ekvj82wk8899gj2j63hplcdk88ftgxlnzwwn3lp5pjsvxs3hp
+```
+
+#### Set the Service URI on the mirror service manager contract
+
+Replace `<ADDR>` with the service manager address obtained from the registry in the previous step.
+Replace `<URI>` with the desired service URI.
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager set-service-uri \
+    --address <ADDR> \
+    --uri ipfs://example
+```
+
+#### Get the Service URI from the mirror service manager contract
+
+Replace `<ADDR>` with the service manager address obtained from the registry in the previous step.
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager get-service-uri \
+    --address <ADDR> \
+```
 
 # Local docker builds
 

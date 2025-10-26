@@ -100,6 +100,7 @@ impl Command {
             Command::Registry { command } => match command {
                 RegistryCommand::Upload { args, .. } => args,
                 RegistryCommand::InstantiateMirrorStake { args, .. } => args,
+                RegistryCommand::GetServiceManager { args, .. } => args,
             },
             Command::FaucetTap { args, .. } => args,
         }
@@ -261,9 +262,19 @@ pub enum RegistryCommand {
         #[arg(long)]
         threshold_weight: u128,
         /// Configuration pairs for the strategies in format 'strategy=multiplier'
-        /// Example: --strategy test_strategy=100 --strategy some_other_strategy=200
-        #[arg(long)]
+        /// Example: --strategy test_strategy=100 some_other_strategy=200
+        #[arg(long, required = true, num_args = 1..)]
         strategy: Vec<String>,
+        #[clap(flatten)]
+        args: CliArgs,
+    },
+    /// Gets the service manager address for this registry
+    GetServiceManager {
+        /// Registry address
+        #[arg(long)]
+        address: String,
+        #[arg(long)]
+        contract_kind: RegistryContractKind,
         #[clap(flatten)]
         args: CliArgs,
     },
