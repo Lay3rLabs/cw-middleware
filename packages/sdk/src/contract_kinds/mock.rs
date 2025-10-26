@@ -39,12 +39,12 @@ impl MockServiceHandlerQuerier {
     pub async fn get_handled_trigger_message(
         &self,
         trigger_id: Uint64,
-    ) -> Result<String, cosmwasm_std::StdError> {
+    ) -> Result<Vec<u8>, cosmwasm_std::StdError> {
         let resp: TriggerMessageResponse = self
             .mock_query(&cw_wavs_mock_api::service_handler::QueryMsg::TriggerMessage { trigger_id })
             .await?;
 
-        Ok(resp.message)
+        Ok(resp.message.into())
     }
 }
 
@@ -79,12 +79,12 @@ impl MockServiceHandlerExecutor {
     pub async fn set_trigger_message(
         &self,
         trigger_id: Uint64,
-        message: impl ToString,
+        message: Vec<u8>,
     ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
         self.mock_exec(
             &cw_wavs_mock_api::service_handler::ExecuteMsg::SetTriggerMessage {
                 trigger_id,
-                message: message.to_string(),
+                message: message.into(),
             },
             &[],
         )

@@ -64,13 +64,13 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                     .await
                     .map_err(|e| e.to_string())?;
 
-                Result::<String, String>::Ok(message)
+                Result::<Vec<u8>, String>::Ok(message.into())
             })?;
 
             Ok(Some(WasmResponse {
                 payload: MessageWithId {
                     trigger_id: event.trigger_id,
-                    message,
+                    message: message.into(),
                 }
                 .to_bytes()
                 .map_err(|e| e.to_string())?,
