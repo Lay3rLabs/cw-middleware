@@ -8,11 +8,12 @@ use layer_climb::prelude::*;
 use rand::prelude::*;
 use utils::config::load_chain_configs_from_wavs;
 
-use crate::command::Command;
+use crate::{command::Command, output::Output};
 
 pub struct CliContext {
     pub command: Command,
     pub rng: ThreadRng,
+    pub output: Output,
 }
 
 impl CliContext {
@@ -23,8 +24,14 @@ impl CliContext {
 
         let command = Command::parse();
 
+        let output = Output::new(
+            command.args().output_path.clone(),
+            command.args().output_format,
+        );
+
         Self {
             command,
+            output,
             rng: rand::rng(),
         }
     }

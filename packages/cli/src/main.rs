@@ -1,5 +1,6 @@
 mod command;
 mod context;
+mod output;
 use utils::faucet;
 
 use layer_climb_cli::command::WalletCommand;
@@ -10,7 +11,7 @@ use crate::{
         contract::handle_contract_log,
         wallet::{handle_wallet_generate_env, handle_wallet_generate_single, handle_wallet_log},
         Command, RegistryCommand, RegistryContractKind, ServiceHandlerCommand,
-        ServiceManagerCommand,
+        ServiceHandlerContractKind, ServiceManagerCommand, ServiceManagerContractKind,
     },
     context::CliContext,
 };
@@ -78,7 +79,16 @@ async fn main() {
 
                 println!("Uploaded {contract_kind} service manager");
                 println!("Code ID: {code_id}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerUpload {
+                        contract_kind,
+                        code_id,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceManagerCommand::InstantiateMock { code_id, args: _ } => {
                 let client = ctx.signing_client().await.unwrap();
@@ -96,7 +106,16 @@ async fn main() {
                     .unwrap();
 
                 println!("Mock Service Manager instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Mock,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceManagerCommand::InstantiateEcdsa { code_id, args: _ } => {
                 let client = ctx.signing_client().await.unwrap();
@@ -114,7 +133,16 @@ async fn main() {
                     .unwrap();
 
                 println!("ECDSA Service Manager instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Ecdsa,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceManagerCommand::InstantiateBls { code_id, args: _ } => {
                 let client = ctx.signing_client().await.unwrap();
@@ -132,7 +160,16 @@ async fn main() {
                     .unwrap();
 
                 println!("BLS Service Manager instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Bls,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceManagerCommand::InstantiateMirror {
                 code_id,
@@ -154,7 +191,16 @@ async fn main() {
                     .unwrap();
 
                 println!("Mirror Service Manager instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Mirror,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
 
             ServiceManagerCommand::SetServiceUri {
@@ -192,7 +238,16 @@ async fn main() {
 
                 println!("Uploaded {contract_kind} service handler");
                 println!("Code ID: {code_id}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerUpload {
+                        contract_kind,
+                        code_id,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceHandlerCommand::InstantiateMock {
                 code_id,
@@ -213,7 +268,16 @@ async fn main() {
                     .await
                     .unwrap();
                 println!("Mock Service Handler instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Mock,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceHandlerCommand::InstantiateEcdsa {
                 code_id,
@@ -234,7 +298,16 @@ async fn main() {
                     .await
                     .unwrap();
                 println!("ECDSA Service Handler instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Ecdsa,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceHandlerCommand::InstantiateBls {
                 code_id,
@@ -255,7 +328,16 @@ async fn main() {
                     .await
                     .unwrap();
                 println!("BLS Service Handler instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Bls,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
             ServiceHandlerCommand::InstantiateMirror {
                 code_id,
@@ -276,7 +358,16 @@ async fn main() {
                     .await
                     .unwrap();
                 println!("Mirror Service Handler instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash)
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Mirror,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
 
             ServiceHandlerCommand::GetManager { address, args: _ } => {
@@ -303,7 +394,16 @@ async fn main() {
 
                     println!("Uploaded {contract_kind} registry");
                     println!("Code ID: {code_id}");
-                    println!("Tx Hash: {}", tx_resp.txhash)
+                    println!("Tx Hash: {}", tx_resp.txhash);
+
+                    ctx.output
+                        .write(output::OutputData::RegistryUpload {
+                            contract_kind,
+                            code_id,
+                            tx_hash: tx_resp.txhash,
+                        })
+                        .await
+                        .unwrap();
                 }
                 RegistryCommand::InstantiateMirrorStake {
                     code_id,
@@ -370,7 +470,16 @@ async fn main() {
                         .await
                         .unwrap();
                     println!("Mirror Stake Registry instantiated at: {address}");
-                    println!("Tx Hash: {}", tx_resp.txhash)
+                    println!("Tx Hash: {}", tx_resp.txhash);
+
+                    ctx.output
+                        .write(output::OutputData::RegistryInstantiate {
+                            contract_kind: RegistryContractKind::MirrorStake,
+                            address,
+                            tx_hash: tx_resp.txhash,
+                        })
+                        .await
+                        .unwrap();
                 }
                 RegistryCommand::GetServiceManager {
                     address,

@@ -5,7 +5,7 @@ tasks:
     vars:
       OPERATOR_COUNT: 3
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} generate-env {{.OPERATOR_COUNT}}
+      - cd packages/cli && cargo run generate-env {{.OPERATOR_COUNT}} --wavs-home {{.WAVS_HOME_DIR}}
 
   tap-faucet:
     vars:
