@@ -124,7 +124,7 @@ async fn main() {
                     .contract_instantiate(
                         None,
                         code_id,
-                        "ECSDA Service Manager",
+                        "ECDSA Service Manager",
                         &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {},
                         Vec::new(),
                         None,
