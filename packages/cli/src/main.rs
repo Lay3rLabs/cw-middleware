@@ -1,5 +1,6 @@
 mod command;
 mod context;
+mod output;
 use utils::faucet;
 
 use layer_climb_cli::command::WalletCommand;
@@ -9,8 +10,8 @@ use crate::{
     command::{
         contract::handle_contract_log,
         wallet::{handle_wallet_generate_env, handle_wallet_generate_single, handle_wallet_log},
-        Command, ContractArgs, ContractKind, ServiceHandlerArgs, ServiceHandlerCommand,
-        ServiceManagerArgs, ServiceManagerCommand, WalletArgs,
+        Command, RegistryCommand, RegistryContractKind, ServiceHandlerCommand,
+        ServiceHandlerContractKind, ServiceManagerCommand, ServiceManagerContractKind,
     },
     context::CliContext,
 };
@@ -33,11 +34,11 @@ async fn main() {
 
     let mut ctx = CliContext::new().await;
 
-    match ctx.args.command.clone() {
-        Command::GenerateEnv { operators } => {
+    match ctx.command.clone() {
+        Command::GenerateEnv { operators, .. } => {
             handle_wallet_generate_env(&mut ctx, operators).await;
         }
-        Command::Wallet(WalletArgs { command }) => match command {
+        Command::Wallet { command, .. } => match command {
             WalletCommand::Create => {
                 handle_wallet_generate_single(&mut ctx).await;
             }
@@ -52,7 +53,7 @@ async fn main() {
                     .unwrap();
             }
         },
-        Command::Contract(ContractArgs { command }) => {
+        Command::Contract { command, .. } => {
             command
                 .run(
                     ctx.climb_command_any_client().await.unwrap(),
@@ -62,52 +63,151 @@ async fn main() {
                 .unwrap();
         }
 
-        Command::ServiceManager(ServiceManagerArgs { command }) => match command {
-            ServiceManagerCommand::Deploy {
-                code_id,
+        Command::ServiceManager { command } => match command {
+            ServiceManagerCommand::Upload {
+                wasm_directory,
                 contract_kind,
+                args: _,
+            } => {
+                let client = ctx.signing_client().await.unwrap();
+                let wasm_path = contract_kind.wasm_path(&wasm_directory);
+                let wasm_bytes = tokio::fs::read(&wasm_path)
+                    .await
+                    .unwrap_or_else(|_| panic!("Failed to read wasm file at {wasm_path}"));
+                let (code_id, tx_resp) =
+                    client.contract_upload_file(wasm_bytes, None).await.unwrap();
+
+                println!("Uploaded {contract_kind} service manager");
+                println!("Code ID: {code_id}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerUpload {
+                        contract_kind,
+                        code_id,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+            ServiceManagerCommand::InstantiateMock { code_id, args: _ } => {
+                let client = ctx.signing_client().await.unwrap();
+
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "Mock Service Manager",
+                        &cw_wavs_mock_api::service_manager::InstantiateMsg {},
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+
+                println!("Mock Service Manager instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Mock,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+            ServiceManagerCommand::InstantiateEcdsa { code_id, args: _ } => {
+                let client = ctx.signing_client().await.unwrap();
+
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "ECDSA Service Manager",
+                        &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {},
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+
+                println!("ECDSA Service Manager instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Ecdsa,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+            ServiceManagerCommand::InstantiateBls { code_id, args: _ } => {
+                let client = ctx.signing_client().await.unwrap();
+
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "BLS Service Manager",
+                        &cw_wavs_bls_api::service_manager::InstantiateMsg {},
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+
+                println!("BLS Service Manager instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Bls,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+            ServiceManagerCommand::InstantiateMirror {
+                code_id,
+                owner,
+                args: _,
             } => {
                 let client = ctx.signing_client().await.unwrap();
 
-                let (address, _) = match contract_kind {
-                    ContractKind::Mock => client
-                        .contract_instantiate(
-                            None,
-                            code_id,
-                            "Mock Service Manager",
-                            &cw_wavs_mock_api::service_manager::InstantiateMsg {},
-                            Vec::new(),
-                            None,
-                        )
-                        .await
-                        .unwrap(),
-                    ContractKind::Ecdsa => client
-                        .contract_instantiate(
-                            None,
-                            code_id,
-                            "Ecdsa Service Manager",
-                            &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {},
-                            Vec::new(),
-                            None,
-                        )
-                        .await
-                        .unwrap(),
-                    ContractKind::Bls => client
-                        .contract_instantiate(
-                            None,
-                            code_id,
-                            "Bls Service Manager",
-                            &cw_wavs_bls_api::service_manager::InstantiateMsg {},
-                            Vec::new(),
-                            None,
-                        )
-                        .await
-                        .unwrap(),
-                };
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "Mirror Service Manager",
+                        &cw_wavs_mirror_api::service_manager::InstantiateMsg { owner },
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
 
-                println!("Service Manager deployed at: {address}");
+                println!("Mirror Service Manager instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceManagerInstantiate {
+                        contract_kind: ServiceManagerContractKind::Mirror,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
-            ServiceManagerCommand::SetServiceUri { uri, address } => {
+
+            ServiceManagerCommand::SetServiceUri {
+                uri,
+                address,
+                args: _,
+            } => {
                 let client = ctx.wavs_service_manager_executor(&address).await.unwrap();
                 let resp = client.set_service_uri(uri.to_string()).await.unwrap();
                 println!(
@@ -115,69 +215,293 @@ async fn main() {
                     resp.unchecked_into_tx_response().txhash
                 );
             }
-            ServiceManagerCommand::GetServiceUri { address } => {
+            ServiceManagerCommand::GetServiceUri { address, args: _ } => {
                 let client = ctx.wavs_service_manager_querier(&address).await.unwrap();
                 let uri = client.get_service_uri().await.unwrap();
                 println!("Service URI: {uri}");
             }
         },
 
-        Command::ServiceHandler(ServiceHandlerArgs { command }) => match command {
-            ServiceHandlerCommand::Deploy {
+        Command::ServiceHandler { command } => match command {
+            ServiceHandlerCommand::Upload {
+                wasm_directory,
+                contract_kind,
+                args: _,
+            } => {
+                let client = ctx.signing_client().await.unwrap();
+                let wasm_path = contract_kind.wasm_path(&wasm_directory);
+                let wasm_bytes = tokio::fs::read(&wasm_path)
+                    .await
+                    .unwrap_or_else(|_| panic!("Failed to read wasm file at {wasm_path}"));
+                let (code_id, tx_resp) =
+                    client.contract_upload_file(wasm_bytes, None).await.unwrap();
+
+                println!("Uploaded {contract_kind} service handler");
+                println!("Code ID: {code_id}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerUpload {
+                        contract_kind,
+                        code_id,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+            ServiceHandlerCommand::InstantiateMock {
                 code_id,
                 service_manager,
-                contract_kind,
+                args: _,
             } => {
                 let client = ctx.signing_client().await.unwrap();
 
-                let (address, _) = match contract_kind {
-                    ContractKind::Mock => client
-                        .contract_instantiate(
-                            None,
-                            code_id,
-                            "Mock Service Handler",
-                            &cw_wavs_mock_api::service_handler::InstantiateMsg { service_manager },
-                            Vec::new(),
-                            None,
-                        )
-                        .await
-                        .unwrap(),
-                    ContractKind::Ecdsa => client
-                        .contract_instantiate(
-                            None,
-                            code_id,
-                            "Ecdsa Service Handler",
-                            &cw_wavs_ecdsa_api::service_handler::InstantiateMsg { service_manager },
-                            Vec::new(),
-                            None,
-                        )
-                        .await
-                        .unwrap(),
-                    ContractKind::Bls => client
-                        .contract_instantiate(
-                            None,
-                            code_id,
-                            "Bls Service Handler",
-                            &cw_wavs_bls_api::service_handler::InstantiateMsg { service_manager },
-                            Vec::new(),
-                            None,
-                        )
-                        .await
-                        .unwrap(),
-                };
-                println!("Service Handler deployed at: {address}");
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "Mock Service Handler",
+                        &cw_wavs_mock_api::service_handler::InstantiateMsg { service_manager },
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+                println!("Mock Service Handler instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Mock,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
             }
-            ServiceHandlerCommand::GetManager { address } => {
+            ServiceHandlerCommand::InstantiateEcdsa {
+                code_id,
+                service_manager,
+                args: _,
+            } => {
+                let client = ctx.signing_client().await.unwrap();
+
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "ECDSA Service Handler",
+                        &cw_wavs_ecdsa_api::service_handler::InstantiateMsg { service_manager },
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+                println!("ECDSA Service Handler instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Ecdsa,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+            ServiceHandlerCommand::InstantiateBls {
+                code_id,
+                service_manager,
+                args: _,
+            } => {
+                let client = ctx.signing_client().await.unwrap();
+
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "BLS Service Handler",
+                        &cw_wavs_bls_api::service_handler::InstantiateMsg { service_manager },
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+                println!("BLS Service Handler instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Bls,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+            ServiceHandlerCommand::InstantiateMirror {
+                code_id,
+                service_manager,
+                args: _,
+            } => {
+                let client = ctx.signing_client().await.unwrap();
+
+                let (address, tx_resp) = client
+                    .contract_instantiate(
+                        None,
+                        code_id,
+                        "Mirror Service Handler",
+                        &cw_wavs_mirror_api::service_handler::InstantiateMsg { service_manager },
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+                println!("Mirror Service Handler instantiated at: {address}");
+                println!("Tx Hash: {}", tx_resp.txhash);
+
+                ctx.output
+                    .write(output::OutputData::ServiceHandlerInstantiate {
+                        contract_kind: ServiceHandlerContractKind::Mirror,
+                        address,
+                        tx_hash: tx_resp.txhash,
+                    })
+                    .await
+                    .unwrap();
+            }
+
+            ServiceHandlerCommand::GetManager { address, args: _ } => {
                 let client = ctx.wavs_service_handler_querier(&address).await.unwrap();
                 let manager = client.get_manager_address().await.unwrap();
                 println!("Service Manager: {manager}");
             }
         },
 
-        Command::FaucetTap { addr, url } => {
+        Command::Registry { command } => {
+            match command {
+                RegistryCommand::Upload {
+                    wasm_directory,
+                    contract_kind,
+                    args: _,
+                } => {
+                    let client = ctx.signing_client().await.unwrap();
+                    let wasm_path = contract_kind.wasm_path(&wasm_directory);
+                    let wasm_bytes = tokio::fs::read(&wasm_path)
+                        .await
+                        .unwrap_or_else(|_| panic!("Failed to read wasm file at {wasm_path}"));
+                    let (code_id, tx_resp) =
+                        client.contract_upload_file(wasm_bytes, None).await.unwrap();
+
+                    println!("Uploaded {contract_kind} registry");
+                    println!("Code ID: {code_id}");
+                    println!("Tx Hash: {}", tx_resp.txhash);
+
+                    ctx.output
+                        .write(output::OutputData::RegistryUpload {
+                            contract_kind,
+                            code_id,
+                            tx_hash: tx_resp.txhash,
+                        })
+                        .await
+                        .unwrap();
+                }
+                RegistryCommand::InstantiateMirrorStake {
+                    code_id,
+                    service_manager_code_id,
+                    threshold_weight,
+                    strategy,
+                    args: _,
+                } => {
+                    let client = ctx.signing_client().await.unwrap();
+
+                    let service_manager_instantiate = cosmwasm_std::WasmMsg::Instantiate2 {
+                        admin: Some(client.addr.to_string()),
+                        code_id: service_manager_code_id,
+                        msg: cosmwasm_std::to_json_binary(
+                            &cw_wavs_mirror_api::service_manager::InstantiateMsg {
+                                owner: client.addr.to_string(),
+                            },
+                        )
+                        .unwrap(),
+                        funds: vec![],
+                        label: "Mirror Service Manager".to_string(),
+                        salt: cosmwasm_std::Binary::from(b"service_manager"),
+                    };
+
+                    let strategies = strategy
+                        .into_iter()
+                        .map(|s| {
+                            let (strategy, multiplier) = s.split_once('=').unwrap_or_else(|| {
+                                panic!(
+                                    "Strategy must be in the format strategy=multiplier, got: {}",
+                                    s
+                                )
+                            });
+
+                            let multiplier: cosmwasm_std::Uint256 =
+                                multiplier.parse().unwrap_or_else(|_| {
+                                    panic!(
+                                        "Multiplier must be a valid u128 integer, got: {}",
+                                        multiplier
+                                    )
+                                });
+                            cw_wavs_mirror_api::stake_registry::StrategyParams {
+                                strategy: strategy.to_string(),
+                                multiplier,
+                            }
+                        })
+                        .collect();
+
+                    let (address, tx_resp) = client
+                        .contract_instantiate(
+                            None,
+                            code_id,
+                            "Mirror Stake Registry",
+                            &cw_wavs_mirror_api::stake_registry::InstantiateMsg {
+                                service_manager_instantiate,
+                                threshold_weight: threshold_weight.into(),
+                                quorum: cw_wavs_mirror_api::stake_registry::QuorumConfig {
+                                    strategies,
+                                },
+                            },
+                            Vec::new(),
+                            None,
+                        )
+                        .await
+                        .unwrap();
+                    println!("Mirror Stake Registry instantiated at: {address}");
+                    println!("Tx Hash: {}", tx_resp.txhash);
+
+                    ctx.output
+                        .write(output::OutputData::RegistryInstantiate {
+                            contract_kind: RegistryContractKind::MirrorStake,
+                            address,
+                            tx_hash: tx_resp.txhash,
+                        })
+                        .await
+                        .unwrap();
+                }
+                RegistryCommand::GetServiceManager {
+                    address,
+                    contract_kind,
+                    args: _,
+                } => {
+                    let manager: cosmwasm_std::Addr = match contract_kind {
+                        RegistryContractKind::MirrorStake => {
+                            let client = ctx.query_client().await.unwrap();
+                            let address = client.chain_config.parse_address(&address).unwrap();
+                            client.contract_smart(&address, &cw_wavs_mirror_api::stake_registry::QueryMsg::GetServiceManager {  }).await.unwrap()
+                        }
+                    };
+                    println!("Service Manager: {manager}");
+                }
+            }
+        }
+
+        Command::FaucetTap { addr, url, .. } => {
             let client = ctx.query_client().await.unwrap();
             let addr = match addr {
-                Some(addr) => ctx.parse_address(&addr).unwrap(),
+                Some(addr) => ctx.parse_address(&addr).await.unwrap(),
                 None => ctx.wallet_addr().await.unwrap(),
             };
             let balance_before = client

@@ -5,70 +5,60 @@ tasks:
     vars:
       OPERATOR_COUNT: 3
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} generate-env {{.OPERATOR_COUNT}}
+      - cd packages/cli && cargo run generate-env {{.OPERATOR_COUNT}} --wavs-home {{.WAVS_HOME_DIR}}
 
   tap-faucet:
     vars:
       OPERATOR_COUNT: 3
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} faucet-tap {{.CLI_ARGS}}
+      - cd packages/cli && cargo run faucet-tap --wavs-home {{.WAVS_HOME_DIR}} {{.CLI_ARGS}}
 
   service-manager-upload:
-    cmds:
-      - task: contract-upload-inner
-        vars:
-          NAME: "service_manager"
-
-  service-handler-upload:
-    cmds:
-      - task: contract-upload-inner
-        vars:
-          NAME: "service_handler"
-
-  contract-upload-inner:
-    internal: true
-    requires:
-      vars: [NAME]
     vars:
       CONTRACT_KIND:
         sh: task contracts:env-kind
-      CONTRACT_NAME: "cw_wavs_{{.CONTRACT_KIND}}_{{.NAME}}.wasm"
-      CONTRACT_PATH: "{{.CONTRACTS_ARTIFACTS_PATH}}/{{.CONTRACT_NAME}}"
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} contract upload --wasm-file "{{.CONTRACT_PATH}}"
+      - cd packages/cli && cargo run service-manager upload --wavs-home {{.WAVS_HOME_DIR}} --wasm-directory {{.CONTRACTS_ARTIFACTS_PATH}} --contract-kind {{.CONTRACT_KIND}}
 
-  service-manager-deploy:
+  service-manager-instantiate:
     vars:
       CONTRACT_KIND:
         sh: task contracts:env-kind
     requires:
       vars: [CODE_ID]
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} service-manager deploy --code-id {{.CODE_ID}} --contract-kind {{.CONTRACT_KIND}}
+      - cd packages/cli && cargo run service-manager instantiate-{{.CONTRACT_KIND}} --wavs-home {{.WAVS_HOME_DIR}} --code-id {{.CODE_ID}}
 
-  service-handler-deploy:
+  service-handler-upload:
+    vars:
+      CONTRACT_KIND:
+        sh: task contracts:env-kind
+    cmds:
+      - cd packages/cli && cargo run service-handler upload --wavs-home {{.WAVS_HOME_DIR}} --wasm-directory {{.CONTRACTS_ARTIFACTS_PATH}} --contract-kind {{.CONTRACT_KIND}}
+
+  service-handler-instantiate:
     requires:
       vars: [CODE_ID, SERVICE_MANAGER_ADDR]
     vars:
       CONTRACT_KIND:
         sh: task contracts:env-kind
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} service-handler deploy --code-id {{.CODE_ID}} --service-manager {{.SERVICE_MANAGER_ADDR}} --contract-kind {{.CONTRACT_KIND}}
+      - cd packages/cli && cargo run service-handler instantiate-{{.CONTRACT_KIND}} --wavs-home {{.WAVS_HOME_DIR}} --code-id {{.CODE_ID}} --service-manager {{.SERVICE_MANAGER_ADDR}}
 
   service-manager-set-service-uri:
     requires:
       vars: [ADDR, URI]
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} service-manager set-service-uri --address {{.ADDR}} --uri {{.URI}}
+      - cd packages/cli && cargo run service-manager set-service-uri --wavs-home {{.WAVS_HOME_DIR}} --address {{.ADDR}} --uri {{.URI}}
 
   service-manager-get-service-uri:
     requires:
       vars: [ADDR]
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} service-manager get-service-uri --address {{.ADDR}}
+      - cd packages/cli && cargo run service-manager get-service-uri --wavs-home {{.WAVS_HOME_DIR}} --address {{.ADDR}}
 
   service-handler-get-manager:
     requires:
       vars: [ADDR]
     cmds:
-      - cd packages/cli && cargo run -- --wavs-home {{.WAVS_HOME_DIR}} service-handler get-manager --address {{.ADDR}}
+      - cd packages/cli && cargo run service-handler get-manager --wavs-home {{.WAVS_HOME_DIR}} --address {{.ADDR}}

@@ -2136,7 +2136,7 @@ dependencies = [
 
 [[package]]
 name = "cw-wavs-sdk"
-version = "0.2.0-alpha.3"
+version = "0.2.0-alpha.4"
 dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
@@ -2391,7 +2391,7 @@ dependencies = [
 
 [[package]]
 name = "echo-with-id"
-version = "0.2.0-alpha.3"
+version = "0.2.0-alpha.4"
 dependencies = [
  "anyhow",
  "bincode",
@@ -5252,7 +5252,7 @@ dependencies = [
 
 [[package]]
 name = "simple-aggregator"
-version = "0.2.0-alpha.3"
+version = "0.2.0-alpha.4"
 dependencies = [
  "anyhow",
  "bincode",
@@ -6198,7 +6198,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "utils"
-version = "0.2.0-alpha.3"
+version = "0.2.0-alpha.4"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6441,7 +6441,7 @@ dependencies = [
 
 [[package]]
 name = "wavs-cosmos-cli"
-version = "0.2.0-alpha.3"
+version = "0.2.0-alpha.4"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6450,6 +6450,7 @@ dependencies = [
  "cosmwasm-std",
  "cw-wavs-bls-api",
  "cw-wavs-ecdsa-api",
+ "cw-wavs-mirror-api",
  "cw-wavs-mock-api",
  "cw-wavs-sdk",
  "deadpool",
@@ -6459,6 +6460,7 @@ dependencies = [
  "rand 0.9.2",
  "rustls",
  "serde",
+ "serde_json",
  "shared-tests",
  "tokio",
  "tracing",
