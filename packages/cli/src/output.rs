@@ -61,7 +61,8 @@ pub enum OutputData {
     },
     RegistryInstantiate {
         contract_kind: RegistryContractKind,
-        address: String,
+        registry_address: String,
+        service_manager_address: String,
         tx_hash: String,
     },
 }
