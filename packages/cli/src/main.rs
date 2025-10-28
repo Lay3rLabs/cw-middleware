@@ -452,7 +452,7 @@ async fn main() {
                         })
                         .collect();
 
-                    let (address, tx_resp) = client
+                    let (registry_address, tx_resp) = client
                         .contract_instantiate(
                             None,
                             code_id,
@@ -469,13 +469,25 @@ async fn main() {
                         )
                         .await
                         .unwrap();
-                    println!("Mirror Stake Registry instantiated at: {address}");
+
+                    let service_manager_address: cosmwasm_std::Addr = client
+                        .querier
+                        .contract_smart(
+                            &registry_address,
+                            &cw_wavs_mirror_api::stake_registry::QueryMsg::GetServiceManager {},
+                        )
+                        .await
+                        .unwrap();
+
+                    println!("Mirror Stake Registry instantiated at: {registry_address}");
+                    println!("Service Manager instantiated at: {service_manager_address}");
                     println!("Tx Hash: {}", tx_resp.txhash);
 
                     ctx.output
                         .write(output::OutputData::RegistryInstantiate {
                             contract_kind: RegistryContractKind::MirrorStake,
-                            address: address.to_string(),
+                            registry_address: registry_address.to_string(),
+                            service_manager_address: service_manager_address.to_string(),
                             tx_hash: tx_resp.txhash,
                         })
                         .await
