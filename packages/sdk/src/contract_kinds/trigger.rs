@@ -1,4 +1,4 @@
-use cosmwasm_std::{Addr, Uint64};
+use cosmwasm_std::{Addr, HexBinary, Uint64};
 use cw_wavs_trigger_api::simple::PushMessageEvent;
 use layer_climb::events::CosmosTxEvents;
 use serde::de::DeserializeOwned;
@@ -30,7 +30,7 @@ impl SimpleTriggerQuerier {
     pub async fn get_trigger_message(
         &self,
         trigger_id: impl Into<Uint64>,
-    ) -> Result<String, cosmwasm_std::StdError> {
+    ) -> Result<HexBinary, cosmwasm_std::StdError> {
         self.cw_wavs_trigger_simple_query(&cw_wavs_trigger_api::simple::QueryMsg::TriggerMessage {
             trigger_id: trigger_id.into(),
         })
@@ -60,12 +60,9 @@ impl SimpleTriggerExecutor {
         &self.inner
     }
 
-    pub async fn push_message(
-        &self,
-        message: impl ToString,
-    ) -> Result<Uint64, cosmwasm_std::StdError> {
+    pub async fn push_message(&self, message: Vec<u8>) -> Result<Uint64, cosmwasm_std::StdError> {
         let msg = cw_wavs_trigger_api::simple::ExecuteMsg::Push {
-            message: message.to_string(),
+            data: message.into(),
         };
         let resp = self.cw_wavs_trigger_simple_exec(&msg, &[]).await?;
         let events = CosmosTxEvents::from(&resp);

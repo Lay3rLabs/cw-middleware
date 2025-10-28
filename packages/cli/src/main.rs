@@ -111,7 +111,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceManagerInstantiate {
                         contract_kind: ServiceManagerContractKind::Mock,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -138,7 +138,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceManagerInstantiate {
                         contract_kind: ServiceManagerContractKind::Ecdsa,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -165,7 +165,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceManagerInstantiate {
                         contract_kind: ServiceManagerContractKind::Bls,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -196,7 +196,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceManagerInstantiate {
                         contract_kind: ServiceManagerContractKind::Mirror,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -273,7 +273,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceHandlerInstantiate {
                         contract_kind: ServiceHandlerContractKind::Mock,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -303,7 +303,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceHandlerInstantiate {
                         contract_kind: ServiceHandlerContractKind::Ecdsa,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -333,7 +333,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceHandlerInstantiate {
                         contract_kind: ServiceHandlerContractKind::Bls,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -363,7 +363,7 @@ async fn main() {
                 ctx.output
                     .write(output::OutputData::ServiceHandlerInstantiate {
                         contract_kind: ServiceHandlerContractKind::Mirror,
-                        address,
+                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -475,7 +475,7 @@ async fn main() {
                     ctx.output
                         .write(output::OutputData::RegistryInstantiate {
                             contract_kind: RegistryContractKind::MirrorStake,
-                            address,
+                            address: address.to_string(),
                             tx_hash: tx_resp.txhash,
                         })
                         .await

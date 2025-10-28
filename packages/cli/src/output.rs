@@ -1,5 +1,4 @@
 use anyhow::Result;
-use layer_climb::prelude::Address;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -42,7 +41,7 @@ pub enum OutputData {
     },
     ServiceManagerInstantiate {
         contract_kind: ServiceManagerContractKind,
-        address: Address,
+        address: String,
         tx_hash: String,
     },
     ServiceHandlerUpload {
@@ -52,7 +51,7 @@ pub enum OutputData {
     },
     ServiceHandlerInstantiate {
         contract_kind: ServiceHandlerContractKind,
-        address: Address,
+        address: String,
         tx_hash: String,
     },
     RegistryUpload {
@@ -62,7 +61,7 @@ pub enum OutputData {
     },
     RegistryInstantiate {
         contract_kind: RegistryContractKind,
-        address: Address,
+        address: String,
         tx_hash: String,
     },
 }

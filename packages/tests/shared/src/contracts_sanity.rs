@@ -28,7 +28,7 @@ pub async fn run_sanity_tests_with_id(contracts: &ContractTestWrapper, id: &str)
 
     let trigger_id = contracts
         .cw_wavs_trigger_simple_executor
-        .push_message("hello world")
+        .push_message("hello world".as_bytes().to_vec())
         .await
         .unwrap();
 
@@ -40,5 +40,5 @@ pub async fn run_sanity_tests_with_id(contracts: &ContractTestWrapper, id: &str)
         .await
         .unwrap();
 
-    assert_eq!(trigger_message, "hello world");
+    assert_eq!(str::from_utf8(&trigger_message).unwrap(), "hello world");
 }

@@ -23,7 +23,7 @@ async fn mock_handler_works() {
 
     mock_client
         .service_handler_executor
-        .set_trigger_message(42u64.into(), "hello world")
+        .set_trigger_message(42u64.into(), "hello world".as_bytes().to_vec())
         .await
         .unwrap();
 
@@ -32,6 +32,8 @@ async fn mock_handler_works() {
         .get_handled_trigger_message(42u64.into())
         .await
         .unwrap();
+
+    let msg = std::str::from_utf8(&msg).unwrap();
 
     assert_eq!(msg, "hello world");
 }

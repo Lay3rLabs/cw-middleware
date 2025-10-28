@@ -21,7 +21,7 @@ impl TestClient {
         let trigger_id = self
             .trigger
             .executor
-            .push_message("hello world!")
+            .push_message("hello world!".as_bytes().to_vec())
             .await
             .unwrap();
 
@@ -47,6 +47,7 @@ async fn handle_mock_response(client: &MockTestClient, trigger_id: Uint64) {
                 .await
             {
                 Ok(s) => {
+                    let s = std::str::from_utf8(&s).unwrap();
                     tracing::info!("Received trigger message for trigger {trigger_id}: {s}");
                     assert_eq!(s, "hello world!");
                     break;
