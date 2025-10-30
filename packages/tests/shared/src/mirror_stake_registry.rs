@@ -443,23 +443,21 @@ pub async fn run_mirror_ethereum_recovery_id_test(
 
     // Check what recovery ID was actually generated
     let actual_recovery_id = valid_signature[64];
-    println!("Generated signature uses recovery ID: {}", actual_recovery_id);
+    println!(
+        "Generated signature uses recovery ID: {}",
+        actual_recovery_id
+    );
 
     // Test the valid signature as-is
     let signers = vec![alloy_primitives::Address::from_slice(
         &signing_addr.as_bytes(),
     )];
-    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(
-        &valid_signature,
-    )];
+    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(&valid_signature)];
     let tuple_data = (signers.clone(), signatures, 12345u32);
     let encoded_data = tuple_data.abi_encode();
 
     let result = querier
-        .validate_signature(
-            digest_binary.clone(),
-            Binary::from(encoded_data),
-        )
+        .validate_signature(digest_binary.clone(), Binary::from(encoded_data))
         .await;
 
     match result {
@@ -468,7 +466,10 @@ pub async fn run_mirror_ethereum_recovery_id_test(
                 validation_result.is_valid,
                 "Valid signature should be validated successfully"
             );
-            println!("✅ Valid signature with recovery ID {} succeeded", actual_recovery_id);
+            println!(
+                "✅ Valid signature with recovery ID {} succeeded",
+                actual_recovery_id
+            );
         }
         Err(e) => {
             panic!("Valid signature should not fail with error: {}", e);
@@ -483,19 +484,17 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         eth_signature[64] = 28; // Convert to Ethereum format
     }
 
-    println!("Testing converted Ethereum-style recovery ID: {}", eth_signature[64]);
+    println!(
+        "Testing converted Ethereum-style recovery ID: {}",
+        eth_signature[64]
+    );
 
-    let eth_signatures = vec![alloy_primitives::Bytes::copy_from_slice(
-        &eth_signature,
-    )];
+    let eth_signatures = vec![alloy_primitives::Bytes::copy_from_slice(&eth_signature)];
     let eth_tuple_data = (signers.clone(), eth_signatures, 12345u32);
     let eth_encoded_data = eth_tuple_data.abi_encode();
 
     let eth_result = querier
-        .validate_signature(
-            digest_binary.clone(),
-            Binary::from(eth_encoded_data),
-        )
+        .validate_signature(digest_binary.clone(), Binary::from(eth_encoded_data))
         .await;
 
     match eth_result {
@@ -504,7 +503,10 @@ pub async fn run_mirror_ethereum_recovery_id_test(
                 validation_result.is_valid,
                 "Ethereum-style signature should be validated successfully with fix"
             );
-            println!("✅ Ethereum-style signature with recovery ID {} succeeded", eth_signature[64]);
+            println!(
+                "✅ Ethereum-style signature with recovery ID {} succeeded",
+                eth_signature[64]
+            );
         }
         Err(e) => {
             panic!("Ethereum-style signature should not fail with error: {}", e);
@@ -516,17 +518,12 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     let mut invalid_signature = valid_signature.clone();
     invalid_signature[64] = 255; // Invalid recovery ID
 
-    let invalid_signatures = vec![alloy_primitives::Bytes::copy_from_slice(
-        &invalid_signature,
-    )];
+    let invalid_signatures = vec![alloy_primitives::Bytes::copy_from_slice(&invalid_signature)];
     let invalid_tuple_data = (signers.clone(), invalid_signatures, 12345u32);
     let invalid_encoded_data = invalid_tuple_data.abi_encode();
 
     let invalid_result = querier
-        .validate_signature(
-            digest_binary,
-            Binary::from(invalid_encoded_data),
-        )
+        .validate_signature(digest_binary, Binary::from(invalid_encoded_data))
         .await;
 
     match invalid_result {
