@@ -1,4 +1,4 @@
-use alloy_primitives::{keccak256 as alloy_keccak256, B256};
+use alloy_primitives::{keccak256 as alloy_keccak256, eip191_hash_message, B256};
 use alloy_sol_types::{SolType, SolValue};
 use cosmwasm_std::{HexBinary, Uint256};
 use cw_wavs_sdk::contract_kinds::mirror::{
@@ -12,15 +12,17 @@ use rand::thread_rng;
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 fn create_eip191_hash(message: &[u8]) -> B256 {
-    let prefix = b"\x19Ethereum Signed Message:\n";
-    let message_len = message.len().to_string();
+    eip191_hash_message(alloy_keccak256(&message))
 
-    let mut full_message = Vec::new();
-    full_message.extend_from_slice(prefix);
-    full_message.extend_from_slice(message_len.as_bytes());
-    full_message.extend_from_slice(message);
+    // let prefix = b"\x19Ethereum Signed Message:\n";
+    // let message_len = message.len().to_string();
 
-    alloy_keccak256(&full_message)
+    // let mut full_message = Vec::new();
+    // full_message.extend_from_slice(prefix);
+    // full_message.extend_from_slice(message_len.as_bytes());
+    // full_message.extend_from_slice(message);
+
+    // alloy_keccak256(&full_message)
 }
 
 fn create_signing_key_and_address() -> (SigningKey, EvmAddr) {

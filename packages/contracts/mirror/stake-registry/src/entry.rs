@@ -1,3 +1,4 @@
+use alloy_primitives::{eip191_hash_message, keccak256};
 use cosmwasm_std::{
     entry_point, instantiate2_address, to_json_binary, Addr, CodeInfoResponse, Deps, DepsMut, Env,
     HexBinary, MessageInfo, QueryResponse, Response, StdError, StdResult, Uint256, WasmMsg,
@@ -6,7 +7,6 @@ use cw2::set_contract_version;
 use layer_climb_address::EvmAddr;
 use sha3::{Digest, Keccak256};
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
-use wavs_types::EnvelopeExt;
 
 use crate::error::ContractError;
 use crate::state::{
@@ -387,14 +387,7 @@ fn is_valid_signature(
         }
     };
 
-    // TODO: copy hash logic from packet
-    // let envelope = envelope.decode()?;
-    let hash = alloy_primitives::eip191_hash_message(envelope.as_slice());
-    // let hash = envelope.prefix_eip191_hash();
-    // match kind.prefix {
-    //     Some(SignaturePrefix::Eip191) => envelope.prefix_eip191_hash(),
-    //     None => envelope.unprefixed_hash(),
-    // };
+    let hash = eip191_hash_message(&keccak256(envelope.as_slice()));
 
     let calculated_pubkey =
         deps.api
