@@ -8,6 +8,8 @@ use k256::ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey};
 use k256::U256;
 use layer_climb_address::EvmAddr;
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
+use wavs_types::{EnvelopeExt, EnvelopeSigner, SignatureKind};
+use wavs_types::{EnvelopeSignature, SignatureData};
 
 use crate::error::ContractError;
 use crate::state::{
@@ -269,6 +271,31 @@ fn query_validate_signature(
     // Enforce unique signers to prevent double counting
     use std::collections::HashSet;
     let mut seen_signers: HashSet<[u8; 20]> = HashSet::new();
+
+    // TBD
+    //
+    // Can't we just try to recover the signers directly from the envelope and signatures?
+    // and then compare to what we expect?
+    let sol_envelope = envelope.decode().unwrap();
+    let sol_signature_data: SignatureData = signature_data.into();
+
+    let envelope_signatures: Vec<EnvelopeSignature> = sol_signature_data
+        .signatures
+        .iter()
+        .map(|signature| EnvelopeSignature {
+            data: signature.to_vec(), // Use the actual signature bytes
+            kind: SignatureKind::evm_default(),
+        })
+        .collect();
+
+    // This will recover the signer addresses from the signatures
+    let recovered_signature_data = sol_envelope
+        .signature_data(envelope_signatures, signature_data.reference_block as u64)
+        .unwrap();
+
+    if recovered_signature_data != sol_signature_data {
+        panic!("Signature not valid!");
+    }
 
     // Verify each signature (operators are actually signing keys in the decoded data)
     for (i, signing_key) in signature_data.signers.iter().enumerate() {
