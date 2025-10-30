@@ -2087,6 +2087,7 @@ dependencies = [
  "layer-climb-address",
  "serde",
  "thiserror 2.0.17",
+ "wavs-types",
 ]
 
 [[package]]

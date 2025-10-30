@@ -3,6 +3,7 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cosmwasm_std::{Binary, Uint256, WasmMsg};
 use layer_climb_address::EvmAddr;
+use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -47,8 +48,8 @@ pub enum QueryMsg {
     /// Returns ValidationResult with total voting power and voting power that signed
     #[returns(ValidationResult)]
     ValidateSignature {
-        digest: Binary,
-        signature_data: Binary,
+        envelope: WavsEnvelope,
+        signature_data: WavsSignatureData,
     },
     /// Get operator weight
     #[returns(Uint256)]

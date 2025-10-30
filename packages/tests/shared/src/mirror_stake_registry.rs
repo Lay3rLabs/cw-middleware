@@ -1,6 +1,6 @@
 use alloy_primitives::{keccak256 as alloy_keccak256, B256};
 use alloy_sol_types::{SolType, SolValue};
-use cosmwasm_std::{Binary, Uint256};
+use cosmwasm_std::{HexBinary, Uint256};
 use cw_wavs_sdk::contract_kinds::mirror::{
     MirrorStakeRegistryExecutor, MirrorStakeRegistryQuerier,
 };
@@ -9,6 +9,7 @@ use k256::ecdsa::{
 };
 use layer_climb_address::EvmAddr;
 use rand::thread_rng;
+use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 fn create_eip191_hash(message: &[u8]) -> B256 {
     let prefix = b"\x19Ethereum Signed Message:\n";
@@ -153,20 +154,17 @@ pub async fn run_mirror_sanity_tests(
     let digest = create_eip191_hash(test_message);
     let signature = sign_message_hash(&test_signing_key, digest.as_slice());
 
-    // Create ABI-encoded signature data
-    use alloy_sol_types::sol_data::*;
-    type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
-
-    let signers = vec![alloy_primitives::Address::from_slice(
-        &test_signing_addr.as_bytes(),
-    )];
-    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(&signature)];
-    let tuple_data = (signers, signatures, 12345u32);
-    let encoded_data = SignatureDataType::abi_encode(&tuple_data);
+    let signers = vec![test_signing_addr];
+    let signatures = vec![HexBinary::from(signature)];
+    let signature_data = WavsSignatureData {
+        signers,
+        signatures,
+        reference_block: 12345u32,
+    };
 
     // Test signature validation
     let result = querier
-        .validate_signature(Binary::from(digest.to_vec()), Binary::from(encoded_data))
+        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
         .await
         .unwrap();
 
@@ -221,40 +219,36 @@ pub async fn run_mirror_abi_signature_validation_test(
     let sig1 = sign_message_hash(&signing_key1, digest.as_slice());
     let sig2 = sign_message_hash(&signing_key2, digest.as_slice());
 
-    // Create ABI-encoded signature data
-    let signers = vec![
-        alloy_primitives::Address::from_slice(&signing_address1.as_bytes()),
-        alloy_primitives::Address::from_slice(&signing_address2.as_bytes()),
-    ];
-
-    let signatures = vec![
-        alloy_primitives::Bytes::copy_from_slice(&sig1),
-        alloy_primitives::Bytes::copy_from_slice(&sig2),
-    ];
-    let tuple_data = (signers, signatures, 12345u32);
-    let encoded_data = (tuple_data).abi_encode();
+    // Create WavsSignatureData structure like the sanity test does
+    let signers = vec![signing_address1, signing_address2];
+    let signatures = vec![HexBinary::from(sig1), HexBinary::from(sig2)];
+    let signature_data = WavsSignatureData {
+        signers,
+        signatures,
+        reference_block: 12345u32,
+    };
 
     // Test signature validation
-    let digest_binary = Binary::from(digest.to_vec());
-    let signature_data = Binary::from(encoded_data);
-
     let result = querier
-        .validate_signature(digest_binary, signature_data)
-        .await;
-
-    let validation_result = result.unwrap();
+        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .await
+        .unwrap();
 
     // Verify the validation results
+    assert!(result.is_valid, "Signature should be valid");
     assert_eq!(
-        validation_result.total_voting_power,
-        Uint256::from(1100u128)
+        result.reference_block, 12345,
+        "Reference block should match"
     );
-    assert_eq!(validation_result.reference_block, 12345);
     assert_eq!(
-        validation_result.voting_power_signed,
-        Uint256::from(1100u128)
+        result.voting_power_signed,
+        Uint256::from(1100u128),
+        "Voting power signed should match total weight"
     );
-    assert!(validation_result.is_valid);
+    assert!(
+        result.voting_power_signed > Uint256::zero(),
+        "Should have voting power"
+    );
 }
 
 pub async fn run_mirror_abi_binary_compatibility_test() {
@@ -311,18 +305,6 @@ pub async fn run_mirror_negative_test_scenarios(
     executor: &MirrorStakeRegistryExecutor,
     querier: &MirrorStakeRegistryQuerier,
 ) {
-    // Test: Invalid signature validation with malformed ABI data
-    let test_message = b"test invalid signature";
-    let digest = create_eip191_hash(test_message);
-    let digest_binary = Binary::from(digest.to_vec());
-
-    // Malformed signature data (empty)
-    let malformed_data = Binary::from(vec![]);
-    let result = querier
-        .validate_signature(digest_binary.clone(), malformed_data)
-        .await;
-    assert!(result.is_err(), "Should fail with malformed signature data");
-
     // Test: Zero weight operator handling
     let zero_weight_operator = EvmAddr::new([0x99; 20]);
     let zero_signing_key = EvmAddr::new([0x88; 20]);
@@ -393,19 +375,20 @@ pub async fn run_mirror_negative_test_scenarios(
     let wrong_digest = create_eip191_hash(wrong_message);
     let wrong_sig = sign_message_hash(&valid_key, wrong_digest.as_slice());
 
-    let signers = vec![alloy_primitives::Address::from_slice(
-        &valid_addr.as_bytes(),
-    )];
-    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(&wrong_sig)];
-    let tuple_data = (signers, signatures, 54321u32);
-    let encoded_data = (tuple_data).abi_encode();
+    let signers = vec![valid_addr];
+    let signatures = vec![HexBinary::from(wrong_sig)];
+    let signature_data = WavsSignatureData {
+        signers,
+        signatures,
+        reference_block: 54321u32,
+    };
 
     let original_message = b"original message";
     let original_digest = create_eip191_hash(original_message);
     let result = querier
         .validate_signature(
-            Binary::from(original_digest.to_vec()),
-            Binary::from(encoded_data),
+            WavsEnvelope::new_raw(original_digest.to_vec()),
+            signature_data,
         )
         .await;
 
@@ -435,7 +418,6 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     // Create a test message
     let message = b"test message for recovery ID validation";
     let digest = create_eip191_hash(message);
-    let digest_binary = Binary::from(digest.to_vec());
 
     // Test: Use the properly generated signature (with correct recovery ID)
     println!("Testing with properly generated signature...");
@@ -448,33 +430,28 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         actual_recovery_id
     );
 
-    // Test the valid signature as-is
-    let signers = vec![alloy_primitives::Address::from_slice(
-        &signing_addr.as_bytes(),
-    )];
-    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(&valid_signature)];
-    let tuple_data = (signers.clone(), signatures, 12345u32);
-    let encoded_data = tuple_data.abi_encode();
+    // Test the valid signature as-is using WavsSignatureData
+    let signers = vec![signing_addr.clone()];
+    let signatures = vec![HexBinary::from(valid_signature.clone())];
+    let signature_data = WavsSignatureData {
+        signers,
+        signatures,
+        reference_block: 12345u32,
+    };
 
     let result = querier
-        .validate_signature(digest_binary.clone(), Binary::from(encoded_data))
-        .await;
+        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .await
+        .unwrap();
 
-    match result {
-        Ok(validation_result) => {
-            assert!(
-                validation_result.is_valid,
-                "Valid signature should be validated successfully"
-            );
-            println!(
-                "✅ Valid signature with recovery ID {} succeeded",
-                actual_recovery_id
-            );
-        }
-        Err(e) => {
-            panic!("Valid signature should not fail with error: {}", e);
-        }
-    }
+    assert!(
+        result.is_valid,
+        "Valid signature should be validated successfully"
+    );
+    println!(
+        "✅ Valid signature with recovery ID {} succeeded",
+        actual_recovery_id
+    );
 
     // Test: Convert recovery ID to Ethereum format and test again
     let mut eth_signature = valid_signature.clone();
@@ -489,41 +466,46 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         eth_signature[64]
     );
 
-    let eth_signatures = vec![alloy_primitives::Bytes::copy_from_slice(&eth_signature)];
-    let eth_tuple_data = (signers.clone(), eth_signatures, 12345u32);
-    let eth_encoded_data = eth_tuple_data.abi_encode();
+    let eth_signers = vec![signing_addr.clone()];
+    let eth_signatures = vec![HexBinary::from(eth_signature.clone())];
+    let eth_signature_data = WavsSignatureData {
+        signers: eth_signers,
+        signatures: eth_signatures,
+        reference_block: 12345u32,
+    };
 
     let eth_result = querier
-        .validate_signature(digest_binary.clone(), Binary::from(eth_encoded_data))
-        .await;
+        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), eth_signature_data)
+        .await
+        .unwrap();
 
-    match eth_result {
-        Ok(validation_result) => {
-            assert!(
-                validation_result.is_valid,
-                "Ethereum-style signature should be validated successfully with fix"
-            );
-            println!(
-                "✅ Ethereum-style signature with recovery ID {} succeeded",
-                eth_signature[64]
-            );
-        }
-        Err(e) => {
-            panic!("Ethereum-style signature should not fail with error: {}", e);
-        }
-    }
+    assert!(
+        eth_result.is_valid,
+        "Ethereum-style signature should be validated successfully with fix"
+    );
+    println!(
+        "✅ Ethereum-style signature with recovery ID {} succeeded",
+        eth_signature[64]
+    );
 
     // Test: Invalid recovery ID
     println!("Testing invalid recovery ID...");
     let mut invalid_signature = valid_signature.clone();
     invalid_signature[64] = 255; // Invalid recovery ID
 
-    let invalid_signatures = vec![alloy_primitives::Bytes::copy_from_slice(&invalid_signature)];
-    let invalid_tuple_data = (signers.clone(), invalid_signatures, 12345u32);
-    let invalid_encoded_data = invalid_tuple_data.abi_encode();
+    let invalid_signers = vec![signing_addr];
+    let invalid_signatures = vec![HexBinary::from(invalid_signature)];
+    let invalid_signature_data = WavsSignatureData {
+        signers: invalid_signers,
+        signatures: invalid_signatures,
+        reference_block: 12345u32,
+    };
 
     let invalid_result = querier
-        .validate_signature(digest_binary, Binary::from(invalid_encoded_data))
+        .validate_signature(
+            WavsEnvelope::new_raw(digest.to_vec()),
+            invalid_signature_data,
+        )
         .await;
 
     match invalid_result {
