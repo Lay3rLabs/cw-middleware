@@ -388,8 +388,9 @@ fn is_valid_signature(
     };
 
     // TODO: copy hash logic from packet
-    let envelope = envelope.decode()?;
-    let hash = envelope.prefix_eip191_hash();
+    // let envelope = envelope.decode()?;
+    let hash = alloy_primitives::eip191_hash_message(envelope.as_slice());
+    // let hash = envelope.prefix_eip191_hash();
     // match kind.prefix {
     //     Some(SignaturePrefix::Eip191) => envelope.prefix_eip191_hash(),
     //     None => envelope.unprefixed_hash(),

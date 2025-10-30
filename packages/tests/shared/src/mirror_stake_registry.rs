@@ -164,7 +164,7 @@ pub async fn run_mirror_sanity_tests(
 
     // Test signature validation
     let result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .validate_signature(WavsEnvelope::new_raw(test_message.to_vec()), signature_data)
         .await
         .unwrap();
 
@@ -230,7 +230,7 @@ pub async fn run_mirror_abi_signature_validation_test(
 
     // Test signature validation
     let result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .validate_signature(WavsEnvelope::new_raw(test_message.to_vec()), signature_data)
         .await
         .unwrap();
 
@@ -440,7 +440,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     };
 
     let result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .validate_signature(WavsEnvelope::new_raw(message.to_vec()), signature_data)
         .await
         .unwrap();
 
@@ -474,8 +474,9 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         reference_block: 12345u32,
     };
 
+    // This must use raw prehash
     let eth_result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), eth_signature_data)
+        .validate_signature(WavsEnvelope::new_raw(message.to_vec()), eth_signature_data)
         .await
         .unwrap();
 
@@ -503,7 +504,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
 
     let invalid_result = querier
         .validate_signature(
-            WavsEnvelope::new_raw(digest.to_vec()),
+            WavsEnvelope::new_raw(message.to_vec()),
             invalid_signature_data,
         )
         .await;
