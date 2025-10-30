@@ -1,13 +1,12 @@
-use alloy_primitives::{keccak256, B256};
 use cosmwasm_std::{
     entry_point, instantiate2_address, to_json_binary, Addr, CodeInfoResponse, Deps, DepsMut, Env,
     HexBinary, MessageInfo, QueryResponse, Response, StdError, StdResult, Uint256, WasmMsg,
 };
 use cw2::set_contract_version;
-use k256::ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey};
-use k256::U256;
 use layer_climb_address::EvmAddr;
+use sha3::{Digest, Keccak256};
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
+use wavs_types::EnvelopeExt;
 
 use crate::error::ContractError;
 use crate::state::{
@@ -312,7 +311,7 @@ fn query_validate_signature(
 
         // Verify signature using the signing key (safe index: len equality checked above)
         let signature = &signature_data.signatures[i];
-        if !is_valid_signature(&envelope, signature, signing_key)? {
+        if !is_valid_signature(deps, &envelope, signature, signing_key)? {
             return Ok(ValidationResult {
                 is_valid: false,
                 total_voting_power: total_weight,
@@ -389,13 +388,23 @@ fn is_valid_signature(
     };
 
     // TODO: copy hash logic from packet
-    
-    let calculated_pubkey = deps.api.secp256k1_recover_pubkey(&hash, &rs, normalized_recovery_id)?;
+    let envelope = envelope.decode()?;
+    let hash = envelope.prefix_eip191_hash();
+    // match kind.prefix {
+    //     Some(SignaturePrefix::Eip191) => envelope.prefix_eip191_hash(),
+    //     None => envelope.unprefixed_hash(),
+    // };
+
+    let calculated_pubkey =
+        deps.api
+            .secp256k1_recover_pubkey(hash.as_slice(), &rs, normalized_recovery_id)?;
     let calculated_address = ethereum_address_raw(&calculated_pubkey)?;
-    if signer_address != calculated_address {
+    if signer_address.as_bytes() != calculated_address {
         return Ok(false);
     }
-    let valid = deps.api.secp256k1_verify(&hash, &rs, &calculated_pubkey)?;
+    let valid = deps
+        .api
+        .secp256k1_verify(hash.as_slice(), &rs, &calculated_pubkey)?;
     Ok(valid)
 
     // // Extract r, s, and recovery_id from signature

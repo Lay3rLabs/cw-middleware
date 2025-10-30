@@ -20,6 +20,7 @@ cw-wavs-mirror-api = { workspace = true }
 layer-climb-address = { workspace = true }
 wavs-types = { workspace = true }
 hex = "0.4"
+sha3 = "0.10.8"
 
 [features]
 library = []

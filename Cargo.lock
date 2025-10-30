@@ -2086,6 +2086,7 @@ dependencies = [
  "k256",
  "layer-climb-address",
  "serde",
+ "sha3",
  "thiserror 2.0.17",
  "wavs-types",
 ]
