@@ -387,60 +387,19 @@ fn is_valid_signature(
         }
     };
 
-    let hash = eip191_hash_message(&keccak256(envelope.as_slice()));
+    let hash = eip191_hash_message(keccak256(envelope.as_slice()));
 
     let calculated_pubkey =
         deps.api
-            .secp256k1_recover_pubkey(hash.as_slice(), &rs, normalized_recovery_id)?;
+            .secp256k1_recover_pubkey(hash.as_slice(), rs, normalized_recovery_id)?;
     let calculated_address = ethereum_address_raw(&calculated_pubkey)?;
     if signer_address.as_bytes() != calculated_address {
         return Ok(false);
     }
     let valid = deps
         .api
-        .secp256k1_verify(hash.as_slice(), &rs, &calculated_pubkey)?;
+        .secp256k1_verify(hash.as_slice(), rs, &calculated_pubkey)?;
     Ok(valid)
-
-    // // Extract r, s, and recovery_id from signature
-    // let sig_bytes = signature.as_slice();
-    // let r_bytes: [u8; 32] = sig_bytes[0..32]
-    //     .try_into()
-    //     .map_err(|_| StdError::msg("Invalid signature format: r component"))?;
-    // let s_bytes: [u8; 32] = sig_bytes[32..64]
-    //     .try_into()
-    //     .map_err(|_| StdError::msg("Invalid signature format: s component"))?;
-
-    // let s = U256::from_be_slice(&s_bytes);
-    // let secp256k1_n_half =
-    //     U256::from_be_hex("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
-    // if s > secp256k1_n_half {
-    //     return Ok(false); // Reject malleable signatures
-    // }
-
-    // // Create k256 signature from r and s
-    // let k256_sig = K256Signature::from_scalars(r_bytes, s_bytes)
-    //     .map_err(|_| StdError::msg("Invalid signature scalars"))?;
-
-    // let recovery_id = RecoveryId::try_from(normalized_recovery_id)
-    //     .map_err(|_| StdError::msg("Invalid recovery ID"))?;
-
-    // Convert digest to B256 for recovery
-    // let digest_hash =
-    //     B256::try_from(envelope.as_slice()).map_err(|_| StdError::msg("Invalid digest length"))?;
-
-    // // Recover the verifying key (public key) from signature
-    // let verifying_key =
-    //     VerifyingKey::recover_from_prehash(digest_hash.as_slice(), &k256_sig, recovery_id)
-    //         .map_err(|_| StdError::msg("Failed to recover public key"))?;
-
-    // // Convert verifying key to Ethereum address
-    // let public_key_bytes = verifying_key.to_encoded_point(false);
-    // let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip 0x04 prefix
-    // let addr_hash = keccak256(public_key_uncompressed);
-    // let recovered_address = &addr_hash[12..]; // Last 20 bytes
-
-    // // Compare with expected signer address
-    // Ok(recovered_address == signer_address.as_bytes())
 }
 
 pub fn ethereum_address_raw(pubkey: &[u8]) -> StdResult<[u8; 20]> {
