@@ -15,10 +15,10 @@ pub const OPERATOR_WEIGHTS: SnapshotMap<String, Uint256> = SnapshotMap::new(
     "operator_weights__changelog",
     Strategy::EveryBlock,
 );
-pub const OPERATOR_SIGNING_KEYS: SnapshotMap<String, EvmAddr> = SnapshotMap::new(
-    "operator_signing_keys",
-    "operator_signing_keys__checkpoints",
-    "operator_signing_keys__changelog",
+pub const OPERATOR_TO_SIGNING_KEY: SnapshotMap<String, EvmAddr> = SnapshotMap::new(
+    "operator_to_signing_key",
+    "operator_to_signing_key__checkpoints",
+    "operator_to_signing_key__changelog",
     Strategy::EveryBlock,
 );
 pub const SIGNING_KEY_TO_OPERATOR: SnapshotMap<String, EvmAddr> = SnapshotMap::new(
