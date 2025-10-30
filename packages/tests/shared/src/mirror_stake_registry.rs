@@ -1,4 +1,4 @@
-use alloy_primitives::{keccak256 as alloy_keccak256, B256};
+use alloy_primitives::{eip191_hash_message, keccak256 as alloy_keccak256, B256};
 use alloy_sol_types::{SolType, SolValue};
 use cosmwasm_std::{HexBinary, Uint256};
 use cw_wavs_sdk::contract_kinds::mirror::{
@@ -12,15 +12,7 @@ use rand::thread_rng;
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 fn create_eip191_hash(message: &[u8]) -> B256 {
-    let prefix = b"\x19Ethereum Signed Message:\n";
-    let message_len = message.len().to_string();
-
-    let mut full_message = Vec::new();
-    full_message.extend_from_slice(prefix);
-    full_message.extend_from_slice(message_len.as_bytes());
-    full_message.extend_from_slice(message);
-
-    alloy_keccak256(&full_message)
+    eip191_hash_message(alloy_keccak256(message))
 }
 
 fn create_signing_key_and_address() -> (SigningKey, EvmAddr) {
@@ -164,7 +156,7 @@ pub async fn run_mirror_sanity_tests(
 
     // Test signature validation
     let result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .validate_signature(WavsEnvelope::new_raw(test_message.to_vec()), signature_data)
         .await
         .unwrap();
 
@@ -230,7 +222,7 @@ pub async fn run_mirror_abi_signature_validation_test(
 
     // Test signature validation
     let result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .validate_signature(WavsEnvelope::new_raw(test_message.to_vec()), signature_data)
         .await
         .unwrap();
 
@@ -440,7 +432,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     };
 
     let result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), signature_data)
+        .validate_signature(WavsEnvelope::new_raw(message.to_vec()), signature_data)
         .await
         .unwrap();
 
@@ -474,8 +466,9 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         reference_block: 12345u32,
     };
 
+    // This must use raw prehash
     let eth_result = querier
-        .validate_signature(WavsEnvelope::new_raw(digest.to_vec()), eth_signature_data)
+        .validate_signature(WavsEnvelope::new_raw(message.to_vec()), eth_signature_data)
         .await
         .unwrap();
 
@@ -503,7 +496,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
 
     let invalid_result = querier
         .validate_signature(
-            WavsEnvelope::new_raw(digest.to_vec()),
+            WavsEnvelope::new_raw(message.to_vec()),
             invalid_signature_data,
         )
         .await;

@@ -1,12 +1,11 @@
-use alloy_primitives::{keccak256, B256};
+use alloy_primitives::{eip191_hash_message, keccak256};
 use cosmwasm_std::{
     entry_point, instantiate2_address, to_json_binary, Addr, CodeInfoResponse, Deps, DepsMut, Env,
     HexBinary, MessageInfo, QueryResponse, Response, StdError, StdResult, Uint256, WasmMsg,
 };
 use cw2::set_contract_version;
-use k256::ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey};
-use k256::U256;
 use layer_climb_address::EvmAddr;
+use sha3::{Digest, Keccak256};
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 use crate::error::ContractError;
@@ -312,7 +311,7 @@ fn query_validate_signature(
 
         // Verify signature using the signing key (safe index: len equality checked above)
         let signature = &signature_data.signatures[i];
-        if !is_valid_signature(&envelope, signature, signing_key)? {
+        if !is_valid_signature(deps, &envelope, signature, signing_key)? {
             return Ok(ValidationResult {
                 is_valid: false,
                 total_voting_power: total_weight,
@@ -360,6 +359,7 @@ fn query_validate_signature(
 
 // Mimics Solidity's signer.isValidSignatureNow(digest, signature)
 fn is_valid_signature(
+    deps: Deps,
     envelope: &WavsEnvelope,
     signature: &HexBinary,
     signer_address: &EvmAddr,
@@ -374,28 +374,9 @@ fn is_valid_signature(
         return Ok(false);
     }
 
-    // Extract r, s, and recovery_id from signature
     let sig_bytes = signature.as_slice();
-    let r_bytes: [u8; 32] = sig_bytes[0..32]
-        .try_into()
-        .map_err(|_| StdError::msg("Invalid signature format: r component"))?;
-    let s_bytes: [u8; 32] = sig_bytes[32..64]
-        .try_into()
-        .map_err(|_| StdError::msg("Invalid signature format: s component"))?;
-
-    let s = U256::from_be_slice(&s_bytes);
-    let secp256k1_n_half =
-        U256::from_be_hex("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
-    if s > secp256k1_n_half {
-        return Ok(false); // Reject malleable signatures
-    }
-
+    let rs = &sig_bytes[0..64];
     let recovery_id = sig_bytes[64];
-
-    // Create k256 signature from r and s
-    let k256_sig = K256Signature::from_scalars(r_bytes, s_bytes)
-        .map_err(|_| StdError::msg("Invalid signature scalars"))?;
-
     // Create recovery ID (normalize from Ethereum format 27/28 to k256 format 0/1)
     let normalized_recovery_id = match recovery_id {
         27 => 0,
@@ -405,26 +386,36 @@ fn is_valid_signature(
             return Ok(false);
         }
     };
-    let recovery_id = RecoveryId::try_from(normalized_recovery_id)
-        .map_err(|_| StdError::msg("Invalid recovery ID"))?;
 
-    // Convert digest to B256 for recovery
-    let digest_hash =
-        B256::try_from(envelope.as_slice()).map_err(|_| StdError::msg("Invalid digest length"))?;
+    let hash = eip191_hash_message(keccak256(envelope.as_slice()));
 
-    // Recover the verifying key (public key) from signature
-    let verifying_key =
-        VerifyingKey::recover_from_prehash(digest_hash.as_slice(), &k256_sig, recovery_id)
-            .map_err(|_| StdError::msg("Failed to recover public key"))?;
+    let calculated_pubkey =
+        deps.api
+            .secp256k1_recover_pubkey(hash.as_slice(), rs, normalized_recovery_id)?;
+    let calculated_address = ethereum_address_raw(&calculated_pubkey)?;
+    if signer_address.as_bytes() != calculated_address {
+        return Ok(false);
+    }
+    let valid = deps
+        .api
+        .secp256k1_verify(hash.as_slice(), rs, &calculated_pubkey)?;
+    Ok(valid)
+}
 
-    // Convert verifying key to Ethereum address
-    let public_key_bytes = verifying_key.to_encoded_point(false);
-    let public_key_uncompressed = &public_key_bytes.as_bytes()[1..]; // Skip 0x04 prefix
-    let addr_hash = keccak256(public_key_uncompressed);
-    let recovered_address = &addr_hash[12..]; // Last 20 bytes
+pub fn ethereum_address_raw(pubkey: &[u8]) -> StdResult<[u8; 20]> {
+    let (tag, data) = match pubkey.split_first() {
+        Some(pair) => pair,
+        None => return Err(StdError::msg("Public key must not be empty")),
+    };
+    if *tag != 0x04 {
+        return Err(StdError::msg("Public key must start with 0x04"));
+    }
+    if data.len() != 64 {
+        return Err(StdError::msg("Public key must be 65 bytes long"));
+    }
 
-    // Compare with expected signer address
-    Ok(recovered_address == signer_address.as_bytes())
+    let hash = Keccak256::digest(data);
+    Ok(hash[hash.len() - 20..].try_into().unwrap())
 }
 
 fn query_operator_weight(deps: Deps, operator: EvmAddr) -> StdResult<Uint256> {

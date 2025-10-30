@@ -29,7 +29,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.2.0-alpha.8"
+version = "0.2.0-alpha.9"
 license = "GPL-3.0-or-later"
 authors = ["Layer Labs (Cayman)"]
 repository = "https://github.com/Lay3rLabs/cw-middleware"
