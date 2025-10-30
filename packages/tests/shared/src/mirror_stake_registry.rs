@@ -414,3 +414,135 @@ pub async fn run_mirror_negative_test_scenarios(
         assert!(!validation_result.is_valid, "Should be invalid signature");
     }
 }
+
+pub async fn run_mirror_ethereum_recovery_id_test(
+    executor: &MirrorStakeRegistryExecutor,
+    querier: &MirrorStakeRegistryQuerier,
+) {
+    println!("Testing Ethereum-style recovery IDs (27/28) vs k256 recovery IDs (0/1)");
+
+    // Create a test operator with signing key
+    let (signing_key, signing_addr) = create_signing_key_and_address();
+    let operator = EvmAddr::new([0x99; 20]);
+    let weight = Uint256::from(1000u128);
+
+    // Register the operator
+    executor
+        .set_operator_details(operator.clone(), signing_addr.clone(), weight)
+        .await
+        .unwrap();
+
+    // Create a test message
+    let message = b"test message for recovery ID validation";
+    let digest = create_eip191_hash(message);
+    let digest_binary = Binary::from(digest.to_vec());
+
+    // Test: Use the properly generated signature (with correct recovery ID)
+    println!("Testing with properly generated signature...");
+    let valid_signature = sign_message_hash(&signing_key, digest.as_slice());
+
+    // Check what recovery ID was actually generated
+    let actual_recovery_id = valid_signature[64];
+    println!("Generated signature uses recovery ID: {}", actual_recovery_id);
+
+    // Test the valid signature as-is
+    let signers = vec![alloy_primitives::Address::from_slice(
+        &signing_addr.as_bytes(),
+    )];
+    let signatures = vec![alloy_primitives::Bytes::copy_from_slice(
+        &valid_signature,
+    )];
+    let tuple_data = (signers.clone(), signatures, 12345u32);
+    let encoded_data = tuple_data.abi_encode();
+
+    let result = querier
+        .validate_signature(
+            digest_binary.clone(),
+            Binary::from(encoded_data),
+        )
+        .await;
+
+    match result {
+        Ok(validation_result) => {
+            assert!(
+                validation_result.is_valid,
+                "Valid signature should be validated successfully"
+            );
+            println!("✅ Valid signature with recovery ID {} succeeded", actual_recovery_id);
+        }
+        Err(e) => {
+            panic!("Valid signature should not fail with error: {}", e);
+        }
+    }
+
+    // Test: Convert recovery ID to Ethereum format and test again
+    let mut eth_signature = valid_signature.clone();
+    if actual_recovery_id == 0 {
+        eth_signature[64] = 27; // Convert to Ethereum format
+    } else if actual_recovery_id == 1 {
+        eth_signature[64] = 28; // Convert to Ethereum format
+    }
+
+    println!("Testing converted Ethereum-style recovery ID: {}", eth_signature[64]);
+
+    let eth_signatures = vec![alloy_primitives::Bytes::copy_from_slice(
+        &eth_signature,
+    )];
+    let eth_tuple_data = (signers.clone(), eth_signatures, 12345u32);
+    let eth_encoded_data = eth_tuple_data.abi_encode();
+
+    let eth_result = querier
+        .validate_signature(
+            digest_binary.clone(),
+            Binary::from(eth_encoded_data),
+        )
+        .await;
+
+    match eth_result {
+        Ok(validation_result) => {
+            assert!(
+                validation_result.is_valid,
+                "Ethereum-style signature should be validated successfully with fix"
+            );
+            println!("✅ Ethereum-style signature with recovery ID {} succeeded", eth_signature[64]);
+        }
+        Err(e) => {
+            panic!("Ethereum-style signature should not fail with error: {}", e);
+        }
+    }
+
+    // Test: Invalid recovery ID
+    println!("Testing invalid recovery ID...");
+    let mut invalid_signature = valid_signature.clone();
+    invalid_signature[64] = 255; // Invalid recovery ID
+
+    let invalid_signatures = vec![alloy_primitives::Bytes::copy_from_slice(
+        &invalid_signature,
+    )];
+    let invalid_tuple_data = (signers.clone(), invalid_signatures, 12345u32);
+    let invalid_encoded_data = invalid_tuple_data.abi_encode();
+
+    let invalid_result = querier
+        .validate_signature(
+            digest_binary,
+            Binary::from(invalid_encoded_data),
+        )
+        .await;
+
+    match invalid_result {
+        Ok(validation_result) => {
+            // The contract should return Ok but with is_valid: false for invalid signatures
+            assert!(
+                !validation_result.is_valid,
+                "Invalid recovery ID should result in is_valid=false"
+            );
+            println!("✅ Invalid recovery ID correctly returned is_valid=false");
+        }
+        Err(e) => {
+            // It's also acceptable for the contract to return an error for invalid recovery IDs
+            println!("✅ Invalid recovery ID correctly failed with error: {}", e);
+        }
+    }
+
+    println!("✅ Ethereum recovery ID test completed successfully!");
+}

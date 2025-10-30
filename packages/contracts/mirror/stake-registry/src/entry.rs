@@ -6,6 +6,7 @@ use cosmwasm_std::{
 };
 use cw2::set_contract_version;
 use k256::ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey};
+use k256::U256;
 use layer_climb_address::EvmAddr;
 
 use crate::error::ContractError;
@@ -408,15 +409,31 @@ fn is_valid_signature(
     let s_bytes: [u8; 32] = sig_bytes[32..64]
         .try_into()
         .map_err(|_| StdError::msg("Invalid signature format: s component"))?;
+
+    let s = U256::from_be_slice(&s_bytes);
+    let secp256k1_n_half =
+        U256::from_be_hex("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0");
+    if s > secp256k1_n_half {
+        return Ok(false); // Reject malleable signatures
+    }
+
     let recovery_id = sig_bytes[64];
 
     // Create k256 signature from r and s
     let k256_sig = K256Signature::from_scalars(r_bytes, s_bytes)
         .map_err(|_| StdError::msg("Invalid signature scalars"))?;
 
-    // Create recovery ID
-    let recovery_id =
-        RecoveryId::try_from(recovery_id).map_err(|_| StdError::msg("Invalid recovery ID"))?;
+    // Create recovery ID (normalize from Ethereum format 27/28 to k256 format 0/1)
+    let normalized_recovery_id = match recovery_id {
+        27 => 0,
+        28 => 1,
+        0 | 1 => recovery_id,
+        _ => {
+            return Ok(false);
+        }
+    };
+    let recovery_id = RecoveryId::try_from(normalized_recovery_id)
+        .map_err(|_| StdError::msg("Invalid recovery ID"))?;
 
     // Convert digest to B256 for recovery
     let digest_hash =

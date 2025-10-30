@@ -118,3 +118,17 @@ async fn mirror_negative_scenarios() {
     )
     .await;
 }
+
+#[tokio::test]
+async fn mirror_ethereum_recovery_id_test() {
+    tracing_tests_init();
+
+    let client = ContractTestClient::new("admin");
+    let mirror_client = MirrorTestClient::new(client);
+
+    mirror_stake_registry::run_mirror_ethereum_recovery_id_test(
+        &mirror_client.stake_registry_executor,
+        &mirror_client.stake_registry_querier,
+    )
+    .await;
+}
