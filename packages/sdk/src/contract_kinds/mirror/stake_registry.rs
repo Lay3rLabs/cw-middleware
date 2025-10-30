@@ -1,9 +1,10 @@
 use crate::client::{WavsExecutor, WavsQuerier, WavsTxResponse};
-use cosmwasm_std::{Addr, Binary, Uint256};
+use cosmwasm_std::{Addr, Uint256};
 use cw_wavs_mirror_api::stake_registry::{ExecuteMsg, QueryMsg, ValidationResult};
 use layer_climb::prelude::EvmAddr;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
+use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 #[derive(Clone)]
 pub struct MirrorStakeRegistryQuerier {
@@ -31,11 +32,11 @@ impl MirrorStakeRegistryQuerier {
 
     pub async fn validate_signature(
         &self,
-        digest: Binary,
-        signature_data: Binary,
+        envelope: WavsEnvelope,
+        signature_data: WavsSignatureData,
     ) -> Result<ValidationResult, cosmwasm_std::StdError> {
         self.cw_wavs_mirror_stake_registry_query(&QueryMsg::ValidateSignature {
-            digest,
+            envelope,
             signature_data,
         })
         .await

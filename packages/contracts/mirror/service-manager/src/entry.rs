@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
+    entry_point, to_json_binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
     StdResult,
 };
 use cw2::set_contract_version;
@@ -9,8 +9,6 @@ use wavs_types::contracts::cosmwasm::service_manager::{
 };
 
 use crate::state::{self, ADMIN, STAKE_REGISTRY};
-use alloy_primitives::keccak256 as alloy_keccak256;
-use alloy_sol_types::SolType;
 use cw_wavs_mirror_api::service_manager::{ExecuteMsg, InstantiateMsg, QueryMsg};
 
 // version info for migration info
@@ -87,51 +85,18 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                     Some(addr) => addr,
                     None => {
                         return to_json_binary(&WavsValidateResult::Err(
-                            WavsValidateError::InvalidSignature,
+                            WavsValidateError::MissingRegistry,
                         ))
                     }
                 };
-
-                // Compute digest from envelope payload (keccak256 of payload bytes)
-                let decoded = match envelope.decode() {
-                    Ok(d) => d,
-                    Err(_) => {
-                        return to_json_binary(&WavsValidateResult::Err(
-                            WavsValidateError::InvalidSignature,
-                        ))
-                    }
-                };
-                let digest_b256 = alloy_keccak256(&decoded.payload);
-                let digest_bin = Binary::from(digest_b256.to_vec());
-
-                // Build ABI-encoded signature data (address[] signers, bytes[] signatures, uint32 referenceBlock)
-                // Use the provided reference_block from signature_data.
-                let signers: Vec<alloy_primitives::Address> = signature_data
-                    .signers
-                    .iter()
-                    .map(|s| alloy_primitives::Address::from_slice(&s.as_bytes()))
-                    .collect();
-                let signatures: Vec<alloy_primitives::Bytes> = signature_data
-                    .signatures
-                    .iter()
-                    .map(|sig| alloy_primitives::Bytes::copy_from_slice(sig))
-                    .collect();
-
-                // Create a tuple type for (address[], bytes[], uint32)
-                use alloy_sol_types::sol_data::*;
-                type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
-
-                let tuple_data = (signers, signatures, signature_data.reference_block);
-                let encoded = SignatureDataType::abi_encode(&tuple_data);
-                let encoded_bin = Binary::from(encoded);
 
                 // Query stake registry
                 let res: cw_wavs_mirror_api::stake_registry::ValidationResult =
                     deps.querier.query_wasm_smart(
                         stake_registry,
                         &cw_wavs_mirror_api::stake_registry::QueryMsg::ValidateSignature {
-                            digest: digest_bin,
-                            signature_data: encoded_bin,
+                            envelope,
+                            signature_data,
                         },
                     )?;
 

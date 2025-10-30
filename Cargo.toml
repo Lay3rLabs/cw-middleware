@@ -57,10 +57,10 @@ utils = { path = "packages/utils" }
 shared-tests = { path = "packages/tests/shared" }
 
 # WAVS
-wavs-types = { version = "=2.0.0-alpha.7", default-features = false, features = [
+wavs-types = { version = "=2.0.0-rc.2", default-features = false, features = [
   "cosmwasm",
 ] }
-wavs-types-full = { package = "wavs-types", version = "=2.0.0-alpha.7", features = [
+wavs-types-full = { package = "wavs-types", version = "=2.0.0-rc.2", features = [
   "full",
 ] }
 wavs-wasi-utils = "0.5.1"
@@ -75,7 +75,10 @@ async-trait = "0.1.88"
 futures = "0.3.31"
 
 # http
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-webpki-roots"] }
+reqwest = { version = "0.12", default-features = false, features = [
+  "json",
+  "rustls-tls-webpki-roots",
+] }
 
 # pool management
 deadpool = "0.12.2"

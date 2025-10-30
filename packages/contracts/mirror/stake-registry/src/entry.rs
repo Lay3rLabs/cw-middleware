@@ -1,13 +1,13 @@
 use alloy_primitives::{keccak256, B256};
-use alloy_sol_types::SolType;
 use cosmwasm_std::{
-    entry_point, instantiate2_address, to_json_binary, Addr, Binary, CodeInfoResponse, Deps,
-    DepsMut, Env, MessageInfo, QueryResponse, Response, StdError, StdResult, Uint256, WasmMsg,
+    entry_point, instantiate2_address, to_json_binary, Addr, CodeInfoResponse, Deps, DepsMut, Env,
+    HexBinary, MessageInfo, QueryResponse, Response, StdError, StdResult, Uint256, WasmMsg,
 };
 use cw2::set_contract_version;
 use k256::ecdsa::{RecoveryId, Signature as K256Signature, VerifyingKey};
 use k256::U256;
 use layer_climb_address::EvmAddr;
+use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 use crate::error::ContractError;
 use crate::state::{
@@ -15,8 +15,8 @@ use crate::state::{
     SIGNING_KEY_TO_OPERATOR, TOTAL_WEIGHT,
 };
 use cw_wavs_mirror_api::stake_registry::{
-    ExecuteMsg, InstantiateMsg, OperatorWeightUpdatedEvent, QueryMsg, SignatureData,
-    SigningKeyUpdateEvent, TotalWeightUpdatedEvent, ValidationResult,
+    ExecuteMsg, InstantiateMsg, OperatorWeightUpdatedEvent, QueryMsg, SigningKeyUpdateEvent,
+    TotalWeightUpdatedEvent, ValidationResult,
 };
 
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
@@ -83,9 +83,9 @@ pub fn execute(
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
     match msg {
         QueryMsg::ValidateSignature {
-            digest,
+            envelope,
             signature_data,
-        } => to_json_binary(&query_validate_signature(deps, digest, signature_data)?),
+        } => to_json_binary(&query_validate_signature(deps, envelope, signature_data)?),
         QueryMsg::GetOperatorWeight { operator } => {
             to_json_binary(&query_operator_weight(deps, operator)?)
         }
@@ -248,24 +248,21 @@ fn set_operator_details_at(
 
 fn query_validate_signature(
     deps: Deps,
-    digest: Binary,
-    signature_data: Binary,
+    envelope: WavsEnvelope,
+    signature_data: WavsSignatureData,
 ) -> StdResult<ValidationResult> {
-    // Decode the signature data in the same format as Solidity
-    // Expected format: abi.encode(address[] operators, bytes[] signatures, uint32 referenceBlock)
-    let decoded = decode_signature_data(&signature_data)
-        .map_err(|_| StdError::msg("Invalid signature data format"))?;
-
     let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
     let mut voting_power_signed = Uint256::zero();
 
     // Basic sanity checks to avoid panics and invalid data
-    if decoded.operators.is_empty() || decoded.operators.len() != decoded.signatures.len() {
+    if signature_data.signers.is_empty()
+        || signature_data.signers.len() != signature_data.signatures.len()
+    {
         return Ok(ValidationResult {
             is_valid: false,
             total_voting_power: total_weight,
             voting_power_signed: Uint256::zero(),
-            reference_block: decoded.reference_block,
+            reference_block: signature_data.reference_block,
         });
     }
 
@@ -274,14 +271,14 @@ fn query_validate_signature(
     let mut seen_signers: HashSet<[u8; 20]> = HashSet::new();
 
     // Verify each signature (operators are actually signing keys in the decoded data)
-    for (i, signing_key) in decoded.operators.iter().enumerate() {
+    for (i, signing_key) in signature_data.signers.iter().enumerate() {
         // Reject zero address signers
         if signing_key.as_bytes().iter().all(|b| *b == 0) {
             return Ok(ValidationResult {
                 is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
-                reference_block: decoded.reference_block,
+                reference_block: signature_data.reference_block,
             });
         }
 
@@ -292,7 +289,7 @@ fn query_validate_signature(
                 is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
-                reference_block: decoded.reference_block,
+                reference_block: signature_data.reference_block,
             });
         }
 
@@ -302,7 +299,7 @@ fn query_validate_signature(
         let operator = match SIGNING_KEY_TO_OPERATOR.may_load_at_height(
             deps.storage,
             signing_key_str.clone(),
-            decoded.reference_block as u64,
+            signature_data.reference_block as u64,
         )? {
             Some(op) => op,
             None => SIGNING_KEY_TO_OPERATOR
@@ -314,13 +311,13 @@ fn query_validate_signature(
         let operator_key = operator.to_string();
 
         // Verify signature using the signing key (safe index: len equality checked above)
-        let signature = &decoded.signatures[i];
-        if !is_valid_signature(&digest, signature, signing_key)? {
+        let signature = &signature_data.signatures[i];
+        if !is_valid_signature(&envelope, signature, signing_key)? {
             return Ok(ValidationResult {
                 is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
-                reference_block: decoded.reference_block,
+                reference_block: signature_data.reference_block,
             });
         }
 
@@ -328,7 +325,7 @@ fn query_validate_signature(
         let operator_weight_snapshot = OPERATOR_WEIGHTS.may_load_at_height(
             deps.storage,
             operator_key.clone(),
-            decoded.reference_block as u64,
+            signature_data.reference_block as u64,
         )?;
         let operator_weight = operator_weight_snapshot
             .or_else(|| {
@@ -343,7 +340,7 @@ fn query_validate_signature(
                 is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
-                reference_block: decoded.reference_block,
+                reference_block: signature_data.reference_block,
             });
         }
         voting_power_signed += operator_weight;
@@ -357,39 +354,14 @@ fn query_validate_signature(
         is_valid,
         total_voting_power: total_weight,
         voting_power_signed,
-        reference_block: decoded.reference_block,
-    })
-}
-
-pub fn decode_signature_data(data: &Binary) -> Result<SignatureData, ContractError> {
-    // Decode ABI-encoded data: (address[] operators, bytes[] signatures, uint32 referenceBlock)
-    use alloy_sol_types::sol_data::*;
-    type SignatureDataType = (Array<Address>, Array<Bytes>, Uint<32>);
-
-    let (addresses, signatures_bytes, reference_block) =
-        SignatureDataType::abi_decode(data.as_slice())
-            .map_err(|_| ContractError::InvalidSignatureDataFormat {})?;
-
-    // Convert addresses to EvmAddr
-    let operators: Vec<EvmAddr> = addresses.into_iter().map(EvmAddr::from).collect();
-
-    // Convert bytes to Binary
-    let signatures: Vec<Binary> = signatures_bytes
-        .into_iter()
-        .map(|bytes| Binary::from(bytes.as_ref()))
-        .collect();
-
-    Ok(SignatureData {
-        operators,
-        signatures,
-        reference_block,
+        reference_block: signature_data.reference_block,
     })
 }
 
 // Mimics Solidity's signer.isValidSignatureNow(digest, signature)
 fn is_valid_signature(
-    digest: &Binary,
-    signature: &Binary,
+    envelope: &WavsEnvelope,
+    signature: &HexBinary,
     signer_address: &EvmAddr,
 ) -> StdResult<bool> {
     // Validate signature length (must be 65 bytes for ECDSA)
@@ -438,7 +410,7 @@ fn is_valid_signature(
 
     // Convert digest to B256 for recovery
     let digest_hash =
-        B256::try_from(digest.as_slice()).map_err(|_| StdError::msg("Invalid digest length"))?;
+        B256::try_from(envelope.as_slice()).map_err(|_| StdError::msg("Invalid digest length"))?;
 
     // Recover the verifying key (public key) from signature
     let verifying_key =

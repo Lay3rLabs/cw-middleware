@@ -29,6 +29,20 @@ async fn test_cw_wavs_mirror_stake_registry_sanity() {
 }
 
 #[tokio::test]
+async fn test_mirror_abi_signature_validation() {
+    tracing_tests_init();
+
+    let client = ContractTestClient::new().await;
+    let contract = MirrorTestClient::new(client).await;
+
+    mirror_stake_registry::run_mirror_abi_signature_validation_test(
+        &contract.stake_registry_executor,
+        &contract.stake_registry_querier,
+    )
+    .await;
+}
+
+#[tokio::test]
 async fn test_mirror_negative_scenarios() {
     tracing_tests_init();
 

@@ -18,6 +18,7 @@ serde = { workspace = true }
 thiserror = { workspace = true }
 cw-wavs-mirror-api = { workspace = true }
 layer-climb-address = { workspace = true }
+wavs-types = { workspace = true }
 hex = "0.4"
 
 [features]
