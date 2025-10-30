@@ -85,7 +85,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                     Some(addr) => addr,
                     None => {
                         return to_json_binary(&WavsValidateResult::Err(
-                            WavsValidateError::InvalidSignature,
+                            WavsValidateError::MissingRegistry,
                         ))
                     }
                 };

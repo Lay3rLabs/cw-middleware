@@ -4307,7 +4307,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "thiserror 2.0.17",
  "tokio",
  "tracing",
@@ -4344,9 +4344,9 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.1",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6472,9 +6472,9 @@ dependencies = [
 
 [[package]]
 name = "wavs-types"
-version = "2.0.0-alpha.7"
+version = "2.0.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7e60f432c2c3b8aee59724a7567542ae7cffb9a501079380779b39b25bcbda1"
+checksum = "5a87da5ba599af45b36293ae8757c28a898bbff0c99c6ff543f9cf2234106857"
 dependencies = [
  "alloy-contract",
  "alloy-primitives",
