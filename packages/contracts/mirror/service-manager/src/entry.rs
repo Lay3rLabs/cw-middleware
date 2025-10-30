@@ -57,7 +57,7 @@ pub fn execute(
             if info.sender != admin {
                 return Err(cosmwasm_std::StdError::msg("Unauthorized"));
             }
-            state::OPERATOR_SIGNING_KEY_ADDRS.save(deps.storage, &operator, &signing_key)?;
+            state::OPERATOR_SIGNING_KEY_ADDRS.save(deps.storage, &signing_key, &operator)?;
             state::OPERATOR_WEIGHTS.save(deps.storage, &operator, &weight)?;
             Ok(Response::default())
         }
