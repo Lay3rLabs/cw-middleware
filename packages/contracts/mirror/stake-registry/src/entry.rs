@@ -11,7 +11,7 @@ use layer_climb_address::EvmAddr;
 
 use crate::error::ContractError;
 use crate::state::{
-    Config, CONFIG, OPERATOR_REGISTERED, OPERATOR_SIGNING_KEYS, OPERATOR_WEIGHTS, OWNER,
+    Config, CONFIG, OPERATOR_REGISTERED, OPERATOR_TO_SIGNING_KEY, OPERATOR_WEIGHTS, OWNER,
     SIGNING_KEY_TO_OPERATOR, TOTAL_WEIGHT,
 };
 use cw_wavs_mirror_api::stake_registry::{
@@ -200,7 +200,8 @@ fn set_operator_details_at(
     TOTAL_WEIGHT.save(deps.storage, &new_total_weight)?;
 
     // Update signing key mappings
-    let current_signing_key = OPERATOR_SIGNING_KEYS.may_load(deps.storage, operator_key.clone())?;
+    let current_signing_key =
+        OPERATOR_TO_SIGNING_KEY.may_load(deps.storage, operator_key.clone())?;
 
     let mut events = Vec::new();
 
@@ -213,7 +214,7 @@ fn set_operator_details_at(
 
         // Set new signing key mapping
         let signing_key_str = signing_key.to_string();
-        OPERATOR_SIGNING_KEYS.save(
+        OPERATOR_TO_SIGNING_KEY.save(
             deps.storage,
             operator_key.clone(),
             signing_key,
@@ -463,7 +464,7 @@ fn query_operator_weight(deps: Deps, operator: EvmAddr) -> StdResult<Uint256> {
 
 fn query_operator_signing_key(deps: Deps, operator: EvmAddr) -> StdResult<Option<EvmAddr>> {
     let operator_key = operator.to_string();
-    OPERATOR_SIGNING_KEYS.may_load(deps.storage, operator_key)
+    OPERATOR_TO_SIGNING_KEY.may_load(deps.storage, operator_key)
 }
 
 fn query_latest_operator_for_signing_key(
