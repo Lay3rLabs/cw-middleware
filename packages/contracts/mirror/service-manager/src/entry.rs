@@ -57,7 +57,7 @@ pub fn execute(
             if info.sender != admin {
                 return Err(cosmwasm_std::StdError::msg("Unauthorized"));
             }
-            state::OPERATOR_SIGNING_KEY_ADDRS.save(deps.storage, &operator, &signing_key)?;
+            state::SIGNING_KEY_TO_OPERATOR.save(deps.storage, &signing_key, &operator)?;
             state::OPERATOR_WEIGHTS.save(deps.storage, &operator, &weight)?;
             Ok(Response::default())
         }
@@ -148,7 +148,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             }
             ServiceManagerQueryMessages::WavsLatestOperatorForSigningKey { signing_key_addr } => {
                 to_json_binary(
-                    &state::OPERATOR_SIGNING_KEY_ADDRS.may_load(deps.storage, &signing_key_addr)?,
+                    &state::SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, &signing_key_addr)?,
                 )
             }
         },
