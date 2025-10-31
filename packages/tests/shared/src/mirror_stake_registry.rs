@@ -160,7 +160,7 @@ pub async fn run_mirror_sanity_tests(
         .await
         .unwrap();
 
-    assert!(result.is_valid, "Signature should be valid");
+    assert!(result.error.is_none(), "Signature should be valid");
     assert_eq!(
         result.reference_block, 12345,
         "Reference block should match"
@@ -227,7 +227,7 @@ pub async fn run_mirror_abi_signature_validation_test(
         .unwrap();
 
     // Verify the validation results
-    assert!(result.is_valid, "Signature should be valid");
+    assert!(result.error.is_none(), "Signature should be valid");
     assert_eq!(
         result.reference_block, 12345,
         "Reference block should match"
@@ -386,7 +386,10 @@ pub async fn run_mirror_negative_test_scenarios(
 
     // This should either fail or return is_valid: false
     if let Ok(validation_result) = result {
-        assert!(!validation_result.is_valid, "Should be invalid signature");
+        assert!(
+            validation_result.error.is_some(),
+            "Should be invalid signature"
+        );
     }
 }
 
@@ -437,7 +440,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         .unwrap();
 
     assert!(
-        result.is_valid,
+        result.error.is_none(),
         "Valid signature should be validated successfully"
     );
     println!(
@@ -473,7 +476,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         .unwrap();
 
     assert!(
-        eth_result.is_valid,
+        eth_result.error.is_none(),
         "Ethereum-style signature should be validated successfully with fix"
     );
     println!(
@@ -505,7 +508,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         Ok(validation_result) => {
             // The contract should return Ok but with is_valid: false for invalid signatures
             assert!(
-                !validation_result.is_valid,
+                validation_result.error.is_some(),
                 "Invalid recovery ID should result in is_valid=false"
             );
             println!("✅ Invalid recovery ID correctly returned is_valid=false");
