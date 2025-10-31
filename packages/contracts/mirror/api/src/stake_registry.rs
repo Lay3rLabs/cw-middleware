@@ -77,6 +77,7 @@ pub struct ValidationResult {
     pub total_voting_power: Uint256,
     pub voting_power_signed: Uint256,
     pub reference_block: u32,
+    pub error_reason: String,
 }
 
 #[cw_serde]

@@ -62,9 +62,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                     let _operator_addr =
                         match state::OPERATOR_SIGNING_KEY_ADDRS.load(deps.storage, signer) {
                             Ok(addr) => addr,
-                            Err(_) => {
+                            Err(e) => {
                                 return to_json_binary(&WavsValidateResult::Err(
-                                    WavsValidateError::InvalidSignature,
+                                    WavsValidateError::InvalidSignature(e.to_string()),
                                 ));
                             }
                         };
