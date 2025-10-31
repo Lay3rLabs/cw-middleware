@@ -387,7 +387,7 @@ pub async fn run_mirror_negative_test_scenarios(
     // This should either fail or return is_valid: false
     if let Ok(validation_result) = result {
         assert!(
-            !validation_result.error.is_none(),
+            validation_result.error.is_some(),
             "Should be invalid signature"
         );
     }
@@ -508,7 +508,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         Ok(validation_result) => {
             // The contract should return Ok but with is_valid: false for invalid signatures
             assert!(
-                !validation_result.error.is_none(),
+                validation_result.error.is_some(),
                 "Invalid recovery ID should result in is_valid=false"
             );
             println!("✅ Invalid recovery ID correctly returned is_valid=false");
