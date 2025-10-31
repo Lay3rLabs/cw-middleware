@@ -71,7 +71,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 for signer in &signature_data.signers {
                     if !state::SIGNING_KEY_OPERATOR_ADDRS.has(deps.storage, signer) {
                         return to_json_binary(&WavsValidateResult::Err(
-                            WavsValidateError::InvalidSignature,
+                            WavsValidateError::InvalidSignature(format!(
+                                "Signer address {} not recognized",
+                                signer
+                            )),
                         ));
                     };
                 }

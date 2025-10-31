@@ -23,3 +23,8 @@ tasks:
       - cargo fmt --all -- --check
       - cargo fix --allow-dirty --allow-staged
       - cargo clippy --all-targets -- -D warnings
+
+  debugging:
+    cmds:
+      - task contracts:build-inner CONTRACT_KIND=mirror
+      - docker build -t cw-middleware:local .

@@ -104,7 +104,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                     to_json_binary(&WavsValidateResult::Ok)
                 } else {
                     to_json_binary(&WavsValidateResult::Err(
-                        WavsValidateError::InvalidSignature,
+                        WavsValidateError::InvalidSignature(format!("{res:#?}")),
                     ))
                 }
             }

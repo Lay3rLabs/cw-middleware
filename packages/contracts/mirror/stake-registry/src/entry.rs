@@ -262,6 +262,11 @@ fn query_validate_signature(
             total_voting_power: total_weight,
             voting_power_signed: Uint256::zero(),
             reference_block: signature_data.reference_block,
+            error_reason: format!(
+                "mismatched signer and signatures length. Signers={}, Signatures={}",
+                signature_data.signers.len(),
+                signature_data.signatures.len()
+            ),
         });
     }
 
@@ -278,6 +283,7 @@ fn query_validate_signature(
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
+                error_reason: "signing key adderss is zero".to_string(),
             });
         }
 
@@ -289,6 +295,7 @@ fn query_validate_signature(
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
+                error_reason: format!("duplicate signing key address: {signing_key}"),
             });
         }
 
@@ -306,9 +313,6 @@ fn query_validate_signature(
                 .ok_or_else(|| StdError::msg("Signer not registered"))?,
         };
 
-        // Determine registration at reference block by non-zero weight
-        let operator_key = operator.to_string();
-
         // Verify signature using the signing key (safe index: len equality checked above)
         let signature = &signature_data.signatures[i];
         if !is_valid_signature(deps, &envelope, signature, signing_key)? {
@@ -317,10 +321,12 @@ fn query_validate_signature(
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
+                error_reason: format!("invalid signature for signing key: {signing_key}",),
             });
         }
 
         // Add operator's weight to voting power (snapshot at reference block)
+        let operator_key = operator.to_string();
         let operator_weight_snapshot = OPERATOR_WEIGHTS.may_load_at_height(
             deps.storage,
             operator_key.clone(),
@@ -340,6 +346,7 @@ fn query_validate_signature(
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
+                error_reason: format!("operator {operator} has zero weight"),
             });
         }
         voting_power_signed += operator_weight;
@@ -354,6 +361,14 @@ fn query_validate_signature(
         total_voting_power: total_weight,
         voting_power_signed,
         reference_block: signature_data.reference_block,
+        error_reason: if is_valid {
+            "".to_string()
+        } else {
+            format!(
+                "insufficient voting power: signed={}, threshold={}",
+                voting_power_signed, config.threshold_weight
+            )
+        },
     })
 }
 
