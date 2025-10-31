@@ -7,6 +7,7 @@ use cw2::set_contract_version;
 use layer_climb_address::EvmAddr;
 use sha3::{Digest, Keccak256};
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
+use wavs_types::contracts::cosmwasm::service_manager::error::WavsValidateError;
 
 use crate::error::ContractError;
 use crate::state::{
@@ -258,15 +259,14 @@ fn query_validate_signature(
         || signature_data.signers.len() != signature_data.signatures.len()
     {
         return Ok(ValidationResult {
-            is_valid: false,
             total_voting_power: total_weight,
             voting_power_signed: Uint256::zero(),
             reference_block: signature_data.reference_block,
-            error_reason: format!(
+            error: Some(WavsValidateError::InvalidSignature(format!(
                 "mismatched signer and signatures length. Signers={}, Signatures={}",
                 signature_data.signers.len(),
                 signature_data.signatures.len()
-            ),
+            ))),
         });
     }
 
@@ -279,11 +279,12 @@ fn query_validate_signature(
         // Reject zero address signers
         if signing_key.as_bytes().iter().all(|b| *b == 0) {
             return Ok(ValidationResult {
-                is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
-                error_reason: "signing key adderss is zero".to_string(),
+                error: Some(WavsValidateError::InvalidSignature(
+                    "signing key address is zero".to_string(),
+                )),
             });
         }
 
@@ -291,11 +292,12 @@ fn query_validate_signature(
         let signer_arr: [u8; 20] = signing_key.as_bytes();
         if !seen_signers.insert(signer_arr) {
             return Ok(ValidationResult {
-                is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
-                error_reason: format!("duplicate signing key address: {signing_key}"),
+                error: Some(WavsValidateError::InvalidSignature(format!(
+                    "duplicate signing key address: {signing_key}"
+                ))),
             });
         }
 
@@ -317,11 +319,12 @@ fn query_validate_signature(
         let signature = &signature_data.signatures[i];
         if !is_valid_signature(deps, &envelope, signature, signing_key)? {
             return Ok(ValidationResult {
-                is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
-                error_reason: format!("invalid signature for signing key: {signing_key}",),
+                error: Some(WavsValidateError::InvalidSignature(format!(
+                    "signing key: {signing_key}"
+                ))),
             });
         }
 
@@ -342,11 +345,12 @@ fn query_validate_signature(
             .unwrap_or_default();
         if operator_weight.is_zero() {
             return Ok(ValidationResult {
-                is_valid: false,
                 total_voting_power: total_weight,
                 voting_power_signed: Uint256::zero(),
                 reference_block: signature_data.reference_block,
-                error_reason: format!("operator {operator} has zero weight"),
+                error: Some(WavsValidateError::InvalidSignature(format!(
+                    "operator {operator} has zero weight"
+                ))),
             });
         }
         voting_power_signed += operator_weight;
@@ -357,17 +361,17 @@ fn query_validate_signature(
     let is_valid = voting_power_signed >= config.threshold_weight;
 
     Ok(ValidationResult {
-        is_valid,
         total_voting_power: total_weight,
         voting_power_signed,
         reference_block: signature_data.reference_block,
-        error_reason: if is_valid {
-            "".to_string()
+        error: if is_valid {
+            None
         } else {
-            format!(
-                "insufficient voting power: signed={}, threshold={}",
-                voting_power_signed, config.threshold_weight
-            )
+            Some(WavsValidateError::InsufficientQuorum {
+                signer_weight: voting_power_signed,
+                threshold_weight: config.threshold_weight,
+                total_weight,
+            })
         },
     })
 }

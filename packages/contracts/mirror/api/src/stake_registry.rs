@@ -3,7 +3,10 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cosmwasm_std::{Binary, Uint256, WasmMsg};
 use layer_climb_address::EvmAddr;
-use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
+use wavs_types::contracts::cosmwasm::{
+    service_handler::{WavsEnvelope, WavsSignatureData},
+    service_manager::error::WavsValidateError,
+};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -73,11 +76,10 @@ pub enum QueryMsg {
 
 #[cw_serde]
 pub struct ValidationResult {
-    pub is_valid: bool,
     pub total_voting_power: Uint256,
     pub voting_power_signed: Uint256,
     pub reference_block: u32,
-    pub error_reason: String,
+    pub error: Option<WavsValidateError>,
 }
 
 #[cw_serde]

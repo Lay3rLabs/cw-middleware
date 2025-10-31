@@ -100,12 +100,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                         },
                     )?;
 
-                if res.is_valid {
-                    to_json_binary(&WavsValidateResult::Ok)
-                } else {
-                    to_json_binary(&WavsValidateResult::Err(
-                        WavsValidateError::InvalidSignature(format!("{res:#?}")),
-                    ))
+                match res.error {
+                    Some(error) => to_json_binary(&WavsValidateResult::Err(error)),
+                    None => to_json_binary(&WavsValidateResult::Ok),
                 }
             }
             ServiceManagerQueryMessages::WavsServiceUri {} => {
