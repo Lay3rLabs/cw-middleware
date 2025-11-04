@@ -62,7 +62,7 @@ impl MirrorTestClient {
             code_id: service_manager_code_id,
             msg: cosmwasm_std::to_json_binary(
                 &cw_wavs_mirror_api::service_manager::InstantiateMsg {
-                    owner: admin.to_string(),
+                    admin: admin.to_string(),
                 },
             )
             .unwrap(),

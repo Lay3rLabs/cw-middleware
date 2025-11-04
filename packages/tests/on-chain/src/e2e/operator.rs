@@ -23,8 +23,8 @@ impl TestClient {
             }
             TestService::Mirror(client) => {
                 client
-                    .service_manager_executor
-                    .set_signing_key(operator_addr, signing_key_addr, 1)
+                    .stake_registry_executor
+                    .set_operator_details(operator_addr, signing_key_addr, 1u64.into())
                     .await
                     .unwrap();
             }

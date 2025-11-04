@@ -1,8 +1,9 @@
 use cosmwasm_std::{
     entry_point, to_json_binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
-    StdResult,
+    StdResult, Uint256,
 };
 use cw2::set_contract_version;
+use layer_climb_address::EvmAddr;
 use wavs_types::contracts::cosmwasm::service_manager::{
     error::WavsValidateError, event::WavsServiceUriUpdatedEvent, ServiceManagerExecuteMessages,
     ServiceManagerQueryMessages, WavsValidateResult,
@@ -24,7 +25,7 @@ pub fn instantiate(
 ) -> StdResult<Response> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 
-    let admin = deps.api.addr_validate(&msg.owner)?;
+    let admin = deps.api.addr_validate(&msg.admin)?;
     ADMIN.save(deps.storage, &admin)?;
     STAKE_REGISTRY.save(deps.storage, &info.sender)?;
 
@@ -35,30 +36,24 @@ pub fn instantiate(
 pub fn execute(
     deps: DepsMut,
     _env: Env,
-    info: MessageInfo,
+    _info: MessageInfo,
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
     match msg {
         ExecuteMsg::Wavs(msg) => match msg {
             ServiceManagerExecuteMessages::WavsSetServiceUri { service_uri } => {
+                let admin = ADMIN.load(deps.storage)?;
+                if _info.sender != admin {
+                    return Err(cosmwasm_std::StdError::msg(
+                        "Unauthorized: only admin can set service URI",
+                    ));
+                }
+
                 state::SERVICE_URI.save(deps.storage, &service_uri)?;
 
                 Ok(Response::new().add_event(WavsServiceUriUpdatedEvent { service_uri }))
             }
         },
-        ExecuteMsg::SetSigningKey {
-            operator,
-            signing_key,
-            weight,
-        } => {
-            let admin = ADMIN.load(deps.storage)?;
-            if info.sender != admin {
-                return Err(cosmwasm_std::StdError::msg("Unauthorized"));
-            }
-            state::SIGNING_KEY_TO_OPERATOR.save(deps.storage, &signing_key, &operator)?;
-            state::OPERATOR_WEIGHTS.save(deps.storage, &operator, &weight)?;
-            Ok(Response::default())
-        }
     }
 }
 
@@ -73,8 +68,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
         },
         QueryMsg::Wavs(msg) => match msg {
             ServiceManagerQueryMessages::WavsOperatorWeight { operator_address } => {
-                // TODO: integrate with mirror stake registry for operator weight queries
-                to_json_binary(&state::OPERATOR_WEIGHTS.load(deps.storage, &operator_address)?)
+                // Query stake registry for operator weight
+                let stake_registry = state::STAKE_REGISTRY.load(deps.storage)?;
+                let weight: Uint256 = deps.querier.query_wasm_smart(
+                    stake_registry,
+                    &cw_wavs_mirror_api::stake_registry::QueryMsg::GetOperatorWeight {
+                        operator: operator_address,
+                    },
+                )?;
+                to_json_binary(&weight)
             }
             ServiceManagerQueryMessages::WavsValidate {
                 envelope,
@@ -109,9 +111,15 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 to_json_binary(&state::SERVICE_URI.load(deps.storage)?)
             }
             ServiceManagerQueryMessages::WavsLatestOperatorForSigningKey { signing_key_addr } => {
-                to_json_binary(
-                    &state::SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, &signing_key_addr)?,
-                )
+                // Query stake registry for operator by signing key
+                let stake_registry = state::STAKE_REGISTRY.load(deps.storage)?;
+                let operator: Option<EvmAddr> = deps.querier.query_wasm_smart(
+                    stake_registry,
+                    &cw_wavs_mirror_api::stake_registry::QueryMsg::GetLatestOperatorForSigningKey {
+                        signing_key: signing_key_addr,
+                    },
+                )?;
+                to_json_binary(&operator)
             }
         },
     }

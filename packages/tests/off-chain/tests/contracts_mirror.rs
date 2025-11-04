@@ -62,20 +62,16 @@ async fn mirror_service_manager_admin_only() {
     let weight = cosmwasm_std::Uint256::from(100u64);
 
     let result = mirror_client
-        .service_manager_executor
-        .mirror_exec(
-            &cw_wavs_mirror_api::service_manager::ExecuteMsg::SetSigningKey {
-                operator: operator.clone(),
-                signing_key: signing_key.clone(),
-                weight,
-            },
-            &[],
-        )
+        .stake_registry_executor
+        .set_operator_details(operator.clone(), signing_key.clone(), weight)
         .await;
 
-    assert!(result.is_ok(), "Admin should be able to set signing key");
+    assert!(
+        result.is_ok(),
+        "Should be able to set operator details via stake registry"
+    );
 
-    // Non-admin trying to set signing key should fail
+    // Test that non-owner can't execute admin-like functions (e.g., setting service URI)
     let non_admin_client = ContractTestClient::new("not_admin");
     let non_admin_executor = cw_wavs_sdk::service_manager::ServiceManagerExecutor::new(
         non_admin_client.executor,
@@ -90,11 +86,11 @@ async fn mirror_service_manager_admin_only() {
 
     let result = non_admin_mirror_executor
         .mirror_exec(
-            &cw_wavs_mirror_api::service_manager::ExecuteMsg::SetSigningKey {
-                operator,
-                signing_key,
-                weight,
-            },
+            &cw_wavs_mirror_api::service_manager::ExecuteMsg::Wavs(
+                wavs_types::contracts::cosmwasm::service_manager::ServiceManagerExecuteMessages::WavsSetServiceUri {
+                    service_uri: "test".to_string(),
+                }
+            ),
             &[],
         )
         .await;
