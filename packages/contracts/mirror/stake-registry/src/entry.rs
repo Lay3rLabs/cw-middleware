@@ -310,9 +310,19 @@ fn query_validate_signature(
             signature_data.reference_block as u64,
         )? {
             Some(op) => op,
-            None => SIGNING_KEY_TO_OPERATOR
-                .may_load(deps.storage, signing_key_str)?
-                .ok_or_else(|| StdError::msg("Signer not registered"))?,
+            None => match SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)? {
+                Some(op) => op,
+                None => {
+                    return Ok(ValidationResult {
+                        total_voting_power: total_weight,
+                        voting_power_signed: Uint256::zero(),
+                        reference_block: signature_data.reference_block,
+                        error: Some(WavsValidateError::InvalidSignature(
+                            "Signer not registered".to_string(),
+                        )),
+                    });
+                }
+            },
         };
 
         // Verify signature using the signing key (safe index: len equality checked above)
