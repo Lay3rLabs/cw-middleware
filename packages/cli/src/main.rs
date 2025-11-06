@@ -173,7 +173,7 @@ async fn main() {
             }
             ServiceManagerCommand::InstantiateMirror {
                 code_id,
-                owner,
+                admin,
                 args: _,
             } => {
                 let client = ctx.signing_client().await.unwrap();
@@ -183,7 +183,7 @@ async fn main() {
                         None,
                         code_id,
                         "Mirror Service Manager",
-                        &cw_wavs_mirror_api::service_manager::InstantiateMsg { owner },
+                        &cw_wavs_mirror_api::service_manager::InstantiateMsg { admin },
                         Vec::new(),
                         None,
                     )
@@ -419,7 +419,7 @@ async fn main() {
                         code_id: service_manager_code_id,
                         msg: cosmwasm_std::to_json_binary(
                             &cw_wavs_mirror_api::service_manager::InstantiateMsg {
-                                owner: client.addr.to_string(),
+                                admin: client.addr.to_string(),
                             },
                         )
                         .unwrap(),

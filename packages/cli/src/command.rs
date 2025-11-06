@@ -167,7 +167,7 @@ pub enum ServiceManagerCommand {
         #[arg(long)]
         code_id: u64,
         #[arg(long)]
-        owner: String,
+        admin: String,
         #[clap(flatten)]
         args: CliArgs,
     },

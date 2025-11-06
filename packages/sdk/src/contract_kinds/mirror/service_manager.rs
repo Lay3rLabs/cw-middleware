@@ -2,7 +2,6 @@ use crate::{
     client::{WavsExecutor, WavsQuerier, WavsTxResponse},
     service_manager::{ServiceManagerExecutor, ServiceManagerQuerier},
 };
-use layer_climb::prelude::EvmAddr;
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
 
@@ -60,22 +59,5 @@ impl MirrorServiceManagerExecutor {
 
     pub fn executor(&self) -> &WavsExecutor {
         self.inner.executor()
-    }
-
-    pub async fn set_signing_key(
-        &self,
-        operator_addr: EvmAddr,
-        signing_key_addr: EvmAddr,
-        weight: u64,
-    ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
-        self.mirror_exec(
-            &cw_wavs_mirror_api::service_manager::ExecuteMsg::SetSigningKey {
-                operator: operator_addr,
-                signing_key: signing_key_addr,
-                weight: weight.into(),
-            },
-            &[],
-        )
-        .await
     }
 }
