@@ -2057,6 +2057,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "cw-wavs-mirror-quorum-sync-handler"
+version = "0.0.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw-wavs-mirror-api",
+ "cw-wavs-mirror-service-handler",
+ "cw2",
+ "layer-climb-address",
+ "wavs-types",
+]
+
+[[package]]
 name = "cw-wavs-mirror-service-handler"
 version = "0.0.0"
 dependencies = [
