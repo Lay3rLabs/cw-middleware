@@ -41,6 +41,10 @@ pub enum ExecuteMsg {
         signing_keys: Vec<EvmAddr>,
         weights: Vec<Uint256>,
     },
+    // Update stake threshold (owner only)
+    UpdateStakeThreshold {
+        threshold: Uint256,
+    },
 }
 
 #[cw_serde]

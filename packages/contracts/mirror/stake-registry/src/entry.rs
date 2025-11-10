@@ -76,6 +76,9 @@ pub fn execute(
             signing_keys,
             weights,
         } => execute_batch_set_operator_details(deps, _env, info, operators, signing_keys, weights),
+        ExecuteMsg::UpdateStakeThreshold { threshold } => {
+            execute_update_stake_threshold(deps, _env, info, threshold)
+        }
     }
 }
 
@@ -99,6 +102,27 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
         QueryMsg::GetTotalWeight {} => to_json_binary(&query_total_weight(deps)?),
         QueryMsg::GetQuorum {} => to_json_binary(&query_quorum(deps)?),
     }
+}
+
+fn execute_update_stake_threshold(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    threshold: Uint256,
+) -> Result<Response, ContractError> {
+    let owner = OWNER.load(deps.storage)?;
+    if info.sender != owner {
+        return Err(ContractError::Unauthorized {});
+    }
+
+    CONFIG.update::<_, StdError>(deps.storage, |x| {
+        Ok(Config {
+            threshold_weight: threshold,
+            ..x
+        })
+    })?;
+
+    Ok(Response::new().add_attribute("method", "update_stake_threshold"))
 }
 
 fn execute_set_operator_details(

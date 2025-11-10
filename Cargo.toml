@@ -17,6 +17,7 @@ members = [
   "packages/contracts/mirror/service-handler",
   "packages/contracts/mirror/service-manager",
   "packages/contracts/mirror/stake-registry",
+  "packages/contracts/mirror/mirror-operator-sync-handler",
   "packages/components/echo-with-id",
   "packages/components/simple-aggregator",
   "packages/tests/off-chain",

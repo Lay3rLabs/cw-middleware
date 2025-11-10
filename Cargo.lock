@@ -2028,11 +2028,31 @@ dependencies = [
 name = "cw-wavs-mirror-api"
 version = "0.1.0"
 dependencies = [
+ "alloy-sol-types",
  "bincode",
  "cosmwasm-schema",
  "cosmwasm-std",
  "layer-climb-address",
  "serde",
+ "wavs-types",
+]
+
+[[package]]
+name = "cw-wavs-mirror-operator-sync-handler"
+version = "0.0.0"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "const-hex",
+ "cosmwasm-schema",
+ "cosmwasm-std",
+ "cw-storage-plus",
+ "cw-wavs-mirror-api",
+ "cw-wavs-mirror-service-handler",
+ "cw2",
+ "layer-climb-address",
  "wavs-types",
 ]
 

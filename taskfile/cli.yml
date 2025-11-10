@@ -62,3 +62,23 @@ tasks:
       vars: [ADDR]
     cmds:
       - cd packages/cli && cargo run service-handler get-manager --wavs-home {{.WAVS_HOME_DIR}} --address {{.ADDR}}
+
+  build-abi:
+    desc: "Build all ABI files from smart contracts"
+    internal: true
+    deps:
+      - task: build-wavs-abi
+
+  build-wavs-abi:
+    desc: "Build WAVS middleware ABI files"
+    internal: true
+    dir: "./node_modules/@wavs/solidity/contracts"
+    preconditions:
+      - sh: "command -v forge"
+        msg: "Foundry forge is required but not installed"
+    sources: ["eigenlayer/ecdsa/**/*.sol"]
+    generates:
+      - "{{.ABI_WAVS_MIDDLEWARE_DIR}}/IWavsServiceManager.sol/**"
+    cmds:
+      - mkdir -p {{.ABI_WAVS_MIDDLEWARE_DIR}}
+      - forge build -C eigenlayer/ecdsa

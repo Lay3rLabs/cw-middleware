@@ -1,7 +1,10 @@
 use cosmwasm_std::{Addr, Uint64};
 use cw_storage_plus::{Item, Map};
 use cw_wavs_mirror_api::message_with_id::MessageWithId;
-use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
+use wavs_types::{
+    contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData},
+    Envelope,
+};
 
 pub const SERVICE_MANAGER: Item<Addr> = Item::new("service-manager");
 
@@ -12,7 +15,7 @@ pub fn save_envelope(
     storage: &mut dyn cosmwasm_std::Storage,
     envelope: WavsEnvelope,
     signature_data: WavsSignatureData,
-) -> cosmwasm_std::StdResult<()> {
+) -> cosmwasm_std::StdResult<Envelope> {
     let envelope = envelope.decode()?;
     let message_with_id = MessageWithId::from_bytes(&envelope.payload)?;
 
@@ -23,5 +26,5 @@ pub fn save_envelope(
     )?;
     SIGNATURE_DATA.save(storage, message_with_id.trigger_id, &signature_data)?;
 
-    Ok(())
+    Ok(envelope)
 }

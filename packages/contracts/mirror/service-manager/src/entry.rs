@@ -64,6 +64,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             cw_wavs_mirror_api::service_manager::MirrorServiceManagerQueryMessages::Admin {} => {
                 let admin = ADMIN.load(deps.storage)?;
                 to_json_binary(&admin)
+            },
+            cw_wavs_mirror_api::service_manager::MirrorServiceManagerQueryMessages::StakeRegistry {  } => {
+                let stake_registry = STAKE_REGISTRY.load(deps.storage)?;
+                to_json_binary(&stake_registry)
             }
         },
         QueryMsg::Wavs(msg) => match msg {

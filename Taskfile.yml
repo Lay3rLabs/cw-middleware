@@ -28,3 +28,9 @@ tasks:
     cmds:
       - task contracts:build-inner CONTRACT_KIND=mirror
       - docker build -t cw-middleware:local .
+
+  setup:
+    desc: "Initialize project dependencies and build ABI files"
+    cmds:
+      - bun install
+      - task: cli:build-abi

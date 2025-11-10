@@ -22,6 +22,9 @@ pub enum MirrorServiceManagerQueryMessages {
     /// Get the current admin address
     #[returns(cosmwasm_std::Addr)]
     Admin {},
+    /// Get the stake registry address
+    #[returns(cosmwasm_std::Addr)]
+    StakeRegistry {},
 }
 
 #[cw_serde]

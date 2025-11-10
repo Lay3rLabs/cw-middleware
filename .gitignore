@@ -6,6 +6,8 @@
 .env
 .vscode
 .claude/
+node_modules/
+.task/
 
 # Rust
 target
