@@ -33,4 +33,3 @@ tasks:
     desc: "Initialize project dependencies and build ABI files"
     cmds:
       - bun install
-      - task: cli:build-abi
