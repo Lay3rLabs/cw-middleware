@@ -408,8 +408,6 @@ async fn main() {
                 RegistryCommand::InstantiateMirrorStake {
                     code_id,
                     service_manager_code_id,
-                    threshold_weight,
-                    strategy,
                     args: _,
                 } => {
                     let client = ctx.signing_client().await.unwrap();
@@ -428,30 +426,6 @@ async fn main() {
                         salt: cosmwasm_std::Binary::from(b"service_manager"),
                     };
 
-                    let strategies = strategy
-                        .into_iter()
-                        .map(|s| {
-                            let (strategy, multiplier) = s.split_once('=').unwrap_or_else(|| {
-                                panic!(
-                                    "Strategy must be in the format strategy=multiplier, got: {}",
-                                    s
-                                )
-                            });
-
-                            let multiplier: cosmwasm_std::Uint256 =
-                                multiplier.parse().unwrap_or_else(|_| {
-                                    panic!(
-                                        "Multiplier must be a valid u128 integer, got: {}",
-                                        multiplier
-                                    )
-                                });
-                            cw_wavs_mirror_api::stake_registry::StrategyParams {
-                                strategy: strategy.to_string(),
-                                multiplier,
-                            }
-                        })
-                        .collect();
-
                     let (registry_address, tx_resp) = client
                         .contract_instantiate(
                             None,
@@ -459,10 +433,6 @@ async fn main() {
                             "Mirror Stake Registry",
                             &cw_wavs_mirror_api::stake_registry::InstantiateMsg {
                                 service_manager_instantiate,
-                                threshold_weight: threshold_weight.into(),
-                                quorum: cw_wavs_mirror_api::stake_registry::QuorumConfig {
-                                    strategies,
-                                },
                             },
                             Vec::new(),
                             None,

@@ -5,7 +5,9 @@ use cosmwasm_std::{
 };
 use cw_wavs_mirror_api::update_with_id::IMirrorQuorumSyncHandler::UpdateWithId;
 use cw_wavs_mirror_service_handler::state::{self};
-use wavs_types::contracts::cosmwasm::service_manager::ServiceManagerQueryMessages;
+use wavs_types::contracts::cosmwasm::service_manager::{
+    ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
+};
 use wavs_types::contracts::cosmwasm::{
     service_handler::ServiceHandlerExecuteMessages, service_manager::WavsValidateResult,
 };
@@ -70,7 +72,18 @@ pub fn execute(
                         .into_std()?;
 
                     // Perform sync
-                    todo!("Service manager and stake registry need to be updated");
+                    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
+                        contract_addr: contract_addr.to_string(),
+                        msg: to_json_binary(
+                            &cw_wavs_mirror_api::service_manager::ExecuteMsg::Wavs(
+                                ServiceManagerExecuteMessages::WavsSetQuorumThreshold {
+                                    numerator: Uint256::from_be_bytes(numerator.to_be_bytes()),
+                                    denominator: Uint256::from_be_bytes(denominator.to_be_bytes()),
+                                },
+                            ),
+                        )?,
+                        funds: vec![],
+                    }))
                 }
             }
         }

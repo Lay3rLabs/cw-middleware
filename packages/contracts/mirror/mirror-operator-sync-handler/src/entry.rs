@@ -43,7 +43,7 @@ pub fn execute(
                 } => {
                     // Decode envelope
                     let decoded_envelope = envelope.decode()?;
-                    let UpdateWithId { triggerId, thresholdWeight, operators, signingKeyAddresses, weights } = cw_wavs_mirror_api::update_with_id::IMirrorOperatorSyncHandler::UpdateWithId::abi_decode(&decoded_envelope.payload)?;
+                    let UpdateWithId { triggerId, thresholdWeight: _, operators, signingKeyAddresses, weights } = cw_wavs_mirror_api::update_with_id::IMirrorOperatorSyncHandler::UpdateWithId::abi_decode(&decoded_envelope.payload)?;
 
                     // Validate trigger id
                     if let Some(last_trigger_id) = LAST_TRIGGER_ID.may_load(deps.storage)? {
@@ -79,15 +79,6 @@ pub fn execute(
                                 signing_keys:signingKeyAddresses.into_iter().map(Into::into).collect(),
                                 weights: weights.into_iter().map(|x| Uint256::from_be_bytes(x.to_be_bytes())).collect()
                             }
-                        )?,
-                        funds: vec![],
-                    }));
-                    msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-                        contract_addr: stake_registry,
-                        msg: to_json_binary(
-                            &cw_wavs_mirror_api::stake_registry::ExecuteMsg::UpdateStakeThreshold {
-                                threshold: Uint256::from_be_bytes(thresholdWeight.to_be_bytes()),
-                            },
                         )?,
                         funds: vec![],
                     }));

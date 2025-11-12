@@ -7,7 +7,6 @@ use cw2::set_contract_version;
 use layer_climb_address::EvmAddr;
 use sha3::{Digest, Keccak256};
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
-use wavs_types::contracts::cosmwasm::service_manager::error::WavsValidateError;
 
 use crate::error::ContractError;
 use crate::state::{
@@ -41,7 +40,7 @@ pub fn instantiate(
                 instantiate2_address(checksum.as_slice(), &canonical_creator, salt)?;
             let service_manager = deps.api.addr_humanize(&service_manager)?;
 
-            let config = Config::new(service_manager, msg.threshold_weight, msg.quorum);
+            let config = Config::new(service_manager);
             CONFIG.save(deps.storage, &config)?;
         }
         _ => {
@@ -76,9 +75,6 @@ pub fn execute(
             signing_keys,
             weights,
         } => execute_batch_set_operator_details(deps, _env, info, operators, signing_keys, weights),
-        ExecuteMsg::UpdateStakeThreshold { threshold } => {
-            execute_update_stake_threshold(deps, _env, info, threshold)
-        }
     }
 }
 
@@ -100,29 +96,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
         }
         QueryMsg::GetServiceManager {} => to_json_binary(&query_service_manager(deps)?),
         QueryMsg::GetTotalWeight {} => to_json_binary(&query_total_weight(deps)?),
-        QueryMsg::GetQuorum {} => to_json_binary(&query_quorum(deps)?),
     }
-}
-
-fn execute_update_stake_threshold(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    threshold: Uint256,
-) -> Result<Response, ContractError> {
-    let owner = OWNER.load(deps.storage)?;
-    if info.sender != owner {
-        return Err(ContractError::Unauthorized {});
-    }
-
-    CONFIG.update::<_, StdError>(deps.storage, |x| {
-        Ok(Config {
-            threshold_weight: threshold,
-            ..x
-        })
-    })?;
-
-    Ok(Response::new().add_attribute("method", "update_stake_threshold"))
 }
 
 fn execute_set_operator_details(
@@ -282,16 +256,11 @@ fn query_validate_signature(
     if signature_data.signers.is_empty()
         || signature_data.signers.len() != signature_data.signatures.len()
     {
-        return Ok(ValidationResult {
-            total_voting_power: total_weight,
-            voting_power_signed: Uint256::zero(),
-            reference_block: signature_data.reference_block,
-            error: Some(WavsValidateError::InvalidSignature(format!(
-                "mismatched signer and signatures length. Signers={}, Signatures={}",
-                signature_data.signers.len(),
-                signature_data.signatures.len()
-            ))),
-        });
+        return Err(StdError::msg(format!(
+            "mismatched signer and signatures length. Signers={}, Signatures={}",
+            signature_data.signers.len(),
+            signature_data.signatures.len()
+        )));
     }
 
     // Enforce unique signers to prevent double counting
@@ -302,27 +271,15 @@ fn query_validate_signature(
     for (i, signing_key) in signature_data.signers.iter().enumerate() {
         // Reject zero address signers
         if signing_key.as_bytes().iter().all(|b| *b == 0) {
-            return Ok(ValidationResult {
-                total_voting_power: total_weight,
-                voting_power_signed: Uint256::zero(),
-                reference_block: signature_data.reference_block,
-                error: Some(WavsValidateError::InvalidSignature(
-                    "signing key address is zero".to_string(),
-                )),
-            });
+            return Err(StdError::msg("signing key address is zero"));
         }
 
         // Reject duplicate signer entries
         let signer_arr: [u8; 20] = signing_key.as_bytes();
         if !seen_signers.insert(signer_arr) {
-            return Ok(ValidationResult {
-                total_voting_power: total_weight,
-                voting_power_signed: Uint256::zero(),
-                reference_block: signature_data.reference_block,
-                error: Some(WavsValidateError::InvalidSignature(format!(
-                    "duplicate signing key address: {signing_key}"
-                ))),
-            });
+            return Err(StdError::msg(format!(
+                "duplicate signing key address: {signing_key}"
+            )));
         }
 
         // Get operator for this signing key as of reference_block (snapshot)
@@ -337,14 +294,7 @@ fn query_validate_signature(
             None => match SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)? {
                 Some(op) => op,
                 None => {
-                    return Ok(ValidationResult {
-                        total_voting_power: total_weight,
-                        voting_power_signed: Uint256::zero(),
-                        reference_block: signature_data.reference_block,
-                        error: Some(WavsValidateError::InvalidSignature(
-                            "Signer not registered".to_string(),
-                        )),
-                    });
+                    return Err(StdError::msg("Signer not registered"));
                 }
             },
         };
@@ -352,14 +302,9 @@ fn query_validate_signature(
         // Verify signature using the signing key (safe index: len equality checked above)
         let signature = &signature_data.signatures[i];
         if !is_valid_signature(deps, &envelope, signature, signing_key)? {
-            return Ok(ValidationResult {
-                total_voting_power: total_weight,
-                voting_power_signed: Uint256::zero(),
-                reference_block: signature_data.reference_block,
-                error: Some(WavsValidateError::InvalidSignature(format!(
-                    "signing key: {signing_key}"
-                ))),
-            });
+            return Err(StdError::msg(format!(
+                "Invalid signature from signing key: {signing_key}"
+            )));
         }
 
         // Add operator's weight to voting power (snapshot at reference block)
@@ -378,35 +323,17 @@ fn query_validate_signature(
             })
             .unwrap_or_default();
         if operator_weight.is_zero() {
-            return Ok(ValidationResult {
-                total_voting_power: total_weight,
-                voting_power_signed: Uint256::zero(),
-                reference_block: signature_data.reference_block,
-                error: Some(WavsValidateError::InvalidSignature(format!(
-                    "operator {operator} has zero weight"
-                ))),
-            });
+            return Err(StdError::msg(format!(
+                "operator {operator} has zero weight"
+            )));
         }
         voting_power_signed += operator_weight;
     }
-
-    // Check if threshold is met
-    let config = CONFIG.load(deps.storage)?;
-    let is_valid = voting_power_signed >= config.threshold_weight;
 
     Ok(ValidationResult {
         total_voting_power: total_weight,
         voting_power_signed,
         reference_block: signature_data.reference_block,
-        error: if is_valid {
-            None
-        } else {
-            Some(WavsValidateError::InsufficientQuorum {
-                signer_weight: voting_power_signed,
-                threshold_weight: config.threshold_weight,
-                total_weight,
-            })
-        },
     })
 }
 
@@ -445,14 +372,21 @@ fn is_valid_signature(
     let calculated_pubkey =
         deps.api
             .secp256k1_recover_pubkey(hash.as_slice(), rs, normalized_recovery_id)?;
-    let calculated_address = ethereum_address_raw(&calculated_pubkey)?;
-    if signer_address.as_bytes() != calculated_address {
+
+    // Verify the signature is cryptographically valid
+    let cryptographically_valid =
+        deps.api
+            .secp256k1_verify(hash.as_slice(), rs, &calculated_pubkey)?;
+
+    if !cryptographically_valid {
         return Ok(false);
     }
-    let valid = deps
-        .api
-        .secp256k1_verify(hash.as_slice(), rs, &calculated_pubkey)?;
-    Ok(valid)
+
+    // Convert recovered public key to Ethereum address
+    let recovered_address = ethereum_address_raw(&calculated_pubkey)?;
+
+    // Check if the recovered address matches the expected signer
+    Ok(recovered_address == signer_address.as_bytes())
 }
 
 pub fn ethereum_address_raw(pubkey: &[u8]) -> StdResult<[u8; 20]> {
@@ -498,9 +432,4 @@ fn query_service_manager(deps: Deps) -> StdResult<Addr> {
 
 fn query_total_weight(deps: Deps) -> StdResult<Uint256> {
     TOTAL_WEIGHT.load(deps.storage)
-}
-
-fn query_quorum(deps: Deps) -> StdResult<cw_wavs_mirror_api::stake_registry::QuorumConfig> {
-    let config = CONFIG.load(deps.storage)?;
-    Ok(config.quorum)
 }

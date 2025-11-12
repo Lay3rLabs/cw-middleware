@@ -49,13 +49,6 @@ impl MirrorTestClient {
                 "Mirror Stake Registry",
                 &cw_wavs_mirror_api::stake_registry::InstantiateMsg {
                     service_manager_instantiate: service_manager_instantiate_msg,
-                    threshold_weight: cosmwasm_std::Uint256::from(1000u128),
-                    quorum: cw_wavs_mirror_api::stake_registry::QuorumConfig {
-                        strategies: vec![cw_wavs_mirror_api::stake_registry::StrategyParams {
-                            strategy: "test_strategy".to_string(),
-                            multiplier: cosmwasm_std::Uint256::from(100u128),
-                        }],
-                    },
                 },
                 vec![],
                 None,

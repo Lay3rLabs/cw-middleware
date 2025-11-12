@@ -1,7 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint256};
 use cw_storage_plus::{Item, Map, SnapshotMap, Strategy};
-use cw_wavs_mirror_api::stake_registry::QuorumConfig;
 use layer_climb_address::EvmAddr;
 
 // Contract configuration
@@ -35,16 +34,10 @@ pub const TOTAL_WEIGHT: Item<Uint256> = Item::new("total_weight");
 #[cw_serde]
 pub struct Config {
     pub service_manager: Addr,
-    pub threshold_weight: Uint256,
-    pub quorum: QuorumConfig,
 }
 
 impl Config {
-    pub fn new(service_manager: Addr, threshold_weight: Uint256, quorum: QuorumConfig) -> Self {
-        Self {
-            service_manager,
-            threshold_weight,
-            quorum,
-        }
+    pub fn new(service_manager: Addr) -> Self {
+        Self { service_manager }
     }
 }
