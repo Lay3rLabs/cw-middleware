@@ -1,5 +1,7 @@
 # What it is
 
+> **Disclaimer**: The smart contracts in this repository are provided “as is” for development and testing only. They have not undergone security review or auditing and are not suitable for production deployment.
+
 This repo is for Wavs Cosmwasm middleware
 
 It's constructed so that developing and testing any combination of the following is as smooth as possible
