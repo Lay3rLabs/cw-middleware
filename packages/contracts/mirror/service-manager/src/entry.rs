@@ -214,3 +214,102 @@ fn validate_quorum(
 
     Ok(WavsValidateResult::Ok)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::testing::mock_dependencies;
+    use cosmwasm_std::Uint256;
+    use wavs_types::contracts::cosmwasm::service_manager::error::WavsValidateError;
+
+    #[test]
+    fn test_validate_quorum_insufficient_quorum_error() {
+        let mut deps = mock_dependencies();
+
+        // Set up quorum configuration (2/3 threshold)
+        let numerator = Uint256::from(2u128);
+        let denominator = Uint256::from(3u128);
+        QUORUM_NUMERATOR
+            .save(&mut deps.storage, &numerator)
+            .unwrap();
+        QUORUM_DENOMINATOR
+            .save(&mut deps.storage, &denominator)
+            .unwrap();
+
+        // Test case where quorum is not reached
+        let total_weight = Uint256::from(100u128);
+        let signed_weight = Uint256::from(60u128); // 60% < 66.7% required threshold
+
+        let result = validate_quorum(signed_weight, total_weight, &deps.as_ref()).unwrap();
+
+        // Match the result as specified in the request
+        match result {
+            WavsValidateResult::Err(WavsValidateError::InsufficientQuorum {
+                signer_weight,
+                threshold_weight,
+                total_weight: returned_total_weight,
+            }) => {
+                assert_eq!(signer_weight, Uint256::from(60u128));
+                assert_eq!(threshold_weight, Uint256::from(66u128)); // floor(100 * 2 / 3)
+                assert_eq!(returned_total_weight, Uint256::from(100u128));
+            }
+            _ => panic!("Expected InsufficientQuorum error"),
+        }
+    }
+
+    #[test]
+    fn test_validate_quorum_success() {
+        let mut deps = mock_dependencies();
+
+        // Set up quorum configuration (2/3 threshold)
+        let numerator = Uint256::from(2u128);
+        let denominator = Uint256::from(3u128);
+        QUORUM_NUMERATOR
+            .save(&mut deps.storage, &numerator)
+            .unwrap();
+        QUORUM_DENOMINATOR
+            .save(&mut deps.storage, &denominator)
+            .unwrap();
+
+        // Test case where quorum is reached
+        let total_weight = Uint256::from(100u128);
+        let signed_weight = Uint256::from(70u128); // 70% > 66.7% required threshold
+
+        let result = validate_quorum(signed_weight, total_weight, &deps.as_ref()).unwrap();
+
+        match result {
+            WavsValidateResult::Ok => {
+                // Test passes
+            }
+            _ => panic!("Expected Ok result"),
+        }
+    }
+
+    #[test]
+    fn test_validate_quorum_zero_total_weight() {
+        let mut deps = mock_dependencies();
+
+        // Set up quorum configuration (2/3 threshold)
+        let numerator = Uint256::from(2u128);
+        let denominator = Uint256::from(3u128);
+        QUORUM_NUMERATOR
+            .save(&mut deps.storage, &numerator)
+            .unwrap();
+        QUORUM_DENOMINATOR
+            .save(&mut deps.storage, &denominator)
+            .unwrap();
+
+        // Test case with zero total weight
+        let total_weight = Uint256::from(0u128);
+        let signed_weight = Uint256::from(0u128);
+
+        let result = validate_quorum(signed_weight, total_weight, &deps.as_ref()).unwrap();
+
+        match result {
+            WavsValidateResult::Err(WavsValidateError::InsufficientQuorumZero) => {
+                // Test passes
+            }
+            _ => panic!("Expected InsufficientQuorumZero error"),
+        }
+    }
+}
