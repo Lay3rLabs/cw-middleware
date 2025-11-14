@@ -6516,8 +6516,9 @@ dependencies = [
 
 [[package]]
 name = "wavs-types"
-version = "2.0.0-rc.3"
-source = "git+https://github.com/Lay3rLabs/WAVS.git?branch=threshold-cw-middleware#b003ef703369b1d3ddb8251f84c15b041f11f97e"
+version = "2.0.0-rc.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41443860bed1ada7b33021e787f7a82a6394966338dc0bc9000e2225c3134999"
 dependencies = [
  "alloy-contract",
  "alloy-primitives",
