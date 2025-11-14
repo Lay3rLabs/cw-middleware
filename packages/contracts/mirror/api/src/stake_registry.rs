@@ -3,27 +3,11 @@ use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
 use cosmwasm_std::{Binary, Uint256, WasmMsg};
 use layer_climb_address::EvmAddr;
-use wavs_types::contracts::cosmwasm::{
-    service_handler::{WavsEnvelope, WavsSignatureData},
-    service_manager::error::WavsValidateError,
-};
+use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
 #[cw_serde]
 pub struct InstantiateMsg {
     pub service_manager_instantiate: WasmMsg,
-    pub threshold_weight: Uint256,
-    pub quorum: QuorumConfig,
-}
-
-#[cw_serde]
-pub struct QuorumConfig {
-    pub strategies: Vec<StrategyParams>,
-}
-
-#[cw_serde]
-pub struct StrategyParams {
-    pub strategy: String,
-    pub multiplier: Uint256,
 }
 
 #[cw_serde]
@@ -40,10 +24,6 @@ pub enum ExecuteMsg {
         operators: Vec<EvmAddr>,
         signing_keys: Vec<EvmAddr>,
         weights: Vec<Uint256>,
-    },
-    // Update stake threshold (owner only)
-    UpdateStakeThreshold {
-        threshold: Uint256,
     },
 }
 
@@ -73,9 +53,6 @@ pub enum QueryMsg {
     /// Get total weight
     #[returns(Uint256)]
     GetTotalWeight {},
-    /// Get quorum config
-    #[returns(QuorumConfig)]
-    GetQuorum {},
 }
 
 #[cw_serde]
@@ -83,7 +60,6 @@ pub struct ValidationResult {
     pub total_voting_power: Uint256,
     pub voting_power_signed: Uint256,
     pub reference_block: u32,
-    pub error: Option<WavsValidateError>,
 }
 
 #[cw_serde]

@@ -2,6 +2,13 @@ use off_chain_tests::client::{
     mirror::MirrorTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };
 use shared_tests::{contracts_sanity, mirror_stake_registry, tracing_init::tracing_tests_init};
+use wavs_types::{
+    contracts::cosmwasm::{
+        service_handler::{WavsEnvelope, WavsSignatureData},
+        service_manager::{error::WavsValidateError, WavsValidateResult},
+    },
+    SignatureData,
+};
 
 #[tokio::test]
 async fn mirror_sanity() {
@@ -127,4 +134,50 @@ async fn mirror_ethereum_recovery_id_test() {
         &mirror_client.stake_registry_querier,
     )
     .await;
+}
+
+#[tokio::test]
+async fn mirror_service_manager_validate_query_is_result() {
+    tracing_tests_init();
+
+    let client = ContractTestClient::new("admin");
+    let mirror_client = MirrorTestClient::new(client);
+
+    let validate = mirror_client
+        .service_manager_querier
+        .service_manager()
+        .validate(
+            WavsEnvelope::new_raw(vec![]),
+            WavsSignatureData::new(SignatureData {
+                signers: vec![],
+                signatures: vec![],
+                referenceBlock: 0,
+            }),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(
+        validate,
+        WavsValidateResult::Err(WavsValidateError::InvalidSignatureLength)
+    );
+
+    let validate = mirror_client
+        .service_manager_querier
+        .service_manager()
+        .validate(
+            WavsEnvelope::new_raw(vec![]),
+            WavsSignatureData::new(SignatureData {
+                signers: vec![alloy_primitives::Address::new([1; 20])],
+                signatures: vec![alloy_primitives::Bytes::new()],
+                referenceBlock: 0,
+            }),
+        )
+        .await
+        .unwrap();
+
+    assert!(matches!(
+        validate,
+        WavsValidateResult::Err(WavsValidateError::InvalidSignature(_))
+    ));
 }

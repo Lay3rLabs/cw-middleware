@@ -160,7 +160,6 @@ pub async fn run_mirror_sanity_tests(
         .await
         .unwrap();
 
-    assert!(result.error.is_none(), "Signature should be valid");
     assert_eq!(
         result.reference_block, 12345,
         "Reference block should match"
@@ -227,7 +226,6 @@ pub async fn run_mirror_abi_signature_validation_test(
         .unwrap();
 
     // Verify the validation results
-    assert!(result.error.is_none(), "Signature should be valid");
     assert_eq!(
         result.reference_block, 12345,
         "Reference block should match"
@@ -384,13 +382,7 @@ pub async fn run_mirror_negative_test_scenarios(
         )
         .await;
 
-    // This should either fail or return is_valid: false
-    if let Ok(validation_result) = result {
-        assert!(
-            validation_result.error.is_some(),
-            "Should be invalid signature"
-        );
-    }
+    assert!(result.is_err());
 }
 
 pub async fn run_mirror_ethereum_recovery_id_test(
@@ -434,19 +426,10 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         reference_block: 12345u32,
     };
 
-    let result = querier
+    querier
         .validate_signature(WavsEnvelope::new_raw(message.to_vec()), signature_data)
         .await
         .unwrap();
-
-    assert!(
-        result.error.is_none(),
-        "Valid signature should be validated successfully"
-    );
-    println!(
-        "✅ Valid signature with recovery ID {} succeeded",
-        actual_recovery_id
-    );
 
     // Test: Convert recovery ID to Ethereum format and test again
     let mut eth_signature = valid_signature.clone();
@@ -470,19 +453,10 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     };
 
     // This must use raw prehash
-    let eth_result = querier
+    querier
         .validate_signature(WavsEnvelope::new_raw(message.to_vec()), eth_signature_data)
         .await
         .unwrap();
-
-    assert!(
-        eth_result.error.is_none(),
-        "Ethereum-style signature should be validated successfully with fix"
-    );
-    println!(
-        "✅ Ethereum-style signature with recovery ID {} succeeded",
-        eth_signature[64]
-    );
 
     // Test: Invalid recovery ID
     println!("Testing invalid recovery ID...");
@@ -504,20 +478,5 @@ pub async fn run_mirror_ethereum_recovery_id_test(
         )
         .await;
 
-    match invalid_result {
-        Ok(validation_result) => {
-            // The contract should return Ok but with is_valid: false for invalid signatures
-            assert!(
-                validation_result.error.is_some(),
-                "Invalid recovery ID should result in is_valid=false"
-            );
-            println!("✅ Invalid recovery ID correctly returned is_valid=false");
-        }
-        Err(e) => {
-            // It's also acceptable for the contract to return an error for invalid recovery IDs
-            println!("✅ Invalid recovery ID correctly failed with error: {}", e);
-        }
-    }
-
-    println!("✅ Ethereum recovery ID test completed successfully!");
+    assert!(invalid_result.is_err());
 }

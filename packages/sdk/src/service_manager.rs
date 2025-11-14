@@ -1,8 +1,11 @@
-use cosmwasm_std::Addr;
+use cosmwasm_std::{Addr, StdResult};
 use serde::de::DeserializeOwned;
 use std::fmt::Debug;
-use wavs_types::contracts::cosmwasm::service_manager::{
-    ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
+use wavs_types::contracts::cosmwasm::{
+    service_handler::{WavsEnvelope, WavsSignatureData},
+    service_manager::{
+        ServiceManagerExecuteMessages, ServiceManagerQueryMessages, WavsValidateResult,
+    },
 };
 
 use crate::client::{WavsExecutor, WavsQuerier, WavsTxResponse};
@@ -31,6 +34,18 @@ impl ServiceManagerQuerier {
     pub async fn get_service_uri(&self) -> Result<String, cosmwasm_std::StdError> {
         self.service_manager_query(&ServiceManagerQueryMessages::WavsServiceUri {})
             .await
+    }
+
+    pub async fn validate(
+        &self,
+        envelope: WavsEnvelope,
+        signature_data: WavsSignatureData,
+    ) -> StdResult<WavsValidateResult> {
+        self.service_manager_query(&ServiceManagerQueryMessages::WavsValidate {
+            envelope,
+            signature_data,
+        })
+        .await
     }
 }
 

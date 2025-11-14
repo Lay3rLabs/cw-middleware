@@ -17,6 +17,7 @@ pub enum ExecuteMsg {
 #[cw_serde]
 #[schemaifier(mute_warnings)]
 pub enum QueryMsg {
+    /// WAVS standard queries
     #[serde(untagged)]
     Wavs(ServiceManagerQueryMessages),
 }

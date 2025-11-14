@@ -3,10 +3,11 @@ use cosmwasm_std::{
     ensure, entry_point, to_json_binary, CosmosMsg, Deps, DepsMut, Env, MessageInfo, QueryResponse,
     Response, StdError, StdResult, Uint256, WasmMsg,
 };
-use cw_wavs_mirror_api::service_manager::MirrorServiceManagerQueryMessages;
-use cw_wavs_mirror_api::update_with_id::IMirrorOperatorSyncHandler::UpdateWithId;
+use cw_wavs_mirror_api::update_with_id::IMirrorQuorumSyncHandler::UpdateWithId;
 use cw_wavs_mirror_service_handler::state::{self};
-use wavs_types::contracts::cosmwasm::service_manager::ServiceManagerQueryMessages;
+use wavs_types::contracts::cosmwasm::service_manager::{
+    ServiceManagerExecuteMessages, ServiceManagerQueryMessages,
+};
 use wavs_types::contracts::cosmwasm::{
     service_handler::ServiceHandlerExecuteMessages, service_manager::WavsValidateResult,
 };
@@ -43,7 +44,11 @@ pub fn execute(
                 } => {
                     // Decode envelope
                     let decoded_envelope = envelope.decode()?;
-                    let UpdateWithId { triggerId, thresholdWeight: _, operators, signingKeyAddresses, weights } = cw_wavs_mirror_api::update_with_id::IMirrorOperatorSyncHandler::UpdateWithId::abi_decode(&decoded_envelope.payload)?;
+                    let UpdateWithId {
+                        triggerId,
+                        numerator,
+                        denominator,
+                    } = UpdateWithId::abi_decode(&decoded_envelope.payload)?;
 
                     // Validate trigger id
                     if let Some(last_trigger_id) = LAST_TRIGGER_ID.may_load(deps.storage)? {
@@ -67,21 +72,18 @@ pub fn execute(
                         .into_std()?;
 
                     // Perform sync
-                    let stake_registry: String = deps.querier.query_wasm_smart(
-                        contract_addr,
-                        &MirrorServiceManagerQueryMessages::StakeRegistry {},
-                    )?;
-
                     msgs.push(CosmosMsg::Wasm(WasmMsg::Execute {
-                        contract_addr: stake_registry.clone(),
-                        msg: to_json_binary(&cw_wavs_mirror_api::stake_registry::ExecuteMsg::BatchSetOperatorDetails {
-                                operators: operators.into_iter().map(Into::into).collect(),
-                                signing_keys:signingKeyAddresses.into_iter().map(Into::into).collect(),
-                                weights: weights.into_iter().map(|x| Uint256::from_be_bytes(x.to_be_bytes())).collect()
-                            }
+                        contract_addr: contract_addr.to_string(),
+                        msg: to_json_binary(
+                            &cw_wavs_mirror_api::service_manager::ExecuteMsg::Wavs(
+                                ServiceManagerExecuteMessages::WavsSetQuorumThreshold {
+                                    numerator: Uint256::from_be_bytes(numerator.to_be_bytes()),
+                                    denominator: Uint256::from_be_bytes(denominator.to_be_bytes()),
+                                },
+                            ),
                         )?,
                         funds: vec![],
-                    }));
+                    }))
                 }
             }
         }

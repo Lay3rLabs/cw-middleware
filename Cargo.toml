@@ -18,6 +18,7 @@ members = [
   "packages/contracts/mirror/service-manager",
   "packages/contracts/mirror/stake-registry",
   "packages/contracts/mirror/mirror-operator-sync-handler",
+  "packages/contracts/mirror/mirror-quorum-sync-handler",
   "packages/components/echo-with-id",
   "packages/components/simple-aggregator",
   "packages/tests/off-chain",
@@ -58,10 +59,10 @@ utils = { path = "packages/utils" }
 shared-tests = { path = "packages/tests/shared" }
 
 # WAVS
-wavs-types = { version = "=2.0.0-rc.3", default-features = false, features = [
+wavs-types = { git = "https://github.com/Lay3rLabs/WAVS.git", branch = "threshold-cw-middleware", default-features = false, features = [
   "cosmwasm",
 ] }
-wavs-types-full = { package = "wavs-types", version = "=2.0.0-rc.3", features = [
+wavs-types-full = { package = "wavs-types", git = "https://github.com/Lay3rLabs/WAVS.git", branch = "threshold-cw-middleware", features = [
   "full",
 ] }
 wavs-wasi-utils = "0.5.1"

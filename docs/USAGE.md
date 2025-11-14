@@ -73,9 +73,6 @@ docker run --rm \
 
 Replace `<CODE_ID>` and `<SERVICE_MANAGER_CODE_ID>` with the code IDs returned from the previous step.
 
-Replace `<THRESHOLD_WEIGHT>`, `<STRATEGY_NAME>` and `<STRATEGY_VALUE>` with your desired values.
-
-
 ```bash
 docker run --rm \
     -v $(pwd)/backend/wavs-home:/wavs-home:ro \
@@ -83,15 +80,7 @@ docker run --rm \
     ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     registry instantiate-mirror-stake \
     --code-id <CODE_ID> \
-    --service-manager-code-id <SERVICE_MANAGER_CODE_ID> \
-    --threshold-weight <THRESHOLD_WEIGHT> \
-    --strategy <STRATEGY_NAME>=<STRATEGY_VALUE>
-```
-
-For example of threshhold-weight and strategy, try:
-```
---threshold-weight 1000 \
---strategy test_strategy=100
+    --service-manager-code-id <SERVICE_MANAGER_CODE_ID>
 ```
 
 ### Get the address of the mirror service manager contract from the registry
@@ -116,6 +105,26 @@ docker run --rm \
     --env-file .docker.env \
     ghcr.io/lay3rlabs/cw-middleware:{TAG} \
     service-handler upload --contract-kind mirror
+```
+
+### Upload the mirror quorum sync handler contract
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    contract upload --contract-kind mirror_quorum_sync_handler
+```
+
+### Upload the mirror operator sync handler contract
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    contract upload --contract-kind mirror_operator_sync_handler
 ```
 
 ### Instantiate the example mirror service handler contract
