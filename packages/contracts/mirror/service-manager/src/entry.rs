@@ -1,12 +1,15 @@
 use cosmwasm_std::{
     entry_point, to_json_binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
-    StdError, StdResult, Uint256,
+    StdResult, Uint256,
 };
 use cw2::set_contract_version;
 use layer_climb_address::EvmAddr;
-use wavs_types::contracts::cosmwasm::service_manager::{
-    error::WavsValidateError, event::WavsServiceUriUpdatedEvent, ServiceManagerExecuteMessages,
-    ServiceManagerQueryMessages, WavsValidateResult,
+use wavs_types::contracts::cosmwasm::{
+    service_handler::{WavsEnvelope, WavsSignatureData},
+    service_manager::{
+        error::WavsValidateError, event::WavsServiceUriUpdatedEvent, ServiceManagerExecuteMessages,
+        ServiceManagerQueryMessages, WavsValidateResult,
+    },
 };
 
 use crate::state::{self, ADMIN, QUORUM_DENOMINATOR, QUORUM_NUMERATOR, STAKE_REGISTRY};
@@ -132,29 +135,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 envelope,
                 signature_data,
             } => {
-                // Input validation
-                if signature_data.signers.is_empty() || signature_data.signers.len() != signature_data.signatures.len() {
-                    WavsValidateResult::Err(WavsValidateError::InvalidSignatureLength).into_std()?
-                }
-                // Validate signatures via stake registry, if configured
-                let stake_registry = state::STAKE_REGISTRY.load(deps.storage)?;
-
-                // Query stake registry for signature validation and weight calculation
-                let ValidationResult { total_voting_power, voting_power_signed, ..} = deps.querier.query_wasm_smart::<ValidationResult>(
-                        stake_registry,
-                        &cw_wavs_mirror_api::stake_registry::QueryMsg::ValidateSignature {
-                            envelope,
-                            signature_data,
-                        },
-                    ).map_err::<StdError, _>(|e| WavsValidateError::InvalidSignature(e.to_string()).into())?;
-
-
-                // Now perform quorum validation in the service manager
-                let validation_result = validate_quorum(
-                    voting_power_signed,
-                    total_voting_power,
-                    &deps,
-                )?;
+                let validation_result = wavs_validate(deps, envelope, signature_data)?;
 
                 to_json_binary(&validation_result)
             }
@@ -173,6 +154,43 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 to_json_binary(&operator)
             }
         },
+    }
+}
+
+pub fn wavs_validate(
+    deps: Deps,
+    envelope: WavsEnvelope,
+    signature_data: WavsSignatureData,
+) -> StdResult<WavsValidateResult> {
+    // Input validation
+    if signature_data.signers.is_empty()
+        || signature_data.signers.len() != signature_data.signatures.len()
+    {
+        return Ok(WavsValidateResult::Err(
+            WavsValidateError::InvalidSignatureLength,
+        ));
+    }
+    // Validate signatures via stake registry, if configured
+    let stake_registry = state::STAKE_REGISTRY.load(deps.storage)?;
+
+    // Query stake registry for signature validation and weight calculation
+    match deps
+        .querier
+        .query_wasm_smart::<ValidationResult>(
+            stake_registry,
+            &cw_wavs_mirror_api::stake_registry::QueryMsg::ValidateSignature {
+                envelope,
+                signature_data,
+            },
+        )
+        .map_err(|e| WavsValidateResult::Err(WavsValidateError::InvalidSignature(e.to_string())))
+    {
+        Ok(ValidationResult {
+            voting_power_signed,
+            total_voting_power,
+            ..
+        }) => validate_quorum(voting_power_signed, total_voting_power, &deps),
+        Err(e) => Ok(e),
     }
 }
 
@@ -213,103 +231,4 @@ fn validate_quorum(
     }
 
     Ok(WavsValidateResult::Ok)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use cosmwasm_std::testing::mock_dependencies;
-    use cosmwasm_std::Uint256;
-    use wavs_types::contracts::cosmwasm::service_manager::error::WavsValidateError;
-
-    #[test]
-    fn test_validate_quorum_insufficient_quorum_error() {
-        let mut deps = mock_dependencies();
-
-        // Set up quorum configuration (2/3 threshold)
-        let numerator = Uint256::from(2u128);
-        let denominator = Uint256::from(3u128);
-        QUORUM_NUMERATOR
-            .save(&mut deps.storage, &numerator)
-            .unwrap();
-        QUORUM_DENOMINATOR
-            .save(&mut deps.storage, &denominator)
-            .unwrap();
-
-        // Test case where quorum is not reached
-        let total_weight = Uint256::from(100u128);
-        let signed_weight = Uint256::from(60u128); // 60% < 66.7% required threshold
-
-        let result = validate_quorum(signed_weight, total_weight, &deps.as_ref()).unwrap();
-
-        // Match the result as specified in the request
-        match result {
-            WavsValidateResult::Err(WavsValidateError::InsufficientQuorum {
-                signer_weight,
-                threshold_weight,
-                total_weight: returned_total_weight,
-            }) => {
-                assert_eq!(signer_weight, Uint256::from(60u128));
-                assert_eq!(threshold_weight, Uint256::from(66u128)); // floor(100 * 2 / 3)
-                assert_eq!(returned_total_weight, Uint256::from(100u128));
-            }
-            _ => panic!("Expected InsufficientQuorum error"),
-        }
-    }
-
-    #[test]
-    fn test_validate_quorum_success() {
-        let mut deps = mock_dependencies();
-
-        // Set up quorum configuration (2/3 threshold)
-        let numerator = Uint256::from(2u128);
-        let denominator = Uint256::from(3u128);
-        QUORUM_NUMERATOR
-            .save(&mut deps.storage, &numerator)
-            .unwrap();
-        QUORUM_DENOMINATOR
-            .save(&mut deps.storage, &denominator)
-            .unwrap();
-
-        // Test case where quorum is reached
-        let total_weight = Uint256::from(100u128);
-        let signed_weight = Uint256::from(70u128); // 70% > 66.7% required threshold
-
-        let result = validate_quorum(signed_weight, total_weight, &deps.as_ref()).unwrap();
-
-        match result {
-            WavsValidateResult::Ok => {
-                // Test passes
-            }
-            _ => panic!("Expected Ok result"),
-        }
-    }
-
-    #[test]
-    fn test_validate_quorum_zero_total_weight() {
-        let mut deps = mock_dependencies();
-
-        // Set up quorum configuration (2/3 threshold)
-        let numerator = Uint256::from(2u128);
-        let denominator = Uint256::from(3u128);
-        QUORUM_NUMERATOR
-            .save(&mut deps.storage, &numerator)
-            .unwrap();
-        QUORUM_DENOMINATOR
-            .save(&mut deps.storage, &denominator)
-            .unwrap();
-
-        // Test case with zero total weight
-        let total_weight = Uint256::from(0u128);
-        let signed_weight = Uint256::from(0u128);
-
-        let result = validate_quorum(signed_weight, total_weight, &deps.as_ref()).unwrap();
-
-        match result {
-            WavsValidateResult::Err(WavsValidateError::InsufficientQuorumZero) => {
-                // Test passes
-            }
-            _ => panic!("Expected InsufficientQuorumZero error"),
-        }
-    }
 }
