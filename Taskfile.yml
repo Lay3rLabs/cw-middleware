@@ -30,6 +30,6 @@ tasks:
       - docker build -t cw-middleware:local .
 
   setup:
-    desc: "Initialize project dependencies and build ABI files"
+    desc: "Initialize project dependencies"
     cmds:
       - bun install

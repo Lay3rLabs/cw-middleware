@@ -57,6 +57,8 @@ pub fn execute(
                             StdError::msg("Invalid trigger id")
                         );
                         LAST_TRIGGER_ID.save(deps.storage, &triggerId)?;
+                    } else {
+                        LAST_TRIGGER_ID.save(deps.storage, &triggerId)?;
                     }
 
                     // Validate against service manager
