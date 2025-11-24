@@ -10,3 +10,7 @@ pub const OPERATOR_SIGNING_KEY_ADDRS: Map<&EvmAddr, EvmAddr> =
 pub const SIGNING_KEY_OPERATOR_ADDRS: Map<&EvmAddr, EvmAddr> =
     Map::new("signing-key-operator-addrs");
 pub const OPERATOR_WEIGHTS: Map<&EvmAddr, Uint256> = Map::new("operator-weight");
+
+// Quorum configuration
+pub const QUORUM_NUMERATOR: Item<Uint256> = Item::new("quorum_numerator");
+pub const QUORUM_DENOMINATOR: Item<Uint256> = Item::new("quorum_denominator");

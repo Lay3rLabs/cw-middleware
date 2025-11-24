@@ -62,10 +62,10 @@ pub fn execute(
                     )?
                     .into_std()?;
 
-                state::save_envelope(deps.storage, envelope, signature_data)?;
+                state::save_envelope(deps.storage, envelope, signature_data)?
             }
         },
-    }
+    };
 
     Ok(Response::default())
 }

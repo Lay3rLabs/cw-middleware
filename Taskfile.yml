@@ -28,3 +28,8 @@ tasks:
     cmds:
       - task contracts:build-inner CONTRACT_KIND=mirror
       - docker build -t cw-middleware:local .
+
+  setup:
+    desc: "Initialize project dependencies"
+    cmds:
+      - bun install

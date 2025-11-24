@@ -275,12 +275,6 @@ pub enum RegistryCommand {
         code_id: u64,
         #[arg(long)]
         service_manager_code_id: u64,
-        #[arg(long)]
-        threshold_weight: u128,
-        /// Configuration pairs for the strategies in format 'strategy=multiplier'
-        /// Example: --strategy test_strategy=100 some_other_strategy=200
-        #[arg(long, required = true, num_args = 1..)]
-        strategy: Vec<String>,
         #[clap(flatten)]
         args: CliArgs,
     },
