@@ -60,10 +60,10 @@ utils = { path = "packages/utils" }
 shared-tests = { path = "packages/tests/shared" }
 
 # WAVS
-wavs-types = { git = "https://github.com/Lay3rLabs/WAVS", branch = "cw-compat", default-features = false, features = [
+wavs-types = { version = "=2.0.0-rc.8", default-features = false, features = [
   "cosmwasm",
 ] }
-wavs-types-full = { package = "wavs-types", git = "https://github.com/Lay3rLabs/WAVS", branch = "cw-compat", features = [
+wavs-types-full = { package = "wavs-types", version = "=2.0.0-rc.8", features = [
   "full",
 ] }
 wavs-wasi-utils = "0.5.1"
