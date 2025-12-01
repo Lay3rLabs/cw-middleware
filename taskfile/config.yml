@@ -10,6 +10,7 @@ vars:
   ARCH:
     sh: uname -m
 
+  # Paths
   BACKEND_DIR: '{{joinPath .REPO_ROOT "backend"}}'
   WAVS_HOME_DIR: '{{joinPath .BACKEND_DIR "wavs-home"}}'
   STARSHIP_DIR: '{{joinPath .BACKEND_DIR "starship"}}'
@@ -18,6 +19,11 @@ vars:
   COMPONENTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/components/artifacts"}}'
   CONTRACTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/contracts/artifacts"}}'
   ABI_WAVS_MIDDLEWARE_DIR: '{{joinPath .REPO_ROOT "abi/wavs-middleware"}}'
+  WIT_DEFINITIONS_PATH: '{{joinPath .REPO_ROOT "wit-definitions"}}'
+  TEMP_CLONE_PATH: '{{joinPath .REPO_ROOT ".temp-clone"}}'
+
+  # Components
+  COMPONENT_WAVS_WIT_BRANCH: "main"
 
   # Changing this requires a change in `packages/tests/on-chain/src/client/config.rs`
   WAVS_BASE_PORT: 8123 # Base port for WAVS, subsequent ports will be incremented by 1 for each instance

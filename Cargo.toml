@@ -25,6 +25,7 @@ members = [
   "packages/tests/on-chain",
   "packages/tests/shared",
   "packages/cli",
+  "packages/version-pins",
 ]
 
 resolver = "2"
@@ -124,7 +125,9 @@ cw-multi-test = { version = "3.0.1", features = [
 
 # WASI
 wstd = "0.5.3"
-wit-bindgen-rt = "0.43.0"
+wit-bindgen-rt = "0.44.0"
+wit-bindgen = "0.47.0"
+wasip2 = "1.0.1"
 
 # CLI
 clap = { version = "4.5.44", features = ["derive", "env", "string"] }
@@ -139,6 +142,14 @@ alloy-sol-macro = "1.4.1"
 alloy-sol-types = "1.4.1"
 alloy-signer = "=1.0.42"
 
+alloy-consensus-any = "=1.0.42"
+alloy-consensus = "=1.0.42"
+alloy-eips = "=1.0.42"
+alloy-serde = "=1.0.42"
+alloy-tx-macros = "=1.0.42"
+alloy-eip2930 = "=0.2.1"
+alloy-eip7702 = "=0.6.1"
+
 # Logging
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
@@ -146,13 +157,3 @@ tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 [patch.crates-io]
 # see https://github.com/CosmWasm/cosmwasm/issues/2525
 cosmwasm-crypto = { git = "https://github.com/CosmWasm/cosmwasm", rev = "72d4eb09260d1773262d9a1cd7bdbb0f17abe7ab" }
-
-# We need to lock all transitive alloy deps to rustc v1.86 compatible versions for cw-optimizer
-alloy-consensus-any = { git = "https://github.com/alloy-rs/alloy", tag = "v1.0.42" }
-alloy-consensus = { git = "https://github.com/alloy-rs/alloy", tag = "v1.0.42" }
-alloy-eips = { git = "https://github.com/alloy-rs/alloy", tag = "v1.0.42" }
-alloy-network-primitives = { git = "https://github.com/alloy-rs/alloy", tag = "v1.0.42" }
-alloy-serde = { git = "https://github.com/alloy-rs/alloy", tag = "v1.0.42" }
-alloy-tx-macros = { git = "https://github.com/alloy-rs/alloy", tag = "v1.0.42" }
-alloy-eip2930 = { git = "https://github.com/alloy-rs/eips", tag = "alloy-eip2930-v0.2.1" }
-alloy-eip7702 = { git = "https://github.com/alloy-rs/eips", tag = "alloy-eip7702-v0.6.1" }

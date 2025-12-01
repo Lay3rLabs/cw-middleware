@@ -17,14 +17,11 @@ wavs-wasi-utils = { workspace = true }
 wit-bindgen-rt = { workspace = true }
 thiserror = { workspace = true }
 cosmwasm-std = { workspace = true }
-cw-wavs-mock-api = {workspace = true }
-cw-wavs-trigger-api = {workspace = true }
-wavs-types = {workspace = true}
-
+cw-wavs-mock-api = { workspace = true }
+cw-wavs-trigger-api = { workspace = true }
+wavs-types = { workspace = true }
+wit-bindgen = { workspace = true }
+wasip2 = { workspace = true }
 
 [lib]
 crate-type = ["cdylib"]
-
-[package.metadata.component]
-package = "component:simple-aggregator"
-target = "wavs:aggregator/aggregator-world@2.0.0"
