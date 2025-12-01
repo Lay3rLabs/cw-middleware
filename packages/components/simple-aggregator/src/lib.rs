@@ -1,19 +1,22 @@
-#[allow(clippy::all)]
-mod bindings;
-
 use std::str::FromStr;
 
 use wavs_types::ChainKey;
 use wavs_wasi_utils::evm::alloy_primitives;
 
-use crate::bindings::{
-    host,
-    wavs::{
-        aggregator::aggregator::{CosmosSubmitAction, EvmAddress, EvmSubmitAction, SubmitAction},
-        types::chain::CosmosAddress,
-    },
-    AggregatorAction, AnyTxHash, Guest, Packet,
+use crate::wavs::aggregator::aggregator::{
+    CosmosAddress, CosmosSubmitAction, EvmAddress, EvmSubmitAction, SubmitAction,
 };
+
+wit_bindgen::generate!({
+    path: "../../../wit-definitions/aggregator/wit",
+    world: "aggregator-world",
+    generate_all,
+    with: {
+        "wasi:io/poll@0.2.0": wasip2::io::poll
+    },
+    features: ["tls"]
+});
+
 struct Component;
 
 impl Guest for Component {
@@ -84,4 +87,4 @@ impl AnyChainKey {
     }
 }
 
-crate::bindings::export!(Component with_types_in crate::bindings);
+export!(Component);

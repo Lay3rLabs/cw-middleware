@@ -4,15 +4,25 @@ use cw_wavs_trigger_api::simple::PushMessageEvent;
 
 use layer_climb::prelude::*;
 
-use crate::bindings::wavs::operator::input::TriggerData;
-use crate::bindings::wavs::types::core::LogLevel;
-use crate::bindings::{host, Guest, TriggerAction, WasmResponse};
-use crate::error::EchoResult;
+use crate::{
+    entry::{host::LogLevel, wavs::operator::input::TriggerData},
+    error::EchoResult,
+};
+
+wit_bindgen::generate!({
+    path: "../../../wit-definitions/operator/wit",
+    world: "wavs-world",
+    generate_all,
+    with: {
+        "wasi:io/poll@0.2.0": wasip2::io::poll
+    },
+    features: ["tls"]
+});
 
 struct Component;
 
 impl Guest for Component {
-    fn run(trigger_action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
+    fn run(trigger_action: TriggerAction) -> std::result::Result<Vec<WasmResponse>, String> {
         let res = inner(trigger_action);
 
         host::log(LogLevel::Warn, &format!("Echo response: {res:?}"));
@@ -21,7 +31,7 @@ impl Guest for Component {
     }
 }
 
-fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
+fn inner(trigger_action: TriggerAction) -> std::result::Result<Vec<WasmResponse>, String> {
     match trigger_action.data {
         TriggerData::CosmosContractEvent(data) => {
             let cosmos_event =
@@ -67,7 +77,7 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                 Result::<Vec<u8>, String>::Ok(message.into())
             })?;
 
-            Ok(Some(WasmResponse {
+            Ok(vec![WasmResponse {
                 payload: MessageWithId {
                     trigger_id: event.trigger_id,
                     message: message.into(),
@@ -75,20 +85,22 @@ fn inner(trigger_action: TriggerAction) -> std::result::Result<Option<WasmRespon
                 .to_bytes()
                 .map_err(|e| e.to_string())?,
                 ordering: None,
-            }))
+                event_id_salt: None,
+            }])
         }
         TriggerData::Raw(raw) => handle_raw(raw).map_err(|e| e.to_string()),
         _ => Err("Unsupported trigger data".to_string()),
     }
 }
 
-pub fn handle_raw(raw: Vec<u8>) -> EchoResult<Option<WasmResponse>> {
+pub fn handle_raw(raw: Vec<u8>) -> EchoResult<Vec<WasmResponse>> {
     let input = String::from_utf8(raw)?;
 
-    Ok(Some(WasmResponse {
+    Ok(vec![WasmResponse {
         payload: input.into_bytes(),
         ordering: None,
-    }))
+        event_id_salt: None,
+    }])
 }
 
-crate::bindings::export!(Component with_types_in crate::bindings);
+export!(Component);

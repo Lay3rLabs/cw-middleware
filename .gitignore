@@ -17,3 +17,6 @@ artifacts
 
 # Interchain test 
 backend/interchain-test/configs
+
+# Wit dependencies
+**/wit/deps

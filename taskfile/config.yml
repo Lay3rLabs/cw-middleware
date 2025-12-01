@@ -10,6 +10,7 @@ vars:
   ARCH:
     sh: uname -m
 
+  # Paths
   BACKEND_DIR: '{{joinPath .REPO_ROOT "backend"}}'
   WAVS_HOME_DIR: '{{joinPath .BACKEND_DIR "wavs-home"}}'
   STARSHIP_DIR: '{{joinPath .BACKEND_DIR "starship"}}'
@@ -18,6 +19,11 @@ vars:
   COMPONENTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/components/artifacts"}}'
   CONTRACTS_ARTIFACTS_PATH: '{{joinPath .REPO_ROOT "packages/contracts/artifacts"}}'
   ABI_WAVS_MIDDLEWARE_DIR: '{{joinPath .REPO_ROOT "abi/wavs-middleware"}}'
+  WIT_DEFINITIONS_PATH: '{{joinPath .REPO_ROOT "wit-definitions"}}'
+  TEMP_CLONE_PATH: '{{joinPath .REPO_ROOT ".temp-clone"}}'
+
+  # Components
+  COMPONENT_WAVS_WIT_BRANCH: "main"
 
   # Changing this requires a change in `packages/tests/on-chain/src/client/config.rs`
   WAVS_BASE_PORT: 8123 # Base port for WAVS, subsequent ports will be incremented by 1 for each instance
@@ -33,6 +39,6 @@ vars:
       fi
   HEALTH_CHECK_TIMEOUT: 5 # seconds to wait for service health checks
   COSMWASM_OPTIMIZER_IMAGE: 'cosmwasm/optimizer{{if eq .ARCH "arm64"}}-arm64{{end}}:0.17.0'
-  WAVS_DOCKER_IMAGE: 'ghcr.io/lay3rlabs/wavs:0.5.3{{if eq .ARCH "arm64"}}-arm64{{end}}'
+  WAVS_DOCKER_IMAGE: 'ghcr.io/lay3rlabs/wavs:2.0.0-rc.8{{if eq .ARCH "arm64"}}-arm64{{end}}'
   JAEGER_DOCKER_IMAGE: "jaegertracing/jaeger:2.5.0"
   PROMETHEUS_DOCKER_IMAGE: "prom/prometheus:v3.3.0"
