@@ -64,6 +64,12 @@ jobs:
         with:
           cache-on-failure: true
 
+      - name: Install wkg
+        run: cargo binstall wkg
+
+      - name: Setup wkg
+        run: wkg config --default-registry wa.dev
+
       - name: Fetch components
         run: task components:fetch-wit
 
