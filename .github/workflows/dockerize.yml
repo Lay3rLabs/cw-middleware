@@ -70,14 +70,14 @@ jobs:
       - name: Setup wkg
         run: wkg config --default-registry wa.dev
 
-      - name: Fetch components
-        run: task components:fetch-wit
-
       - name: Install Task runner
         uses: arduino/setup-task@v2
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch components
+        run: task components:fetch-wit
 
       - name: Build all contracts
         run: task contracts:build-all
