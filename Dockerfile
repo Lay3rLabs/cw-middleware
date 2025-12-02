@@ -28,6 +28,7 @@ FROM chef AS planner
 # Copy workspace files needed for planning
 COPY Cargo.toml Cargo.lock ./
 COPY packages ./packages
+COPY node_modules ./node_modules
 
 # Generate dependency recipe
 RUN cargo chef prepare --recipe-path recipe.json
@@ -71,6 +72,7 @@ COPY --from=cacher /usr/local/cargo /usr/local/cargo
 # Copy source code
 COPY Cargo.toml Cargo.lock ./
 COPY packages ./packages
+COPY node_modules ./node_modules
 
 # Build the CLI binary
 RUN cargo build --release --package ${CLI_PACKAGE}

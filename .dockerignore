@@ -33,10 +33,6 @@ target/
 **/*.rs.bk
 *.pdb
 
-# Node modules (if any)
-node_modules/
-**/node_modules/
-
 # Environment files
 .env
 .env.*
