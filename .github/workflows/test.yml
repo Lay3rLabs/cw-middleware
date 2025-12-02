@@ -55,8 +55,6 @@ jobs:
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: true
 
       - name: Install Task
         uses: arduino/setup-task@v2
@@ -106,8 +104,6 @@ jobs:
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: true
 
       - name: Install Task
         uses: arduino/setup-task@v2
