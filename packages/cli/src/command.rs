@@ -117,6 +117,7 @@ impl Command {
                 RegistryCommand::Upload { args, .. } => args,
                 RegistryCommand::InstantiateMirrorStake { args, .. } => args,
                 RegistryCommand::GetServiceManager { args, .. } => args,
+                RegistryCommand::SetOperatorSigningKey { args, .. } => args,
             },
             Command::FaucetTap { args, .. } => args,
         }
@@ -285,6 +286,23 @@ pub enum RegistryCommand {
         address: String,
         #[arg(long)]
         contract_kind: RegistryContractKind,
+        #[clap(flatten)]
+        args: CliArgs,
+    },
+    /// Set operator signing key
+    SetOperatorSigningKey {
+        /// Registry address
+        #[arg(long)]
+        address: String,
+        /// Operator address (EVM address)
+        #[arg(long)]
+        operator: String,
+        /// Signing key address (EVM address)
+        #[arg(long)]
+        signing_key: String,
+        /// Operator weight
+        #[arg(long)]
+        weight: String,
         #[clap(flatten)]
         args: CliArgs,
     },

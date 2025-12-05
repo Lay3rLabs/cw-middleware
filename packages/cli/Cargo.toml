@@ -10,27 +10,27 @@ license.workspace = true
 publish = false
 
 [dependencies]
-cw-wavs-sdk = {workspace = true}
-cw-wavs-mock-api = {workspace = true}
-cw-wavs-ecdsa-api = {workspace = true}
-cw-wavs-bls-api = {workspace = true}
-cw-wavs-mirror-api = {workspace = true}
-utils = {workspace = true}
-tokio = {workspace = true}
-shared-tests = {workspace = true}
-layer-climb = {workspace = true}
-layer-climb-cli = {workspace = true}
-async-trait = {workspace = true}
-cosmwasm-std = {workspace = true}
-cosmwasm-schema = {workspace = true}
-serde = {workspace = true}
-serde_json = {workspace = true}
-deadpool = {workspace = true}
-rustls = {workspace = true}
-tracing-subscriber = {workspace = true}
-tracing = {workspace = true}
-clap = {workspace = true}
-dotenvy = {workspace = true}
-rand = {workspace = true}
-anyhow = {workspace = true}
-wavs-types = {workspace = true}
+cw-wavs-sdk = { workspace = true }
+cw-wavs-mock-api = { workspace = true }
+cw-wavs-ecdsa-api = { workspace = true }
+cw-wavs-bls-api = { workspace = true }
+cw-wavs-mirror-api = { workspace = true }
+utils = { workspace = true }
+tokio = { workspace = true }
+shared-tests = { workspace = true }
+layer-climb = { workspace = true }
+layer-climb-cli = { workspace = true }
+async-trait = { workspace = true }
+cosmwasm-std = { workspace = true }
+cosmwasm-schema = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+deadpool = { workspace = true }
+rustls = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing = { workspace = true }
+clap = { workspace = true }
+dotenvy = { workspace = true }
+rand = { workspace = true }
+anyhow = { workspace = true }
+wavs-types = { workspace = true }
