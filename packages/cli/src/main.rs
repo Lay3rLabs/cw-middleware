@@ -15,6 +15,8 @@ use crate::{
     },
     context::CliContext,
 };
+use cosmwasm_std::Uint256;
+use cw_wavs_sdk::client::WavsExecutor;
 
 #[tokio::main]
 async fn main() {
@@ -476,6 +478,47 @@ async fn main() {
                         }
                     };
                     println!("Service Manager: {manager}");
+                }
+                RegistryCommand::SetOperatorSigningKey {
+                    address,
+                    operator,
+                    signing_key,
+                    weight,
+                    args: _,
+                } => {
+                    // Parse input
+                    let client = ctx.signing_client().await.unwrap();
+                    let address = ctx.parse_address(&address).await.unwrap();
+                    let operator = ctx.parse_address(&operator).await.unwrap();
+                    let signing_key = ctx.parse_address(&signing_key).await.unwrap();
+                    let operator_weight: Uint256 = weight.parse().expect("Invalid weight value");
+
+                    // Create stake registry executor from client
+                    let stake_registry =
+                        cw_wavs_sdk::contract_kinds::mirror::MirrorStakeRegistryExecutor::new(
+                            WavsExecutor::Climb(client),
+                            address
+                                .try_into()
+                                .expect("Stake registry address is not a cosmos address"),
+                        );
+
+                    // Execute
+                    let tx_resp = stake_registry
+                        .set_operator_details(
+                            operator
+                                .try_into()
+                                .expect("Could not parse operator address"),
+                            signing_key.try_into().expect("Could not parse signing key"),
+                            operator_weight,
+                        )
+                        .await
+                        .unwrap();
+
+                    println!("Operator signing key set successfully!");
+                    println!(
+                        "Transaction Hash: {}",
+                        tx_resp.unchecked_into_tx_response().txhash
+                    );
                 }
             }
         }

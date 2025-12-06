@@ -172,6 +172,20 @@ docker run --rm \
     --address <ADDR> \
 ```
 
+### Set Operator Signing Key
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    registry set-operator-signing-key \
+    --address <REGISTRY_ADDR> \
+    --operator <OPERATOR_EVM_ADDR> \
+    --signing-key <SIGNING_KEY_EVM_ADDR> \
+    --weight <WEIGHT>
+```
+
 # Local docker builds
 
 If you want to build and test changes locally, you can build the docker image yourself:
