@@ -502,13 +502,7 @@ async fn main() {
 
                     // Execute
                     let tx_resp = stake_registry
-                        .set_operator_details(
-                            operator
-                                .try_into()
-                                .expect("Could not parse operator address"),
-                            signing_key.try_into().expect("Could not parse signing key"),
-                            operator_weight,
-                        )
+                        .set_operator_details(operator, signing_key, operator_weight)
                         .await
                         .unwrap();
 
