@@ -4,6 +4,7 @@ pub mod wallet;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+use layer_climb::prelude::EvmAddr;
 use layer_climb_cli::command::{ContractCommand, WalletCommand};
 use serde::{Deserialize, Serialize};
 use wavs_types::ChainKey;
@@ -296,10 +297,10 @@ pub enum RegistryCommand {
         address: String,
         /// Operator address (EVM address)
         #[arg(long)]
-        operator: String,
+        operator: EvmAddr,
         /// Signing key address (EVM address)
         #[arg(long)]
-        signing_key: String,
+        signing_key: EvmAddr,
         /// Operator weight
         #[arg(long)]
         weight: String,

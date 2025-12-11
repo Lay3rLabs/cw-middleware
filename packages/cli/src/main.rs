@@ -489,8 +489,6 @@ async fn main() {
                     // Parse input
                     let client = ctx.signing_client().await.unwrap();
                     let address = ctx.parse_address(&address).await.unwrap();
-                    let operator = ctx.parse_address(&operator).await.unwrap();
-                    let signing_key = ctx.parse_address(&signing_key).await.unwrap();
                     let operator_weight: Uint256 = weight.parse().expect("Invalid weight value");
 
                     // Create stake registry executor from client
