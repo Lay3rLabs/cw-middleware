@@ -172,6 +172,22 @@ docker run --rm \
     --address <ADDR> \
 ```
 
+### Set the Quorum Threshold on the mirror service manager contract
+
+Replace `<ADDR>` with the service manager address.
+Replace `<NUMERATOR>` and `<DENOMINATOR>` with the desired quorum values (e.g., 2 and 3 for 2/3).
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager set-quorum-threshold \
+    --address <ADDR> \
+    --numerator <NUMERATOR> \
+    --denominator <DENOMINATOR>
+```
+
 ### Set Operator Signing Key
 
 ```bash

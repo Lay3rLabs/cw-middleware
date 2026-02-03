@@ -78,4 +78,16 @@ impl ServiceManagerExecutor {
         let msg = ServiceManagerExecuteMessages::WavsSetServiceUri { service_uri: uri };
         self.service_manager_exec(&msg, &[]).await
     }
+
+    pub async fn set_quorum_threshold(
+        &self,
+        numerator: cosmwasm_std::Uint256,
+        denominator: cosmwasm_std::Uint256,
+    ) -> Result<WavsTxResponse, cosmwasm_std::StdError> {
+        let msg = ServiceManagerExecuteMessages::WavsSetQuorumThreshold {
+            numerator,
+            denominator,
+        };
+        self.service_manager_exec(&msg, &[]).await
+    }
 }
