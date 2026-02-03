@@ -91,13 +91,19 @@ tasks:
 
   ### WIT MANAGEMENT TASKS
   clean-wit:
+    status:
+      - test -d {{.WIT_DEFINITIONS_PATH}}
     cmds:
       - echo "Cleaning WIT in {{.WIT_DEFINITIONS_PATH}}"
       - rm -rf "{{.WIT_DEFINITIONS_PATH}}"
 
   fetch-wit:
+    vars:
+      SKIP_CLONE: "{{default false .SKIP_CLONE}}"
     cmds:
       - task: clone-wit-repo
+        vars:
+          SKIP_CLONE: "{{.SKIP_CLONE}}"
       - cd "{{.WIT_DEFINITIONS_PATH}}/operator" && wkg wit fetch
       - cd "{{.WIT_DEFINITIONS_PATH}}/aggregator" && wkg wit fetch
 
@@ -105,7 +111,10 @@ tasks:
     internal: true
     deps: [clean-wit]
     vars:
+      SKIP_CLONE: "{{default false .SKIP_CLONE}}"
       BRANCH: "{{default .COMPONENT_WAVS_WIT_BRANCH .BRANCH}}"
+    status:
+      - "{{.SKIP_CLONE}}"
     cmds:
       - echo "Downloading WIT worlds from {{.BRANCH}} branch"
       - rm -rf "{{.TEMP_CLONE_PATH}}"

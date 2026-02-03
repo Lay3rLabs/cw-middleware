@@ -78,7 +78,7 @@ jobs:
         run: wkg config --default-registry wa.dev
 
       - name: Fetch components
-        run: task components:fetch-wit
+        run: task components:fetch-wit SKIP_CLONE=true
 
       - name: Check formatting
         uses: actions-rs/cargo@v1
