@@ -222,6 +222,24 @@ async fn main() {
                 let uri = client.get_service_uri().await.unwrap();
                 println!("Service URI: {uri}");
             }
+            ServiceManagerCommand::SetQuorumThreshold {
+                numerator,
+                denominator,
+                address,
+                args: _,
+            } => {
+                let client = ctx.wavs_service_manager_executor(&address).await.unwrap();
+                let numerator: Uint256 = numerator.parse().expect("Invalid numerator value");
+                let denominator: Uint256 = denominator.parse().expect("Invalid denominator value");
+                let resp = client
+                    .set_quorum_threshold(numerator, denominator)
+                    .await
+                    .unwrap();
+                println!(
+                    "Set quorum threshold TX hash: {}",
+                    resp.unchecked_into_tx_response().txhash
+                );
+            }
         },
 
         Command::ServiceHandler { command } => match command {

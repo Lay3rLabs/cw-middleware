@@ -105,6 +105,7 @@ impl Command {
                 ServiceManagerCommand::InstantiateMirror { args, .. } => args,
                 ServiceManagerCommand::SetServiceUri { args, .. } => args,
                 ServiceManagerCommand::GetServiceUri { args, .. } => args,
+                ServiceManagerCommand::SetQuorumThreshold { args, .. } => args,
             },
             Command::ServiceHandler { command } => match command {
                 ServiceHandlerCommand::Upload { args, .. } => args,
@@ -187,6 +188,21 @@ pub enum ServiceManagerCommand {
 
     /// Gets the service URI from the service manager contract
     GetServiceUri {
+        /// Service Manager address
+        #[arg(long)]
+        address: String,
+        #[clap(flatten)]
+        args: CliArgs,
+    },
+
+    /// Sets the quorum threshold on the service manager contract
+    SetQuorumThreshold {
+        /// Quorum numerator
+        #[arg(long)]
+        numerator: String,
+        /// Quorum denominator
+        #[arg(long)]
+        denominator: String,
         /// Service Manager address
         #[arg(long)]
         address: String,
