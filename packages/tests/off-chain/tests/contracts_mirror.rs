@@ -1,3 +1,5 @@
+#![recursion_limit = "512"]
+
 use off_chain_tests::client::{
     mirror::MirrorTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };

@@ -151,7 +151,7 @@ pub async fn run_mirror_sanity_tests(
     let signature_data = WavsSignatureData {
         signers,
         signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     // Test signature validation
@@ -161,7 +161,7 @@ pub async fn run_mirror_sanity_tests(
         .unwrap();
 
     assert_eq!(
-        result.reference_block, 12345,
+        result.reference_block, 999_999,
         "Reference block should match"
     );
     assert!(
@@ -216,7 +216,7 @@ pub async fn run_mirror_abi_signature_validation_test(
     let signature_data = WavsSignatureData {
         signers,
         signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     // Test signature validation
@@ -227,7 +227,7 @@ pub async fn run_mirror_abi_signature_validation_test(
 
     // Verify the validation results
     assert_eq!(
-        result.reference_block, 12345,
+        result.reference_block, 999_999,
         "Reference block should match"
     );
     assert_eq!(
@@ -423,7 +423,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     let signature_data = WavsSignatureData {
         signers,
         signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     querier
@@ -449,7 +449,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     let eth_signature_data = WavsSignatureData {
         signers: eth_signers,
         signatures: eth_signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     // This must use raw prehash
@@ -468,7 +468,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     let invalid_signature_data = WavsSignatureData {
         signers: invalid_signers,
         signatures: invalid_signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     let invalid_result = querier
