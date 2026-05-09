@@ -92,7 +92,14 @@ async fn main() {
                     .await
                     .unwrap();
             }
-            ServiceManagerCommand::InstantiateEcdsa { code_id, args: _ } => {
+            ServiceManagerCommand::InstantiateEcdsa {
+                code_id,
+                owner,
+                admin,
+                quorum_numerator,
+                quorum_denominator,
+                args: _,
+            } => {
                 let client = ctx.signing_client().await.unwrap();
 
                 let (address, tx_resp) = client
@@ -100,7 +107,14 @@ async fn main() {
                         None,
                         code_id,
                         "ECDSA Service Manager",
-                        &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {},
+                        &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {
+                            owner,
+                            admin,
+                            quorum_numerator: quorum_numerator
+                                .map(|s| s.parse().expect("invalid numerator")),
+                            quorum_denominator: quorum_denominator
+                                .map(|s| s.parse().expect("invalid denominator")),
+                        },
                         Vec::new(),
                         None,
                     )

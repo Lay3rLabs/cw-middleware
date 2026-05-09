@@ -138,10 +138,22 @@ pub enum ServiceManagerCommand {
         args: CliArgs,
     },
 
-    /// Instantiate an instance of the ecdsa aservice manager
+    /// Instantiate an instance of the ecdsa service manager
     InstantiateEcdsa {
         #[arg(long)]
         code_id: u64,
+        /// Owner address (controls operator set, weights, signing keys, pause)
+        #[arg(long)]
+        owner: String,
+        /// Admin address (controls quorum threshold + service URI)
+        #[arg(long)]
+        admin: String,
+        /// Optional quorum numerator (default 2)
+        #[arg(long)]
+        quorum_numerator: Option<String>,
+        /// Optional quorum denominator (default 3)
+        #[arg(long)]
+        quorum_denominator: Option<String>,
         #[clap(flatten)]
         args: CliArgs,
     },

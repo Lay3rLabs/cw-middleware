@@ -23,12 +23,18 @@ impl EcdsaTestClient {
         let pool = test_client.pool();
         let client = pool.get().await.unwrap();
 
+        let signer = client.addr.to_string();
         let (service_manager, _) = client
             .contract_instantiate(
                 None,
                 CodeId::new_ecdsa_service_manager().await,
                 "ECDSA Service Manager",
-                &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {},
+                &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {
+                    owner: signer.clone(),
+                    admin: signer,
+                    quorum_numerator: None,
+                    quorum_denominator: None,
+                },
                 vec![],
                 None,
             )

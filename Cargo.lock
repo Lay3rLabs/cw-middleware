@@ -1905,6 +1905,7 @@ dependencies = [
 name = "cw-wavs-ecdsa-service-manager"
 version = "0.0.0"
 dependencies = [
+ "alloy-primitives",
  "anyhow",
  "const-hex",
  "cosmwasm-schema",
@@ -1913,6 +1914,7 @@ dependencies = [
  "cw-wavs-ecdsa-api",
  "cw2",
  "layer-climb-address",
+ "sha3",
  "wavs-types",
 ]
 
