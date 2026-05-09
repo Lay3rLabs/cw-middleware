@@ -406,8 +406,12 @@ pub fn ethereum_address_raw(pubkey: &[u8]) -> StdResult<[u8; 20]> {
         return Err(StdError::msg("Public key must be 65 bytes long"));
     }
 
+    // Audit L-3 fix: use ? instead of unwrap so future refactors that change
+    // the input contract don't panic the contract on an unexpected length.
     let hash = Keccak256::digest(data);
-    Ok(hash[hash.len() - 20..].try_into().unwrap())
+    hash[hash.len() - 20..]
+        .try_into()
+        .map_err(|_| StdError::msg("keccak digest tail not 20 bytes"))
 }
 
 fn query_operator_weight(deps: Deps, operator: EvmAddr) -> StdResult<Uint256> {

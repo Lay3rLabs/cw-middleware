@@ -1,6 +1,6 @@
 use cosmwasm_std::{
     entry_point, to_json_binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
-    StdResult, Uint256,
+    StdError, StdResult, Uint256,
 };
 use cw2::set_contract_version;
 use layer_climb_address::EvmAddr;
@@ -25,7 +25,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 #[entry_point]
 pub fn instantiate(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> StdResult<Response> {
@@ -35,11 +35,12 @@ pub fn instantiate(
     ADMIN.save(deps.storage, &admin)?;
     STAKE_REGISTRY.save(deps.storage, &info.sender)?;
 
-    // Set default quorum configuration (2/3)
+    // Set default quorum configuration (2/3) and snapshot at instantiate
+    // height (audit M-4 fix).
     let default_numerator = Uint256::from(2u128);
     let default_denominator = Uint256::from(3u128);
-    QUORUM_NUMERATOR.save(deps.storage, &default_numerator)?;
-    QUORUM_DENOMINATOR.save(deps.storage, &default_denominator)?;
+    QUORUM_NUMERATOR.save(deps.storage, &default_numerator, env.block.height)?;
+    QUORUM_DENOMINATOR.save(deps.storage, &default_denominator, env.block.height)?;
 
     Ok(Response::default()
         .add_attribute("admin", admin)
@@ -50,7 +51,7 @@ pub fn instantiate(
 #[entry_point]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
@@ -73,8 +74,9 @@ pub fn execute(
                         .into_std()?
                 }
 
-                QUORUM_NUMERATOR.save(deps.storage, &numerator)?;
-                QUORUM_DENOMINATOR.save(deps.storage, &denominator)?;
+                // Snapshot at the current block (audit M-4 fix).
+                QUORUM_NUMERATOR.save(deps.storage, &numerator, env.block.height)?;
+                QUORUM_DENOMINATOR.save(deps.storage, &denominator, env.block.height)?;
 
                 Ok(Response::new()
                     .add_attribute("method", "wavs_set_quorum_threshold")
@@ -170,6 +172,7 @@ pub fn wavs_validate(
             WavsValidateError::InvalidSignatureLength,
         ));
     }
+    let reference_block = signature_data.reference_block as u64;
     // Validate signatures via stake registry, if configured
     let stake_registry = state::STAKE_REGISTRY.load(deps.storage)?;
 
@@ -189,20 +192,27 @@ pub fn wavs_validate(
             voting_power_signed,
             total_voting_power,
             ..
-        }) => validate_quorum(voting_power_signed, total_voting_power, &deps),
+        }) => validate_quorum(voting_power_signed, total_voting_power, reference_block, &deps),
         Err(e) => Ok(e),
     }
 }
 
-/// Validates that sufficient quorum has been reached
+/// Validates that sufficient quorum has been reached. Reads the quorum
+/// threshold at `reference_block` (audit M-4 fix) so historical envelopes
+/// are evaluated against the threshold that was in force when they were
+/// signed, not the current threshold.
 fn validate_quorum(
     signed_weight: Uint256,
     total_weight: Uint256,
+    reference_block: u64,
     deps: &Deps,
 ) -> StdResult<WavsValidateResult> {
-    // Load quorum configuration
-    let numerator = QUORUM_NUMERATOR.load(deps.storage)?;
-    let denominator = QUORUM_DENOMINATOR.load(deps.storage)?;
+    let numerator = QUORUM_NUMERATOR
+        .may_load_at_height(deps.storage, reference_block)?
+        .ok_or_else(|| StdError::msg("quorum numerator missing at reference_block"))?;
+    let denominator = QUORUM_DENOMINATOR
+        .may_load_at_height(deps.storage, reference_block)?
+        .ok_or_else(|| StdError::msg("quorum denominator missing at reference_block"))?;
 
     // Calculate threshold weight: (total_weight * numerator) / denominator
     let threshold_weight =
