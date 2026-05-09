@@ -22,7 +22,6 @@ wavs-types = { workspace = true }
 serde = { workspace = true }
 cosmwasm-std = { workspace = true }
 layer-climb = { workspace = true }
-cw-wavs-mock-api = { workspace = true }
 cw-wavs-bls-api = { workspace = true }
 cw-wavs-ecdsa-api = { workspace = true }
 cw-wavs-mirror-api = { workspace = true }

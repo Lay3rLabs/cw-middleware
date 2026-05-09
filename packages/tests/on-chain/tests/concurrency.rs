@@ -1,11 +1,11 @@
 use futures::{stream::FuturesUnordered, StreamExt};
 use on_chain_tests::client::contract::{
-    mock::MockTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
+    ecdsa::EcdsaTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };
 use shared_tests::{contracts_sanity, tracing_init::tracing_tests_init};
 
 #[tokio::test(flavor = "multi_thread")]
-async fn mock_sanity_1() {
+async fn ecdsa_sanity_1() {
     tracing_tests_init();
 
     let mut futures = FuturesUnordered::new();
@@ -14,7 +14,7 @@ async fn mock_sanity_1() {
         futures.push(async {
             let client = ContractTestClient::new().await;
             let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
-            let contract = MockTestClient::new(client.clone()).await;
+            let contract = EcdsaTestClient::new(client.clone()).await;
             let wrapped = contract.wrap_test(&cw_wavs_trigger_simple);
             contracts_sanity::run_sanity_tests_with_id(&wrapped, "1").await;
         });
@@ -24,7 +24,7 @@ async fn mock_sanity_1() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn mock_sanity_2() {
+async fn ecdsa_sanity_2() {
     tracing_tests_init();
 
     let mut futures = FuturesUnordered::new();
@@ -33,7 +33,7 @@ async fn mock_sanity_2() {
         futures.push(async {
             let client = ContractTestClient::new().await;
             let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
-            let contract = MockTestClient::new(client.clone()).await;
+            let contract = EcdsaTestClient::new(client.clone()).await;
             let wrapped = contract.wrap_test(&cw_wavs_trigger_simple);
             contracts_sanity::run_sanity_tests_with_id(&wrapped, "2").await;
         });
@@ -43,7 +43,7 @@ async fn mock_sanity_2() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn mock_sanity_3() {
+async fn ecdsa_sanity_3() {
     tracing_tests_init();
 
     let mut futures = FuturesUnordered::new();
@@ -52,7 +52,7 @@ async fn mock_sanity_3() {
         futures.push(async {
             let client = ContractTestClient::new().await;
             let cw_wavs_trigger_simple = SimpleTriggerTestClient::new(client.clone()).await;
-            let contract = MockTestClient::new(client.clone()).await;
+            let contract = EcdsaTestClient::new(client.clone()).await;
             let wrapped = contract.wrap_test(&cw_wavs_trigger_simple);
             contracts_sanity::run_sanity_tests_with_id(&wrapped, "3").await;
         });

@@ -5,9 +5,6 @@ edition = "2021"
 
 [dependencies]
 cw-wavs-sdk = { workspace = true }
-cw-wavs-mock-api = { workspace = true }
-cw-wavs-mock-service-handler = { workspace = true }
-cw-wavs-mock-service-manager = { workspace = true }
 cw-wavs-trigger-api = { workspace = true }
 cw-wavs-trigger-simple = { workspace = true }
 cw-wavs-ecdsa-api = { workspace = true }

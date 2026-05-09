@@ -11,16 +11,9 @@ impl TestClient {
             .unwrap();
 
         let operator_addr = signing_key_addr.clone();
-        tracing::info!("Adding weight for operator/avs-key {signing_key_addr} on mock contract");
+        tracing::info!("Adding weight for operator/avs-key {signing_key_addr}");
 
         match &self.service {
-            TestService::Mock(client) => {
-                client
-                    .service_manager_executor
-                    .set_signing_key(operator_addr, signing_key_addr, 1)
-                    .await
-                    .unwrap();
-            }
             TestService::Mirror(client) => {
                 client
                     .stake_registry_executor

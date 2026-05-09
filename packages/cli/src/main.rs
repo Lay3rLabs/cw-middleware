@@ -92,33 +92,6 @@ async fn main() {
                     .await
                     .unwrap();
             }
-            ServiceManagerCommand::InstantiateMock { code_id, args: _ } => {
-                let client = ctx.signing_client().await.unwrap();
-
-                let (address, tx_resp) = client
-                    .contract_instantiate(
-                        None,
-                        code_id,
-                        "Mock Service Manager",
-                        &cw_wavs_mock_api::service_manager::InstantiateMsg {},
-                        Vec::new(),
-                        None,
-                    )
-                    .await
-                    .unwrap();
-
-                println!("Mock Service Manager instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash);
-
-                ctx.output
-                    .write(output::OutputData::ServiceManagerInstantiate {
-                        contract_kind: ServiceManagerContractKind::Mock,
-                        address: address.to_string(),
-                        tx_hash: tx_resp.txhash,
-                    })
-                    .await
-                    .unwrap();
-            }
             ServiceManagerCommand::InstantiateEcdsa { code_id, args: _ } => {
                 let client = ctx.signing_client().await.unwrap();
 
@@ -264,36 +237,6 @@ async fn main() {
                     .write(output::OutputData::ServiceHandlerUpload {
                         contract_kind,
                         code_id,
-                        tx_hash: tx_resp.txhash,
-                    })
-                    .await
-                    .unwrap();
-            }
-            ServiceHandlerCommand::InstantiateMock {
-                code_id,
-                service_manager,
-                args: _,
-            } => {
-                let client = ctx.signing_client().await.unwrap();
-
-                let (address, tx_resp) = client
-                    .contract_instantiate(
-                        None,
-                        code_id,
-                        "Mock Service Handler",
-                        &cw_wavs_mock_api::service_handler::InstantiateMsg { service_manager },
-                        Vec::new(),
-                        None,
-                    )
-                    .await
-                    .unwrap();
-                println!("Mock Service Handler instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash);
-
-                ctx.output
-                    .write(output::OutputData::ServiceHandlerInstantiate {
-                        contract_kind: ServiceHandlerContractKind::Mock,
-                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await

@@ -5,8 +5,6 @@ use utils::path::repo_root;
 
 use crate::client::pool::TestPool;
 
-static MOCK_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
-static MOCK_SERVICE_MANAGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static ECDSA_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static ECDSA_SERVICE_MANAGER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 static BLS_SERVICE_HANDLER_CODE_ID: OnceCell<u64> = OnceCell::const_new();
@@ -19,19 +17,6 @@ static TRIGGER_SIMPLE_CODE_ID: OnceCell<u64> = OnceCell::const_new();
 pub struct CodeId {}
 
 impl CodeId {
-    #[instrument]
-    pub async fn new_cw_wavs_mock_service_handler() -> u64 {
-        *MOCK_SERVICE_HANDLER_CODE_ID
-            .get_or_init(upload_cw_wavs_mock_service_handler)
-            .await
-    }
-    #[instrument]
-    pub async fn new_cw_wavs_mock_service_manager() -> u64 {
-        *MOCK_SERVICE_MANAGER_CODE_ID
-            .get_or_init(upload_cw_wavs_mock_service_manager)
-            .await
-    }
-
     #[instrument]
     pub async fn new_bls_service_handler() -> u64 {
         *BLS_SERVICE_HANDLER_CODE_ID
@@ -90,14 +75,6 @@ impl CodeId {
 
 async fn upload_cw_wavs_trigger_simple() -> u64 {
     upload(service_wasm_path("trigger", "simple")).await
-}
-
-async fn upload_cw_wavs_mock_service_handler() -> u64 {
-    upload(service_wasm_path("mock", "service_handler")).await
-}
-
-async fn upload_cw_wavs_mock_service_manager() -> u64 {
-    upload(service_wasm_path("mock", "service_manager")).await
 }
 
 async fn upload_ecdsa_service_handler() -> u64 {

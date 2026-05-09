@@ -99,7 +99,6 @@ impl Command {
             Command::Contract { args, .. } => args,
             Command::ServiceManager { command } => match command {
                 ServiceManagerCommand::Upload { args, .. } => args,
-                ServiceManagerCommand::InstantiateMock { args, .. } => args,
                 ServiceManagerCommand::InstantiateEcdsa { args, .. } => args,
                 ServiceManagerCommand::InstantiateBls { args, .. } => args,
                 ServiceManagerCommand::InstantiateMirror { args, .. } => args,
@@ -109,7 +108,6 @@ impl Command {
             },
             Command::ServiceHandler { command } => match command {
                 ServiceHandlerCommand::Upload { args, .. } => args,
-                ServiceHandlerCommand::InstantiateMock { args, .. } => args,
                 ServiceHandlerCommand::InstantiateEcdsa { args, .. } => args,
                 ServiceHandlerCommand::InstantiateBls { args, .. } => args,
                 ServiceHandlerCommand::InstantiateMirror { args, .. } => args,
@@ -136,14 +134,6 @@ pub enum ServiceManagerCommand {
         wasm_directory: String,
         #[arg(long)]
         contract_kind: ServiceManagerContractKind,
-        #[clap(flatten)]
-        args: CliArgs,
-    },
-
-    /// Instantiate an instance of the mock service manager
-    InstantiateMock {
-        #[arg(long)]
-        code_id: u64,
         #[clap(flatten)]
         args: CliArgs,
     },
@@ -221,15 +211,6 @@ pub enum ServiceHandlerCommand {
         wasm_directory: String,
         #[arg(long)]
         contract_kind: ServiceHandlerContractKind,
-        #[clap(flatten)]
-        args: CliArgs,
-    },
-    /// Instantiate an instance of the mock service handler
-    InstantiateMock {
-        #[arg(long)]
-        code_id: u64,
-        #[arg(long)]
-        service_manager: String,
         #[clap(flatten)]
         args: CliArgs,
     },
@@ -329,7 +310,6 @@ pub enum RegistryCommand {
 #[clap(rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum ServiceHandlerContractKind {
-    Mock,
     Ecdsa,
     Bls,
     Mirror,
@@ -339,7 +319,6 @@ pub enum ServiceHandlerContractKind {
 #[clap(rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum ServiceManagerContractKind {
-    Mock,
     Ecdsa,
     Bls,
     Mirror,
@@ -361,7 +340,6 @@ impl ServiceHandlerContractKind {
 impl std::fmt::Display for ServiceHandlerContractKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ServiceHandlerContractKind::Mock => write!(f, "mock"),
             ServiceHandlerContractKind::Ecdsa => write!(f, "ecdsa"),
             ServiceHandlerContractKind::Bls => write!(f, "bls"),
             ServiceHandlerContractKind::Mirror => write!(f, "mirror"),
@@ -378,7 +356,6 @@ impl ServiceManagerContractKind {
 impl std::fmt::Display for ServiceManagerContractKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ServiceManagerContractKind::Mock => write!(f, "mock"),
             ServiceManagerContractKind::Ecdsa => write!(f, "ecdsa"),
             ServiceManagerContractKind::Bls => write!(f, "bls"),
             ServiceManagerContractKind::Mirror => write!(f, "mirror"),

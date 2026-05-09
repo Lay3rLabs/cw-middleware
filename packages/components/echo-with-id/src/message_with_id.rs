@@ -1,4 +1,4 @@
-use bincode::error::{DecodeError, EncodeError};
+use bincode::error::EncodeError;
 use cosmwasm_std::{HexBinary, Uint64};
 use serde::{Deserialize, Serialize};
 
@@ -11,9 +11,5 @@ pub struct MessageWithId {
 impl MessageWithId {
     pub fn to_bytes(&self) -> Result<Vec<u8>, EncodeError> {
         bincode::serde::encode_to_vec(self, bincode::config::standard())
-    }
-
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, DecodeError> {
-        Ok(bincode::serde::decode_from_slice(bytes, bincode::config::standard())?.0)
     }
 }
