@@ -75,7 +75,30 @@ pub fn execute(
             signing_keys,
             weights,
         } => execute_batch_set_operator_details(deps, _env, info, operators, signing_keys, weights),
+        ExecuteMsg::TransferOwnership { new_owner } => {
+            execute_transfer_ownership(deps, info, new_owner)
+        }
     }
+}
+
+fn execute_transfer_ownership(
+    deps: DepsMut,
+    info: MessageInfo,
+    new_owner: String,
+) -> Result<Response, ContractError> {
+    let owner = OWNER.load(deps.storage)?;
+    if info.sender != owner {
+        return Err(ContractError::Unauthorized {});
+    }
+    let new_owner_addr = deps
+        .api
+        .addr_validate(&new_owner)
+        .map_err(|_| ContractError::Std(StdError::msg("Invalid new_owner address")))?;
+    OWNER.save(deps.storage, &new_owner_addr)?;
+    Ok(Response::new()
+        .add_attribute("method", "transfer_ownership")
+        .add_attribute("old_owner", owner)
+        .add_attribute("new_owner", new_owner_addr))
 }
 
 #[entry_point]

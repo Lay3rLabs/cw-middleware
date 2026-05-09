@@ -56,6 +56,23 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
     match msg {
+        ExecuteMsg::SetAdmin { new_admin } => {
+            let admin = ADMIN.load(deps.storage)?;
+            if info.sender != admin {
+                return Err(StdError::msg(
+                    "Unauthorized: only admin can set admin",
+                ));
+            }
+            let new_admin_addr = deps
+                .api
+                .addr_validate(&new_admin)
+                .map_err(|_| StdError::msg("Invalid new_admin address"))?;
+            ADMIN.save(deps.storage, &new_admin_addr)?;
+            Ok(Response::new()
+                .add_attribute("method", "set_admin")
+                .add_attribute("old_admin", admin)
+                .add_attribute("new_admin", new_admin_addr))
+        }
         ExecuteMsg::Wavs(msg) => match msg {
             ServiceManagerExecuteMessages::WavsSetQuorumThreshold {
                 numerator,

@@ -105,6 +105,7 @@ impl Command {
                 ServiceManagerCommand::SetServiceUri { args, .. } => args,
                 ServiceManagerCommand::GetServiceUri { args, .. } => args,
                 ServiceManagerCommand::SetQuorumThreshold { args, .. } => args,
+                ServiceManagerCommand::SetMirrorAdmin { args, .. } => args,
             },
             Command::ServiceHandler { command } => match command {
                 ServiceHandlerCommand::Upload { args, .. } => args,
@@ -118,6 +119,7 @@ impl Command {
                 RegistryCommand::InstantiateMirrorStake { args, .. } => args,
                 RegistryCommand::GetServiceManager { args, .. } => args,
                 RegistryCommand::SetOperatorSigningKey { args, .. } => args,
+                RegistryCommand::TransferOwnership { args, .. } => args,
             },
             Command::FaucetTap { args, .. } => args,
         }
@@ -223,6 +225,20 @@ pub enum ServiceManagerCommand {
         #[clap(flatten)]
         args: CliArgs,
     },
+
+    /// Mirror only: hand the admin role of a mirror service-manager to a
+    /// new address (typically the mirror-quorum-sync-handler). Resolves
+    /// audit C-5(b) at deploy time.
+    SetMirrorAdmin {
+        /// Service Manager address
+        #[arg(long)]
+        address: String,
+        /// New admin address
+        #[arg(long)]
+        new_admin: String,
+        #[clap(flatten)]
+        args: CliArgs,
+    },
 }
 
 #[derive(Debug, Clone, Subcommand)]
@@ -325,6 +341,20 @@ pub enum RegistryCommand {
         /// Operator weight
         #[arg(long)]
         weight: String,
+        #[clap(flatten)]
+        args: CliArgs,
+    },
+
+    /// Hand the owner role of a mirror stake-registry to a new address
+    /// (typically the mirror-operator-sync-handler). Resolves audit C-5(a)
+    /// at deploy time.
+    TransferOwnership {
+        /// Stake-registry address
+        #[arg(long)]
+        address: String,
+        /// New owner address
+        #[arg(long)]
+        new_owner: String,
         #[clap(flatten)]
         args: CliArgs,
     },

@@ -241,6 +241,24 @@ async fn main() {
                     resp.unchecked_into_tx_response().txhash
                 );
             }
+            ServiceManagerCommand::SetMirrorAdmin {
+                address,
+                new_admin,
+                args: _,
+            } => {
+                let client = ctx.signing_client().await.unwrap();
+                let address = ctx.parse_address(&address).await.unwrap();
+                let resp = client
+                    .contract_execute(
+                        &address,
+                        &cw_wavs_mirror_api::service_manager::ExecuteMsg::SetAdmin { new_admin },
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+                println!("Mirror SetAdmin TX hash: {}", resp.txhash);
+            }
         },
 
         Command::ServiceHandler { command } => match command {
@@ -500,6 +518,26 @@ async fn main() {
                         "Transaction Hash: {}",
                         tx_resp.unchecked_into_tx_response().txhash
                     );
+                }
+                RegistryCommand::TransferOwnership {
+                    address,
+                    new_owner,
+                    args: _,
+                } => {
+                    let client = ctx.signing_client().await.unwrap();
+                    let address = ctx.parse_address(&address).await.unwrap();
+                    let resp = client
+                        .contract_execute(
+                            &address,
+                            &cw_wavs_mirror_api::stake_registry::ExecuteMsg::TransferOwnership {
+                                new_owner,
+                            },
+                            Vec::new(),
+                            None,
+                        )
+                        .await
+                        .unwrap();
+                    println!("Mirror stake-registry TransferOwnership TX hash: {}", resp.txhash);
                 }
             }
         }
