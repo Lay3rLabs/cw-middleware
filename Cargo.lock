@@ -1860,6 +1860,7 @@ dependencies = [
 name = "cw-wavs-bls-service-manager"
 version = "0.0.0"
 dependencies = [
+ "alloy-primitives",
  "anyhow",
  "const-hex",
  "cosmwasm-schema",
@@ -1868,6 +1869,7 @@ dependencies = [
  "cw-wavs-bls-api",
  "cw2",
  "layer-climb-address",
+ "sha3",
  "wavs-types",
 ]
 

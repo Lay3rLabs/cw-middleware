@@ -162,6 +162,18 @@ pub enum ServiceManagerCommand {
     InstantiateBls {
         #[arg(long)]
         code_id: u64,
+        /// Owner address (controls operator set, BLS keys, weights, pause)
+        #[arg(long)]
+        owner: String,
+        /// Admin address (controls quorum threshold + service URI)
+        #[arg(long)]
+        admin: String,
+        /// Optional quorum numerator (default 2)
+        #[arg(long)]
+        quorum_numerator: Option<String>,
+        /// Optional quorum denominator (default 3)
+        #[arg(long)]
+        quorum_denominator: Option<String>,
         #[clap(flatten)]
         args: CliArgs,
     },
