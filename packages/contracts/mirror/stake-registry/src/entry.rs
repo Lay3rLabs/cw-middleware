@@ -192,9 +192,14 @@ fn set_operator_details_at(
     // Update operator weight with block height
     OPERATOR_WEIGHTS.save(deps.storage, operator_key.clone(), &weight, snapshot_height)?;
 
-    // Update total weight
+    // Update total weight (audit H-3 fix: use checked arithmetic so a
+    // corrupted current_weight > total_weight cannot panic the contract).
     let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
-    let new_total_weight = total_weight - current_weight + weight;
+    let new_total_weight = total_weight
+        .checked_sub(current_weight)
+        .map_err(|e| ContractError::Std(StdError::msg(format!("total weight underflow: {e}"))))?
+        .checked_add(weight)
+        .map_err(|e| ContractError::Std(StdError::msg(format!("total weight overflow: {e}"))))?;
     TOTAL_WEIGHT.save(deps.storage, &new_total_weight)?;
 
     // Update signing key mappings
@@ -282,22 +287,24 @@ fn query_validate_signature(
             )));
         }
 
-        // Get operator for this signing key as of reference_block (snapshot)
+        // Get operator for this signing key as of reference_block (snapshot).
+        // Audit H-2 fix: NO fall-back to latest. If a signing key was not
+        // registered at reference_block, the signer is rejected. Falling
+        // back to latest let an operator registered AFTER reference_block
+        // contribute weight to a signature evaluated against the historical
+        // operator set.
         let signing_key_str = signing_key.to_string();
-        // Prefer snapshot at reference block; fall back to latest if no snapshot exists
-        let operator = match SIGNING_KEY_TO_OPERATOR.may_load_at_height(
-            deps.storage,
-            signing_key_str.clone(),
-            signature_data.reference_block as u64,
-        )? {
-            Some(op) => op,
-            None => match SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)? {
-                Some(op) => op,
-                None => {
-                    return Err(StdError::msg("Signer not registered"));
-                }
-            },
-        };
+        let operator = SIGNING_KEY_TO_OPERATOR
+            .may_load_at_height(
+                deps.storage,
+                signing_key_str.clone(),
+                signature_data.reference_block as u64,
+            )?
+            .ok_or_else(|| {
+                StdError::msg(format!(
+                    "Signer not registered at reference_block: {signing_key}"
+                ))
+            })?;
 
         // Verify signature using the signing key (safe index: len equality checked above)
         let signature = &signature_data.signatures[i];
@@ -307,20 +314,18 @@ fn query_validate_signature(
             )));
         }
 
-        // Add operator's weight to voting power (snapshot at reference block)
+        // Add operator's weight to voting power (snapshot at reference block).
+        // Audit H-2 fix: NO fall-back to latest, mirroring the
+        // SIGNING_KEY_TO_OPERATOR lookup above. Without this, an operator
+        // whose weight changed AFTER reference_block could contribute their
+        // post-snapshot weight to a historical envelope.
         let operator_key = operator.to_string();
-        let operator_weight_snapshot = OPERATOR_WEIGHTS.may_load_at_height(
-            deps.storage,
-            operator_key.clone(),
-            signature_data.reference_block as u64,
-        )?;
-        let operator_weight = operator_weight_snapshot
-            .or_else(|| {
-                OPERATOR_WEIGHTS
-                    .may_load(deps.storage, operator_key)
-                    .ok()
-                    .flatten()
-            })
+        let operator_weight = OPERATOR_WEIGHTS
+            .may_load_at_height(
+                deps.storage,
+                operator_key,
+                signature_data.reference_block as u64,
+            )?
             .unwrap_or_default();
         if operator_weight.is_zero() {
             return Err(StdError::msg(format!(
