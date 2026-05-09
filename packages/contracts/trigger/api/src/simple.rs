@@ -1,7 +1,17 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
-use cosmwasm_std::{Empty, HexBinary, Uint64};
+use cosmwasm_std::{HexBinary, Uint64};
 
-pub type InstantiateMsg = Empty;
+/// Configuration for the simple trigger contract. Defaults to a public
+/// message bus (any sender can Push). Pass `allowed_pushers: Some(...)` at
+/// instantiate to restrict pushes to a known address set (audit M-1).
+#[cw_serde]
+#[derive(Default)]
+pub struct InstantiateMsg {
+    /// Optional pusher allowlist. None = public bus (legacy behavior);
+    /// Some([...]) = only those addresses may Push.
+    #[serde(default)]
+    pub allowed_pushers: Option<Vec<String>>,
+}
 
 #[cw_serde]
 #[schemaifier(mute_warnings)]
