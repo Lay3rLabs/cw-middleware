@@ -50,7 +50,7 @@ pub fn instantiate(
         }
     }
     OWNER.save(deps.storage, &info.sender)?;
-    TOTAL_WEIGHT.save(deps.storage, &Uint256::zero())?;
+    TOTAL_WEIGHT.save(deps.storage, &Uint256::zero(), env.block.height)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -223,7 +223,7 @@ fn set_operator_details_at(
         .map_err(|e| ContractError::Std(StdError::msg(format!("total weight underflow: {e}"))))?
         .checked_add(weight)
         .map_err(|e| ContractError::Std(StdError::msg(format!("total weight overflow: {e}"))))?;
-    TOTAL_WEIGHT.save(deps.storage, &new_total_weight)?;
+    TOTAL_WEIGHT.save(deps.storage, &new_total_weight, snapshot_height)?;
 
     // Update signing key mappings
     let current_signing_key =
