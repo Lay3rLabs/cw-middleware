@@ -49,19 +49,12 @@ pub fn instantiate(
 }
 
 #[entry_point]
-pub fn execute(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
-) -> StdResult<Response> {
+pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
         ExecuteMsg::SetAdmin { new_admin } => {
             let admin = ADMIN.load(deps.storage)?;
             if info.sender != admin {
-                return Err(StdError::msg(
-                    "Unauthorized: only admin can set admin",
-                ));
+                return Err(StdError::msg("Unauthorized: only admin can set admin"));
             }
             let new_admin_addr = deps
                 .api
@@ -209,7 +202,12 @@ pub fn wavs_validate(
             voting_power_signed,
             total_voting_power,
             ..
-        }) => validate_quorum(voting_power_signed, total_voting_power, reference_block, &deps),
+        }) => validate_quorum(
+            voting_power_signed,
+            total_voting_power,
+            reference_block,
+            &deps,
+        ),
         Err(e) => Ok(e),
     }
 }

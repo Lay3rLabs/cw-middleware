@@ -66,12 +66,7 @@ pub fn instantiate(
 }
 
 #[entry_point]
-pub fn execute(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
-) -> StdResult<Response> {
+pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
         ExecuteMsg::RegisterOperator {
             operator,
@@ -205,12 +200,7 @@ fn execute_register_operator(
         &bls_pubkey,
         snapshot_height,
     )?;
-    OPERATOR_TO_BLS_KEY_ID.save(
-        deps.storage,
-        operator_key.clone(),
-        &key_id,
-        snapshot_height,
-    )?;
+    OPERATOR_TO_BLS_KEY_ID.save(deps.storage, operator_key.clone(), &key_id, snapshot_height)?;
     BLS_KEY_ID_TO_OPERATOR.save(
         deps.storage,
         key_id_str.clone(),
@@ -346,9 +336,7 @@ fn execute_update_operator_bls_pubkey(
     let new_key_id = bls_key_id(new_bls_pubkey.as_slice())?;
     let new_key_id_str = new_key_id.to_string();
 
-    if let Some(existing) =
-        BLS_KEY_ID_TO_OPERATOR.may_load(deps.storage, new_key_id_str.clone())?
-    {
+    if let Some(existing) = BLS_KEY_ID_TO_OPERATOR.may_load(deps.storage, new_key_id_str.clone())? {
         if existing != operator_addr {
             return Err(StdError::msg("BLS key id already in use"));
         }
@@ -428,11 +416,7 @@ fn execute_accept_ownership(deps: DepsMut, info: MessageInfo) -> StdResult<Respo
         .add_attribute("owner", pending))
 }
 
-fn execute_set_admin(
-    deps: DepsMut,
-    info: MessageInfo,
-    new_admin: String,
-) -> StdResult<Response> {
+fn execute_set_admin(deps: DepsMut, info: MessageInfo, new_admin: String) -> StdResult<Response> {
     ensure_admin(deps.as_ref(), &info)?;
     let new_admin_addr = deps.api.addr_validate(&new_admin)?;
     PENDING_ADMIN.save(deps.storage, &new_admin_addr)?;
@@ -547,11 +531,10 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             ServiceManagerQueryMessages::WavsQuorumThreshold {} => {
                 let numerator = QUORUM_NUMERATOR.load(deps.storage)?;
                 let denominator = QUORUM_DENOMINATOR.load(deps.storage)?;
-                let threshold =
-                    wavs_types::contracts::cosmwasm::service_manager::QuorumThreshold {
-                        numerator,
-                        denominator,
-                    };
+                let threshold = wavs_types::contracts::cosmwasm::service_manager::QuorumThreshold {
+                    numerator,
+                    denominator,
+                };
                 to_json_binary(&threshold)
             }
             ServiceManagerQueryMessages::WavsOperatorWeight { operator_address } => {
@@ -573,9 +556,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 to_json_binary(&result)
             }
             ServiceManagerQueryMessages::WavsServiceUri {} => {
-                let uri = SERVICE_URI
-                    .may_load(deps.storage)?
-                    .unwrap_or_default();
+                let uri = SERVICE_URI.may_load(deps.storage)?.unwrap_or_default();
                 to_json_binary(&uri)
             }
             ServiceManagerQueryMessages::WavsLatestOperatorForSigningKey { signing_key_addr } => {
@@ -601,9 +582,9 @@ fn wavs_validate(
     signature_data: WavsSignatureData,
 ) -> StdResult<WavsValidateResult> {
     if PAUSED.load(deps.storage)? {
-        return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-            "contract is paused".to_string(),
-        )));
+        return Ok(WavsValidateResult::Err(
+            WavsValidateError::InvalidSignature("contract is paused".to_string()),
+        ));
     }
 
     if signature_data.signers.is_empty() {
@@ -612,21 +593,21 @@ fn wavs_validate(
         ));
     }
     if signature_data.signatures.len() != 1 {
-        return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-            format!(
+        return Ok(WavsValidateResult::Err(
+            WavsValidateError::InvalidSignature(format!(
                 "BLS expects 1 aggregate signature, got {}",
                 signature_data.signatures.len()
-            ),
-        )));
+            )),
+        ));
     }
     let aggregate_sig = &signature_data.signatures[0];
     if aggregate_sig.len() != G2_COMPRESSED_LEN {
-        return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-            format!(
+        return Ok(WavsValidateResult::Err(
+            WavsValidateError::InvalidSignature(format!(
                 "aggregate signature must be {G2_COMPRESSED_LEN} bytes (compressed G2), got {}",
                 aggregate_sig.len()
-            ),
-        )));
+            )),
+        ));
     }
 
     let reference_block = signature_data.reference_block as u64;
@@ -657,20 +638,22 @@ fn wavs_validate(
     for signer_id in &signature_data.signers {
         let id_bytes: [u8; 20] = signer_id.as_bytes();
         if id_bytes.iter().all(|b| *b == 0) {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                "BLS-key id is zero".to_string(),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature("BLS-key id is zero".to_string()),
+            ));
         }
         if !seen.insert(id_bytes) {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("duplicate BLS-key id: {signer_id}"),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature(format!("duplicate BLS-key id: {signer_id}")),
+            ));
         }
         if let Some(prev) = last_id {
             if id_bytes <= prev {
-                return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                    "BLS-key ids must be strictly sorted ascending".to_string(),
-                )));
+                return Ok(WavsValidateResult::Err(
+                    WavsValidateError::InvalidSignature(
+                        "BLS-key ids must be strictly sorted ascending".to_string(),
+                    ),
+                ));
             }
         }
         last_id = Some(id_bytes);
@@ -683,9 +666,11 @@ fn wavs_validate(
         )? {
             Some(op) => op,
             None => {
-                return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                    format!("BLS-key id {signer_id} not registered at reference_block"),
-                )));
+                return Ok(WavsValidateResult::Err(
+                    WavsValidateError::InvalidSignature(format!(
+                        "BLS-key id {signer_id} not registered at reference_block"
+                    )),
+                ));
             }
         };
 
@@ -696,15 +681,19 @@ fn wavs_validate(
         )? {
             Some(pk) => pk,
             None => {
-                return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                    format!("operator {operator} has no pubkey at reference_block"),
-                )));
+                return Ok(WavsValidateResult::Err(
+                    WavsValidateError::InvalidSignature(format!(
+                        "operator {operator} has no pubkey at reference_block"
+                    )),
+                ));
             }
         };
         if pubkey.len() != G1_COMPRESSED_LEN {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("operator {operator} pubkey wrong length"),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature(format!(
+                    "operator {operator} pubkey wrong length"
+                )),
+            ));
         }
         concatenated_pubkeys.extend_from_slice(pubkey.as_slice());
 
@@ -712,9 +701,11 @@ fn wavs_validate(
             .may_load_at_height(deps.storage, operator.to_string(), reference_block)?
             .unwrap_or_default();
         if operator_weight.is_zero() {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("operator {operator} has zero weight at reference_block"),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature(format!(
+                    "operator {operator} has zero weight at reference_block"
+                )),
+            ));
         }
         signed_weight = signed_weight
             .checked_add(operator_weight)
@@ -725,25 +716,26 @@ fn wavs_validate(
     let aggregated_pubkey = match deps.api.bls12_381_aggregate_g1(&concatenated_pubkeys) {
         Ok(pk) => pk,
         Err(e) => {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("g1 aggregation failed: {e}"),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature(format!("g1 aggregation failed: {e}")),
+            ));
         }
     };
 
     // Hash the envelope to G2 with the locked-in DST. Off-chain signers
     // must use the same DST byte-for-byte: see audit Decision #7.
-    let message_g2 = match deps
-        .api
-        .bls12_381_hash_to_g2(HashFunction::Sha256, envelope.as_slice(), DST)
-    {
-        Ok(p) => p,
-        Err(e) => {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("hash_to_g2 failed: {e}"),
-            )));
-        }
-    };
+    let message_g2 =
+        match deps
+            .api
+            .bls12_381_hash_to_g2(HashFunction::Sha256, envelope.as_slice(), DST)
+        {
+            Ok(p) => p,
+            Err(e) => {
+                return Ok(WavsValidateResult::Err(
+                    WavsValidateError::InvalidSignature(format!("hash_to_g2 failed: {e}")),
+                ));
+            }
+        };
 
     // Pairing equality: e(G1::generator, sig) == e(aggregated_pubkey, H(m)).
     // Per cosmwasm-std doc: bls12_381_pairing_equality(ps, qs, r, s)
@@ -756,15 +748,17 @@ fn wavs_validate(
     ) {
         Ok(v) => v,
         Err(e) => {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("pairing equality failed: {e}"),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature(format!("pairing equality failed: {e}")),
+            ));
         }
     };
     if !valid {
-        return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-            "aggregate signature failed pairing check".to_string(),
-        )));
+        return Ok(WavsValidateResult::Err(
+            WavsValidateError::InvalidSignature(
+                "aggregate signature failed pairing check".to_string(),
+            ),
+        ));
     }
 
     let lhs = Uint512::from(signed_weight) * Uint512::from(denominator);

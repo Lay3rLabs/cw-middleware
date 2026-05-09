@@ -49,9 +49,7 @@ pub fn execute(
             // public-bus behavior is preserved when ALLOWED_PUSHERS is None.
             if let Some(allowlist) = state::ALLOWED_PUSHERS.may_load(deps.storage)?.flatten() {
                 if !allowlist.contains(&info.sender) {
-                    return Err(StdError::msg(
-                        "Unauthorized: sender not in allowed_pushers",
-                    ));
+                    return Err(StdError::msg("Unauthorized: sender not in allowed_pushers"));
                 }
             }
 

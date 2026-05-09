@@ -61,12 +61,7 @@ pub fn instantiate(
 }
 
 #[entry_point]
-pub fn execute(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    msg: ExecuteMsg,
-) -> StdResult<Response> {
+pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> StdResult<Response> {
     match msg {
         ExecuteMsg::RegisterOperator {
             operator,
@@ -328,11 +323,7 @@ fn execute_update_operator_signing_key(
         return Err(StdError::msg("signing key unchanged"));
     }
 
-    SIGNING_KEY_TO_OPERATOR.remove(
-        deps.storage,
-        old_signing_key.to_string(),
-        snapshot_height,
-    )?;
+    SIGNING_KEY_TO_OPERATOR.remove(deps.storage, old_signing_key.to_string(), snapshot_height)?;
     OPERATOR_TO_SIGNING_KEY.save(
         deps.storage,
         operator_key.clone(),
@@ -388,11 +379,7 @@ fn execute_accept_ownership(deps: DepsMut, info: MessageInfo) -> StdResult<Respo
         .add_attribute("owner", pending))
 }
 
-fn execute_set_admin(
-    deps: DepsMut,
-    info: MessageInfo,
-    new_admin: String,
-) -> StdResult<Response> {
+fn execute_set_admin(deps: DepsMut, info: MessageInfo, new_admin: String) -> StdResult<Response> {
     ensure_admin(deps.as_ref(), &info)?;
     let new_admin_addr = deps.api.addr_validate(&new_admin)?;
     PENDING_ADMIN.save(deps.storage, &new_admin_addr)?;
@@ -510,18 +497,16 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             ServiceManagerQueryMessages::WavsQuorumThreshold {} => {
                 let numerator = QUORUM_NUMERATOR.load(deps.storage)?;
                 let denominator = QUORUM_DENOMINATOR.load(deps.storage)?;
-                let threshold =
-                    wavs_types::contracts::cosmwasm::service_manager::QuorumThreshold {
-                        numerator,
-                        denominator,
-                    };
+                let threshold = wavs_types::contracts::cosmwasm::service_manager::QuorumThreshold {
+                    numerator,
+                    denominator,
+                };
                 to_json_binary(&threshold)
             }
             ServiceManagerQueryMessages::WavsOperatorWeight { operator_address } => {
                 // For ECDSA standalone, operator_address is interpreted as the signing key.
                 let signing_key_str = operator_address.to_string();
-                let operator =
-                    SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)?;
+                let operator = SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)?;
                 let weight = match operator {
                     Some(op) => OPERATOR_WEIGHTS
                         .may_load(deps.storage, op.to_string())?
@@ -538,15 +523,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
                 to_json_binary(&result)
             }
             ServiceManagerQueryMessages::WavsServiceUri {} => {
-                let uri = SERVICE_URI
-                    .may_load(deps.storage)?
-                    .unwrap_or_default();
+                let uri = SERVICE_URI.may_load(deps.storage)?.unwrap_or_default();
                 to_json_binary(&uri)
             }
             ServiceManagerQueryMessages::WavsLatestOperatorForSigningKey { signing_key_addr } => {
                 let signing_key_str = signing_key_addr.to_string();
-                let operator =
-                    SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)?;
+                let operator = SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)?;
                 // Convert Addr -> EvmAddr-shape isn't applicable here (operators are
                 // CW addresses); return None for non-EVM operators. This query is
                 // primarily meaningful for the mirror family.
@@ -565,9 +547,9 @@ fn wavs_validate(
     signature_data: WavsSignatureData,
 ) -> StdResult<WavsValidateResult> {
     if PAUSED.load(deps.storage)? {
-        return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-            "contract is paused".to_string(),
-        )));
+        return Ok(WavsValidateResult::Err(
+            WavsValidateError::InvalidSignature("contract is paused".to_string()),
+        ));
     }
 
     if signature_data.signers.is_empty()
@@ -603,14 +585,16 @@ fn wavs_validate(
 
     for (i, signing_key) in signature_data.signers.iter().enumerate() {
         if signing_key_is_zero(signing_key) {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                "signing key is zero".to_string(),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature("signing key is zero".to_string()),
+            ));
         }
         if !seen.insert(signing_key.as_bytes()) {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("duplicate signing key: {signing_key}"),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature(format!(
+                    "duplicate signing key: {signing_key}"
+                )),
+            ));
         }
 
         let signing_key_str = signing_key.to_string();
@@ -625,9 +609,11 @@ fn wavs_validate(
         )? {
             Some(op) => op,
             None => {
-                return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                    format!("signer not registered at reference_block: {signing_key}"),
-                )));
+                return Ok(WavsValidateResult::Err(
+                    WavsValidateError::InvalidSignature(format!(
+                        "signer not registered at reference_block: {signing_key}"
+                    )),
+                ));
             }
         };
 
@@ -635,14 +621,16 @@ fn wavs_validate(
         match is_valid_signature(deps, &envelope, signature, signing_key) {
             Ok(true) => {}
             Ok(false) => {
-                return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                    format!("invalid signature from {signing_key}"),
-                )));
+                return Ok(WavsValidateResult::Err(
+                    WavsValidateError::InvalidSignature(format!(
+                        "invalid signature from {signing_key}"
+                    )),
+                ));
             }
             Err(e) => {
-                return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                    e.to_string(),
-                )));
+                return Ok(WavsValidateResult::Err(
+                    WavsValidateError::InvalidSignature(e.to_string()),
+                ));
             }
         }
 
@@ -650,9 +638,11 @@ fn wavs_validate(
             .may_load_at_height(deps.storage, operator.to_string(), reference_block)?
             .unwrap_or_default();
         if operator_weight.is_zero() {
-            return Ok(WavsValidateResult::Err(WavsValidateError::InvalidSignature(
-                format!("operator {operator} has zero weight at reference_block"),
-            )));
+            return Ok(WavsValidateResult::Err(
+                WavsValidateError::InvalidSignature(format!(
+                    "operator {operator} has zero weight at reference_block"
+                )),
+            ));
         }
         signed_weight = signed_weight
             .checked_add(operator_weight)

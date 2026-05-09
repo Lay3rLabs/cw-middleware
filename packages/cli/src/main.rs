@@ -537,7 +537,10 @@ async fn main() {
                         )
                         .await
                         .unwrap();
-                    println!("Mirror stake-registry TransferOwnership TX hash: {}", resp.txhash);
+                    println!(
+                        "Mirror stake-registry TransferOwnership TX hash: {}",
+                        resp.txhash
+                    );
                 }
             }
         }

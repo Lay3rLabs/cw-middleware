@@ -85,7 +85,9 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
             BlsServiceHandlerQueryMessages::TriggerMessage { trigger_id } => {
                 let message = state::TRIGGER_MESSAGE
                     .may_load(deps.storage, trigger_id)?
-                    .ok_or_else(|| StdError::msg(format!("no message for trigger_id {trigger_id}")))?;
+                    .ok_or_else(|| {
+                        StdError::msg(format!("no message for trigger_id {trigger_id}"))
+                    })?;
                 to_json_binary(&TriggerMessageResponse { message })
             }
             BlsServiceHandlerQueryMessages::SignatureData { trigger_id } => {

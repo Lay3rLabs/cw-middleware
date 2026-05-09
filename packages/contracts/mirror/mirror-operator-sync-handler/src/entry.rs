@@ -66,7 +66,9 @@ pub fn execute(
                     } else {
                         ensure!(
                             triggerId <= MAX_TRIGGER_ID_GAP,
-                            StdError::msg("Invalid trigger id: initial value exceeds MAX_TRIGGER_ID_GAP")
+                            StdError::msg(
+                                "Invalid trigger id: initial value exceeds MAX_TRIGGER_ID_GAP"
+                            )
                         );
                         LAST_TRIGGER_ID.save(deps.storage, &triggerId)?;
                     }
