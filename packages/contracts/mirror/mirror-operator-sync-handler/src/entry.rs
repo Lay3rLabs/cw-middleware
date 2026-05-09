@@ -45,14 +45,29 @@ pub fn execute(
                     let decoded_envelope = envelope.decode()?;
                     let UpdateWithId { triggerId, thresholdWeight: _, operators, signingKeyAddresses, weights } = cw_wavs_mirror_api::update_with_id::IMirrorOperatorSyncHandler::UpdateWithId::abi_decode(&decoded_envelope.payload)?;
 
-                    // Validate trigger id
+                    // Validate trigger id (audit H-5 fix: bound the
+                    // monotonicity check by MAX_TRIGGER_ID_GAP so a
+                    // malicious or buggy operator quorum that submits
+                    // triggerId == u64::MAX cannot brick all future
+                    // updates. 2^48 leaves headroom for ~280 trillion
+                    // events while rejecting sentinel values like
+                    // u64::MAX or u64::MAX - small_n).
+                    const MAX_TRIGGER_ID_GAP: u64 = 1u64 << 48;
                     if let Some(last_trigger_id) = LAST_TRIGGER_ID.may_load(deps.storage)? {
                         ensure!(
                             last_trigger_id < triggerId,
-                            StdError::msg("Invalid trigger id")
+                            StdError::msg("Invalid trigger id: not strictly greater than last")
+                        );
+                        ensure!(
+                            triggerId.saturating_sub(last_trigger_id) <= MAX_TRIGGER_ID_GAP,
+                            StdError::msg("Invalid trigger id: gap exceeds MAX_TRIGGER_ID_GAP")
                         );
                         LAST_TRIGGER_ID.save(deps.storage, &triggerId)?;
                     } else {
+                        ensure!(
+                            triggerId <= MAX_TRIGGER_ID_GAP,
+                            StdError::msg("Invalid trigger id: initial value exceeds MAX_TRIGGER_ID_GAP")
+                        );
                         LAST_TRIGGER_ID.save(deps.storage, &triggerId)?;
                     }
 

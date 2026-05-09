@@ -50,14 +50,25 @@ pub fn execute(
                         denominator,
                     } = UpdateWithId::abi_decode(&decoded_envelope.payload)?;
 
-                    // Validate trigger id
+                    // Validate trigger id (audit H-5 fix: bound the
+                    // monotonicity check by MAX_TRIGGER_ID_GAP. See
+                    // mirror-operator-sync-handler for rationale.)
+                    const MAX_TRIGGER_ID_GAP: u64 = 1u64 << 48;
                     if let Some(last_trigger_id) = LAST_TRIGGER_ID.may_load(deps.storage)? {
                         ensure!(
                             last_trigger_id < triggerId,
-                            StdError::msg("Invalid trigger id")
+                            StdError::msg("Invalid trigger id: not strictly greater than last")
+                        );
+                        ensure!(
+                            triggerId.saturating_sub(last_trigger_id) <= MAX_TRIGGER_ID_GAP,
+                            StdError::msg("Invalid trigger id: gap exceeds MAX_TRIGGER_ID_GAP")
                         );
                         LAST_TRIGGER_ID.save(deps.storage, &triggerId)?;
                     } else {
+                        ensure!(
+                            triggerId <= MAX_TRIGGER_ID_GAP,
+                            StdError::msg("Invalid trigger id: initial value exceeds MAX_TRIGGER_ID_GAP")
+                        );
                         LAST_TRIGGER_ID.save(deps.storage, &triggerId)?;
                     }
 
