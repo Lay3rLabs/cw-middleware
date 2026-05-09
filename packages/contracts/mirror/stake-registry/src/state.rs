@@ -1,6 +1,6 @@
 use cosmwasm_schema::cw_serde;
 use cosmwasm_std::{Addr, Uint256};
-use cw_storage_plus::{Item, Map, SnapshotMap, Strategy};
+use cw_storage_plus::{Item, Map, SnapshotItem, SnapshotMap, Strategy};
 use layer_climb_address::EvmAddr;
 
 // Contract configuration
@@ -28,8 +28,13 @@ pub const SIGNING_KEY_TO_OPERATOR: SnapshotMap<String, EvmAddr> = SnapshotMap::n
 );
 pub const OPERATOR_REGISTERED: Map<String, bool> = Map::new("operator_registered");
 
-// Weight tracking
-pub const TOTAL_WEIGHT: Item<Uint256> = Item::new("total_weight");
+// Weight tracking with historical checkpoints for validating historical signature sets.
+pub const TOTAL_WEIGHT: SnapshotItem<Uint256> = SnapshotItem::new(
+    "total_weight",
+    "total_weight__checkpoints",
+    "total_weight__changelog",
+    Strategy::EveryBlock,
+);
 
 #[cw_serde]
 pub struct Config {

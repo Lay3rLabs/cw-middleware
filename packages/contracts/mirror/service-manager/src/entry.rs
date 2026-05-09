@@ -229,14 +229,6 @@ fn validate_quorum(
         .may_load_at_height(deps.storage, reference_block)?
         .ok_or_else(|| StdError::msg("quorum denominator missing at reference_block"))?;
 
-    // Calculate threshold weight: (total_weight * numerator) / denominator
-    let threshold_weight =
-        total_weight.full_mul(numerator) / cosmwasm_std::Uint512::from(denominator);
-    // Convert threshold_weight from Uint512 to Uint256 (safely)
-    let threshold_weight = threshold_weight
-        .try_into()
-        .unwrap_or(cosmwasm_std::Uint256::MAX);
-
     // Avoid 0 weight ever passing this check
     if total_weight.is_zero() {
         return Ok(WavsValidateResult::Err(
@@ -244,8 +236,14 @@ fn validate_quorum(
         ));
     }
 
-    // Check if signed_weight >= threshold_weight
-    if signed_weight < threshold_weight {
+    // Quorum check via cross multiplication to avoid floor-rounding the
+    // threshold. Integer division would allow under-quorum signatures for
+    // non-divisible totals, e.g. 1 of 2 passing a 2/3 threshold.
+    let lhs = cosmwasm_std::Uint512::from(signed_weight) * cosmwasm_std::Uint512::from(denominator);
+    let rhs = cosmwasm_std::Uint512::from(total_weight) * cosmwasm_std::Uint512::from(numerator);
+    if lhs < rhs {
+        let threshold = total_weight.full_mul(numerator) / cosmwasm_std::Uint512::from(denominator);
+        let threshold_weight = threshold.try_into().unwrap_or(cosmwasm_std::Uint256::MAX);
         return Ok(WavsValidateResult::Err(
             WavsValidateError::InsufficientQuorum {
                 signer_weight: signed_weight,

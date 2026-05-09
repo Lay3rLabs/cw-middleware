@@ -50,7 +50,7 @@ pub fn instantiate(
         }
     }
     OWNER.save(deps.storage, &info.sender)?;
-    TOTAL_WEIGHT.save(deps.storage, &Uint256::zero())?;
+    TOTAL_WEIGHT.save(deps.storage, &Uint256::zero(), env.block.height)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -223,7 +223,7 @@ fn set_operator_details_at(
         .map_err(|e| ContractError::Std(StdError::msg(format!("total weight underflow: {e}"))))?
         .checked_add(weight)
         .map_err(|e| ContractError::Std(StdError::msg(format!("total weight overflow: {e}"))))?;
-    TOTAL_WEIGHT.save(deps.storage, &new_total_weight)?;
+    TOTAL_WEIGHT.save(deps.storage, &new_total_weight, snapshot_height)?;
 
     // Update signing key mappings
     let current_signing_key =
@@ -277,7 +277,10 @@ fn query_validate_signature(
     envelope: WavsEnvelope,
     signature_data: WavsSignatureData,
 ) -> StdResult<ValidationResult> {
-    let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
+    let reference_block = signature_data.reference_block as u64;
+    let total_weight = TOTAL_WEIGHT
+        .may_load_at_height(deps.storage, reference_block)?
+        .unwrap_or_default();
     let mut voting_power_signed = Uint256::zero();
 
     // Basic sanity checks to avoid panics and invalid data
@@ -318,11 +321,7 @@ fn query_validate_signature(
         // operator set.
         let signing_key_str = signing_key.to_string();
         let operator = SIGNING_KEY_TO_OPERATOR
-            .may_load_at_height(
-                deps.storage,
-                signing_key_str.clone(),
-                signature_data.reference_block as u64,
-            )?
+            .may_load_at_height(deps.storage, signing_key_str.clone(), reference_block)?
             .ok_or_else(|| {
                 StdError::msg(format!(
                     "Signer not registered at reference_block: {signing_key}"
@@ -344,11 +343,7 @@ fn query_validate_signature(
         // post-snapshot weight to a historical envelope.
         let operator_key = operator.to_string();
         let operator_weight = OPERATOR_WEIGHTS
-            .may_load_at_height(
-                deps.storage,
-                operator_key,
-                signature_data.reference_block as u64,
-            )?
+            .may_load_at_height(deps.storage, operator_key, reference_block)?
             .unwrap_or_default();
         if operator_weight.is_zero() {
             return Err(StdError::msg(format!(
