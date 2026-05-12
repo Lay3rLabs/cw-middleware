@@ -2028,7 +2028,7 @@ dependencies = [
 
 [[package]]
 name = "cw-wavs-sdk"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
@@ -2283,7 +2283,7 @@ dependencies = [
 
 [[package]]
 name = "echo-with-id"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "bincode",
@@ -5154,7 +5154,7 @@ dependencies = [
 
 [[package]]
 name = "simple-aggregator"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "bincode",
@@ -6115,7 +6115,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "utils"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6177,7 +6177,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version-pins"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "alloy-consensus",
  "alloy-consensus-any",
@@ -6391,7 +6391,7 @@ dependencies = [
 
 [[package]]
 name = "wavs-cosmos-cli"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
