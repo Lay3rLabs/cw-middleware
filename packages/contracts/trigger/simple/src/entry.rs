@@ -1,13 +1,12 @@
 use cosmwasm_std::{
-    entry_point, to_json_binary, Deps, DepsMut, Empty, Env, MessageInfo, QueryResponse, Response,
-    StdResult, Uint64,
+    entry_point, to_json_binary, Deps, DepsMut, Env, MessageInfo, QueryResponse, Response,
+    StdError, StdResult, Uint64,
 };
 use cw2::set_contract_version;
 
 use crate::state;
-use cw_wavs_trigger_api::simple::{ExecuteMsg, PushMessageEvent, QueryMsg};
+use cw_wavs_trigger_api::simple::{ExecuteMsg, InstantiateMsg, PushMessageEvent, QueryMsg};
 
-// version info for migration info
 const CONTRACT_NAME: &str = env!("CARGO_PKG_NAME");
 const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -16,9 +15,23 @@ pub fn instantiate(
     deps: DepsMut,
     _env: Env,
     _info: MessageInfo,
-    _msg: Empty,
+    msg: InstantiateMsg,
 ) -> StdResult<Response> {
     set_contract_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+
+    // Audit M-1: optional pusher allowlist. None = legacy public-bus
+    // behavior. Validation surfaces invalid addresses at instantiate.
+    let allowed_pushers = match msg.allowed_pushers {
+        Some(list) => {
+            let mut validated = Vec::with_capacity(list.len());
+            for s in list {
+                validated.push(deps.api.addr_validate(&s)?);
+            }
+            Some(validated)
+        }
+        None => None,
+    };
+    state::ALLOWED_PUSHERS.save(deps.storage, &allowed_pushers)?;
 
     Ok(Response::default())
 }
@@ -27,15 +40,24 @@ pub fn instantiate(
 pub fn execute(
     deps: DepsMut,
     _env: Env,
-    _info: MessageInfo,
+    info: MessageInfo,
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
     match msg {
         ExecuteMsg::Push { data } => {
+            // Audit M-1: enforce pusher allowlist if configured. The legacy
+            // public-bus behavior is preserved when ALLOWED_PUSHERS is None.
+            if let Some(allowlist) = state::ALLOWED_PUSHERS.may_load(deps.storage)?.flatten() {
+                if !allowlist.contains(&info.sender) {
+                    return Err(StdError::msg("Unauthorized: sender not in allowed_pushers"));
+                }
+            }
+
             let trigger_id: u64 = state::TRIGGER_MESSAGE_COUNT
                 .may_load(deps.storage)?
                 .unwrap_or_default()
-                + 1;
+                .checked_add(1)
+                .ok_or_else(|| StdError::msg("trigger_id counter exhausted"))?;
 
             state::TRIGGER_MESSAGE_COUNT.save(deps.storage, &trigger_id)?;
 
@@ -54,5 +76,58 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
         QueryMsg::TriggerMessage { trigger_id } => {
             to_json_binary(&state::TRIGGER_MESSAGES.load(deps.storage, trigger_id)?)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::{
+        testing::{mock_dependencies, mock_env},
+        Addr, HexBinary, MessageInfo, Uint64,
+    };
+
+    use super::*;
+
+    #[test]
+    fn push_fails_without_state_change_when_trigger_id_counter_exhausted() {
+        let mut deps = mock_dependencies();
+
+        instantiate(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked("creator"),
+                funds: vec![],
+            },
+            InstantiateMsg::default(),
+        )
+        .unwrap();
+
+        state::TRIGGER_MESSAGE_COUNT
+            .save(deps.as_mut().storage, &u64::MAX)
+            .unwrap();
+
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked("pusher"),
+                funds: vec![],
+            },
+            ExecuteMsg::Push {
+                data: HexBinary::from(vec![1, 2, 3]),
+            },
+        )
+        .unwrap_err();
+
+        assert!(err.to_string().contains("trigger_id counter exhausted"));
+        assert_eq!(
+            state::TRIGGER_MESSAGE_COUNT
+                .load(deps.as_ref().storage)
+                .unwrap(),
+            u64::MAX
+        );
+        assert!(!state::TRIGGER_MESSAGES.has(deps.as_ref().storage, Uint64::new(0)));
+        assert!(!state::TRIGGER_MESSAGES.has(deps.as_ref().storage, Uint64::new(u64::MAX)));
     }
 }

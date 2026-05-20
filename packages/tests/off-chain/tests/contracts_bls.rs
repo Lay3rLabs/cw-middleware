@@ -1,3 +1,5 @@
+#![recursion_limit = "512"]
+
 use off_chain_tests::client::{
     bls::BlsTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };

@@ -11,11 +11,11 @@ use layer_climb_address::EvmAddr;
 use rand::thread_rng;
 use wavs_types::contracts::cosmwasm::service_handler::{WavsEnvelope, WavsSignatureData};
 
-fn create_eip191_hash(message: &[u8]) -> B256 {
+pub fn create_eip191_hash(message: &[u8]) -> B256 {
     eip191_hash_message(alloy_keccak256(message))
 }
 
-fn create_signing_key_and_address() -> (SigningKey, EvmAddr) {
+pub fn create_signing_key_and_address() -> (SigningKey, EvmAddr) {
     let signing_key = SigningKey::random(&mut thread_rng());
     let eth_address = derive_eth_address_from_signing_key(&signing_key);
     (signing_key, eth_address)
@@ -34,7 +34,7 @@ fn derive_eth_address_from_signing_key(signing_key: &SigningKey) -> EvmAddr {
     EvmAddr::new(addr_bytes)
 }
 
-fn sign_message_hash(signing_key: &SigningKey, message_hash: &[u8]) -> Vec<u8> {
+pub fn sign_message_hash(signing_key: &SigningKey, message_hash: &[u8]) -> Vec<u8> {
     let signature: Signature = signing_key.sign_prehash(message_hash).unwrap();
     let (r, s) = signature.split_bytes();
 
@@ -151,7 +151,7 @@ pub async fn run_mirror_sanity_tests(
     let signature_data = WavsSignatureData {
         signers,
         signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     // Test signature validation
@@ -161,7 +161,7 @@ pub async fn run_mirror_sanity_tests(
         .unwrap();
 
     assert_eq!(
-        result.reference_block, 12345,
+        result.reference_block, 999_999,
         "Reference block should match"
     );
     assert!(
@@ -216,7 +216,7 @@ pub async fn run_mirror_abi_signature_validation_test(
     let signature_data = WavsSignatureData {
         signers,
         signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     // Test signature validation
@@ -227,7 +227,7 @@ pub async fn run_mirror_abi_signature_validation_test(
 
     // Verify the validation results
     assert_eq!(
-        result.reference_block, 12345,
+        result.reference_block, 999_999,
         "Reference block should match"
     );
     assert_eq!(
@@ -423,7 +423,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     let signature_data = WavsSignatureData {
         signers,
         signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     querier
@@ -449,7 +449,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     let eth_signature_data = WavsSignatureData {
         signers: eth_signers,
         signatures: eth_signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     // This must use raw prehash
@@ -468,7 +468,7 @@ pub async fn run_mirror_ethereum_recovery_id_test(
     let invalid_signature_data = WavsSignatureData {
         signers: invalid_signers,
         signatures: invalid_signatures,
-        reference_block: 12345u32,
+        reference_block: 999_999u32,
     };
 
     let invalid_result = querier

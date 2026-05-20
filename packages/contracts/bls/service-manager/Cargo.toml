@@ -11,9 +11,11 @@ crate-type = ["cdylib", "rlib"]
 cw-wavs-bls-api= { workspace = true }
 wavs-types = { workspace = true }
 layer-climb-address = { workspace = true }
-cosmwasm-std = {workspace = true}
+cosmwasm-std = { workspace = true }
 anyhow = {workspace = true}
 cw-storage-plus = {workspace = true}
 cw2 = {workspace = true}
 cosmwasm-schema = {workspace = true}
 const-hex = {workspace = true}
+alloy-primitives = { workspace = true }
+sha3 = "0.10.8"

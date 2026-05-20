@@ -99,17 +99,16 @@ impl Command {
             Command::Contract { args, .. } => args,
             Command::ServiceManager { command } => match command {
                 ServiceManagerCommand::Upload { args, .. } => args,
-                ServiceManagerCommand::InstantiateMock { args, .. } => args,
                 ServiceManagerCommand::InstantiateEcdsa { args, .. } => args,
                 ServiceManagerCommand::InstantiateBls { args, .. } => args,
                 ServiceManagerCommand::InstantiateMirror { args, .. } => args,
                 ServiceManagerCommand::SetServiceUri { args, .. } => args,
                 ServiceManagerCommand::GetServiceUri { args, .. } => args,
                 ServiceManagerCommand::SetQuorumThreshold { args, .. } => args,
+                ServiceManagerCommand::SetMirrorAdmin { args, .. } => args,
             },
             Command::ServiceHandler { command } => match command {
                 ServiceHandlerCommand::Upload { args, .. } => args,
-                ServiceHandlerCommand::InstantiateMock { args, .. } => args,
                 ServiceHandlerCommand::InstantiateEcdsa { args, .. } => args,
                 ServiceHandlerCommand::InstantiateBls { args, .. } => args,
                 ServiceHandlerCommand::InstantiateMirror { args, .. } => args,
@@ -120,6 +119,7 @@ impl Command {
                 RegistryCommand::InstantiateMirrorStake { args, .. } => args,
                 RegistryCommand::GetServiceManager { args, .. } => args,
                 RegistryCommand::SetOperatorSigningKey { args, .. } => args,
+                RegistryCommand::TransferOwnership { args, .. } => args,
             },
             Command::FaucetTap { args, .. } => args,
         }
@@ -140,18 +140,22 @@ pub enum ServiceManagerCommand {
         args: CliArgs,
     },
 
-    /// Instantiate an instance of the mock service manager
-    InstantiateMock {
-        #[arg(long)]
-        code_id: u64,
-        #[clap(flatten)]
-        args: CliArgs,
-    },
-
-    /// Instantiate an instance of the ecdsa aservice manager
+    /// Instantiate an instance of the ecdsa service manager
     InstantiateEcdsa {
         #[arg(long)]
         code_id: u64,
+        /// Owner address (controls operator set, weights, signing keys, pause)
+        #[arg(long)]
+        owner: String,
+        /// Admin address (controls quorum threshold + service URI)
+        #[arg(long)]
+        admin: String,
+        /// Optional quorum numerator (default 2)
+        #[arg(long)]
+        quorum_numerator: Option<String>,
+        /// Optional quorum denominator (default 3)
+        #[arg(long)]
+        quorum_denominator: Option<String>,
         #[clap(flatten)]
         args: CliArgs,
     },
@@ -160,6 +164,18 @@ pub enum ServiceManagerCommand {
     InstantiateBls {
         #[arg(long)]
         code_id: u64,
+        /// Owner address (controls operator set, BLS keys, weights, pause)
+        #[arg(long)]
+        owner: String,
+        /// Admin address (controls quorum threshold + service URI)
+        #[arg(long)]
+        admin: String,
+        /// Optional quorum numerator (default 2)
+        #[arg(long)]
+        quorum_numerator: Option<String>,
+        /// Optional quorum denominator (default 3)
+        #[arg(long)]
+        quorum_denominator: Option<String>,
         #[clap(flatten)]
         args: CliArgs,
     },
@@ -209,6 +225,20 @@ pub enum ServiceManagerCommand {
         #[clap(flatten)]
         args: CliArgs,
     },
+
+    /// Mirror only: hand the admin role of a mirror service-manager to a
+    /// new address (typically the mirror-quorum-sync-handler). Resolves
+    /// audit C-5(b) at deploy time.
+    SetMirrorAdmin {
+        /// Service Manager address
+        #[arg(long)]
+        address: String,
+        /// New admin address
+        #[arg(long)]
+        new_admin: String,
+        #[clap(flatten)]
+        args: CliArgs,
+    },
 }
 
 #[derive(Debug, Clone, Subcommand)]
@@ -221,15 +251,6 @@ pub enum ServiceHandlerCommand {
         wasm_directory: String,
         #[arg(long)]
         contract_kind: ServiceHandlerContractKind,
-        #[clap(flatten)]
-        args: CliArgs,
-    },
-    /// Instantiate an instance of the mock service handler
-    InstantiateMock {
-        #[arg(long)]
-        code_id: u64,
-        #[arg(long)]
-        service_manager: String,
         #[clap(flatten)]
         args: CliArgs,
     },
@@ -323,13 +344,26 @@ pub enum RegistryCommand {
         #[clap(flatten)]
         args: CliArgs,
     },
+
+    /// Hand the owner role of a mirror stake-registry to a new address
+    /// (typically the mirror-operator-sync-handler). Resolves audit C-5(a)
+    /// at deploy time.
+    TransferOwnership {
+        /// Stake-registry address
+        #[arg(long)]
+        address: String,
+        /// New owner address
+        #[arg(long)]
+        new_owner: String,
+        #[clap(flatten)]
+        args: CliArgs,
+    },
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, ValueEnum)]
 #[clap(rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum ServiceHandlerContractKind {
-    Mock,
     Ecdsa,
     Bls,
     Mirror,
@@ -339,7 +373,6 @@ pub enum ServiceHandlerContractKind {
 #[clap(rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 pub enum ServiceManagerContractKind {
-    Mock,
     Ecdsa,
     Bls,
     Mirror,
@@ -361,7 +394,6 @@ impl ServiceHandlerContractKind {
 impl std::fmt::Display for ServiceHandlerContractKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ServiceHandlerContractKind::Mock => write!(f, "mock"),
             ServiceHandlerContractKind::Ecdsa => write!(f, "ecdsa"),
             ServiceHandlerContractKind::Bls => write!(f, "bls"),
             ServiceHandlerContractKind::Mirror => write!(f, "mirror"),
@@ -378,7 +410,6 @@ impl ServiceManagerContractKind {
 impl std::fmt::Display for ServiceManagerContractKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ServiceManagerContractKind::Mock => write!(f, "mock"),
             ServiceManagerContractKind::Ecdsa => write!(f, "ecdsa"),
             ServiceManagerContractKind::Bls => write!(f, "bls"),
             ServiceManagerContractKind::Mirror => write!(f, "mirror"),

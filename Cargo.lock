@@ -1860,6 +1860,7 @@ dependencies = [
 name = "cw-wavs-bls-service-manager"
 version = "0.0.0"
 dependencies = [
+ "alloy-primitives",
  "anyhow",
  "const-hex",
  "cosmwasm-schema",
@@ -1868,6 +1869,7 @@ dependencies = [
  "cw-wavs-bls-api",
  "cw2",
  "layer-climb-address",
+ "sha3",
  "wavs-types",
 ]
 
@@ -1905,6 +1907,7 @@ dependencies = [
 name = "cw-wavs-ecdsa-service-manager"
 version = "0.0.0"
 dependencies = [
+ "alloy-primitives",
  "anyhow",
  "const-hex",
  "cosmwasm-schema",
@@ -1913,6 +1916,7 @@ dependencies = [
  "cw-wavs-ecdsa-api",
  "cw2",
  "layer-climb-address",
+ "sha3",
  "wavs-types",
 ]
 
@@ -2023,60 +2027,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "cw-wavs-mock-api"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "bincode",
- "cosmwasm-schema",
- "cosmwasm-std",
- "layer-climb-address",
- "serde",
- "wavs-types",
-]
-
-[[package]]
-name = "cw-wavs-mock-service-handler"
-version = "0.0.0"
-dependencies = [
- "alloy-primitives",
- "alloy-sol-macro",
- "alloy-sol-types",
- "anyhow",
- "const-hex",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-storage-plus",
- "cw-wavs-mock-api",
- "cw2",
- "wavs-types",
-]
-
-[[package]]
-name = "cw-wavs-mock-service-manager"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "const-hex",
- "cosmwasm-schema",
- "cosmwasm-std",
- "cw-storage-plus",
- "cw-wavs-mock-api",
- "cw2",
- "layer-climb-address",
- "wavs-types",
-]
-
-[[package]]
 name = "cw-wavs-sdk"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "cosmwasm-std",
  "cw-multi-test",
  "cw-wavs-bls-api",
  "cw-wavs-ecdsa-api",
  "cw-wavs-mirror-api",
- "cw-wavs-mock-api",
  "cw-wavs-trigger-api",
  "deadpool",
  "layer-climb",
@@ -2106,7 +2064,6 @@ dependencies = [
  "cosmwasm-schema",
  "cosmwasm-std",
  "cw-storage-plus",
- "cw-wavs-mock-api",
  "cw-wavs-trigger-api",
  "cw2",
  "layer-climb-address",
@@ -2326,12 +2283,11 @@ dependencies = [
 
 [[package]]
 name = "echo-with-id"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "bincode",
  "cosmwasm-std",
- "cw-wavs-mock-api",
  "cw-wavs-sdk",
  "cw-wavs-trigger-api",
  "layer-climb",
@@ -3739,9 +3695,6 @@ dependencies = [
  "cw-wavs-mirror-service-handler",
  "cw-wavs-mirror-service-manager",
  "cw-wavs-mirror-stake-registry",
- "cw-wavs-mock-api",
- "cw-wavs-mock-service-handler",
- "cw-wavs-mock-service-manager",
  "cw-wavs-sdk",
  "cw-wavs-trigger-api",
  "cw-wavs-trigger-simple",
@@ -3764,7 +3717,6 @@ dependencies = [
  "cw-wavs-bls-api",
  "cw-wavs-ecdsa-api",
  "cw-wavs-mirror-api",
- "cw-wavs-mock-api",
  "cw-wavs-sdk",
  "cw-wavs-trigger-api",
  "deadpool",
@@ -5202,12 +5154,11 @@ dependencies = [
 
 [[package]]
 name = "simple-aggregator"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "bincode",
  "cosmwasm-std",
- "cw-wavs-mock-api",
  "cw-wavs-sdk",
  "cw-wavs-trigger-api",
  "layer-climb",
@@ -6164,7 +6115,7 @@ checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
 name = "utils"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6173,7 +6124,6 @@ dependencies = [
  "cw-multi-test",
  "cw-wavs-bls-api",
  "cw-wavs-ecdsa-api",
- "cw-wavs-mock-api",
  "deadpool",
  "layer-climb",
  "reqwest",
@@ -6227,7 +6177,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
 name = "version-pins"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "alloy-consensus",
  "alloy-consensus-any",
@@ -6441,7 +6391,7 @@ dependencies = [
 
 [[package]]
 name = "wavs-cosmos-cli"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6451,7 +6401,6 @@ dependencies = [
  "cw-wavs-bls-api",
  "cw-wavs-ecdsa-api",
  "cw-wavs-mirror-api",
- "cw-wavs-mock-api",
  "cw-wavs-sdk",
  "deadpool",
  "dotenvy",

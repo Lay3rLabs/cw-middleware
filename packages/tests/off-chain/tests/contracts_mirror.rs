@@ -1,3 +1,7 @@
+#![recursion_limit = "512"]
+
+use cosmwasm_std::{HexBinary, Uint256};
+use layer_climb_address::EvmAddr;
 use off_chain_tests::client::{
     mirror::MirrorTestClient, trigger::SimpleTriggerTestClient, ContractTestClient,
 };
@@ -180,4 +184,67 @@ async fn mirror_service_manager_validate_query_is_result() {
         validate,
         WavsValidateResult::Err(WavsValidateError::InvalidSignature(_))
     ));
+}
+
+#[tokio::test]
+async fn mirror_validate_signature_uses_snapshot_total_weight_after_later_weight_changes() {
+    tracing_tests_init();
+
+    let client = ContractTestClient::new("admin");
+    let app = client.app();
+    let mirror_client = MirrorTestClient::new(client);
+
+    let (signing_key, signing_addr) = mirror_stake_registry::create_signing_key_and_address();
+    let operator = EvmAddr::new([0x21; 20]);
+
+    app.borrow_mut().update_block(|block| block.height += 1);
+    mirror_client
+        .stake_registry_executor
+        .set_operator_details(
+            operator.clone(),
+            signing_addr.clone(),
+            Uint256::from(100u128),
+        )
+        .await
+        .unwrap();
+    // cw-storage-plus snapshots are queried at the height after the checkpoint.
+    let reference_block = (app.borrow().block_info().height + 1) as u32;
+
+    let message = b"snapshot total weight regression";
+    let digest = mirror_stake_registry::create_eip191_hash(message);
+    let signature = mirror_stake_registry::sign_message_hash(&signing_key, digest.as_slice());
+
+    app.borrow_mut().update_block(|block| block.height += 2);
+    mirror_client
+        .stake_registry_executor
+        .set_operator_details(
+            EvmAddr::new([0x22; 20]),
+            EvmAddr::new([0x23; 20]),
+            Uint256::from(900u128),
+        )
+        .await
+        .unwrap();
+
+    app.borrow_mut().update_block(|block| block.height += 1);
+    mirror_client
+        .stake_registry_executor
+        .set_operator_details(operator, signing_addr.clone(), Uint256::from(1u128))
+        .await
+        .unwrap();
+
+    let result = mirror_client
+        .stake_registry_querier
+        .validate_signature(
+            WavsEnvelope::new_raw(message.to_vec()),
+            WavsSignatureData {
+                signers: vec![signing_addr],
+                signatures: vec![HexBinary::from(signature)],
+                reference_block,
+            },
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(result.total_voting_power, Uint256::from(100u128));
+    assert_eq!(result.voting_power_signed, Uint256::from(100u128));
 }

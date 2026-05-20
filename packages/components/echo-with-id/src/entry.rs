@@ -1,4 +1,4 @@
-use cw_wavs_mock_api::message_with_id::MessageWithId;
+use crate::message_with_id::MessageWithId;
 use cw_wavs_sdk::contract_kinds::trigger::SimpleTriggerQuerier;
 use cw_wavs_trigger_api::simple::PushMessageEvent;
 

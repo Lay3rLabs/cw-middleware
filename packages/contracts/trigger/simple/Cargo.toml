@@ -8,7 +8,6 @@ license = "Apache-2.0"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-cw-wavs-mock-api = { workspace = true }
 cw-wavs-trigger-api = { workspace = true }
 # The workspace `wavs-types` has features, we need to disable them, overriding with `worksace = true` doesn't work
 wavs-types = { workspace = true }

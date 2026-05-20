@@ -1,6 +1,6 @@
 # What it is
 
-> **Disclaimer**: The smart contracts in this repository are provided “as is” for development and testing only. They have not undergone security review or auditing and are not suitable for production deployment.
+> **Status (v0.3.0, 2026-05-11)**: Audit-remediation work from the [2026-05-09 internal audit](./audits/2026-05-09-internal-audit.md) is complete — all Critical, High, and 4 of 5 Medium findings closed (see [`audits/2026-05-09-fixes.md`](./audits/2026-05-09-fixes.md) for the finding-to-commit map and [`audits/2026-05-09-handoff.md`](./audits/2026-05-09-handoff.md) for the v0.3.0 readiness summary). ECDSA, BLS, and Mirror families ship real cryptography; the Mock variant was removed. External audit and the comprehensive ECDSA/BLS test buildout are tracked as v0.3.x follow-up.
 
 This repo is for Wavs Cosmwasm middleware
 
@@ -10,10 +10,10 @@ This README is focused on the testing/development story, for information on how 
 
 **Contracts**
 
-* Mock (Service Handler and Service Manager)
-* ECDSA (Service Handler and Service Manager)
-* BLS (Service Handler and Service Manager)
-* Trigger (Simple)
+* ECDSA (Service Handler and Service Manager) — standalone POA-shape stake registry; secp256k1/EIP-191 signatures
+* BLS (Service Handler and Service Manager) — standalone POA-shape stake registry; BLS12-381 aggregate signatures via cosmwasm-crypto host calls
+* Mirror (Service Handler, Service Manager, Stake Registry, Operator Sync Handler, Quorum Sync Handler) — bridges an EVM-side operator set into a CosmWasm chain via signed envelopes
+* Trigger (Simple) — optional `allowed_pushers` allowlist at instantiate
 
 **Chains**
 
@@ -25,7 +25,7 @@ This README is focused on the testing/development story, for information on how 
 * Local on-chain
 * Remote on-chain
 
-Code is generally shared between all these different requirements. So, for example, it's very easy to switch between mock on-chain and ecdsa off-chain for common tests that hit "wavs service" code, while still supporting mock-specific tests.
+Code is generally shared between all these different requirements. So, for example, it's very easy to switch between ecdsa and bls flavors for common tests that hit "wavs service" code.
 
 Functionality can also be shared between tests and non-tests, such as CLI and components
 
@@ -75,7 +75,7 @@ Some more contract building commands:
 * `task contracts:build-all`: build all the different kinds of contracts
 * `task contracts:build-service-handler`: build just the service handler for the current kind
 * `task contracts:build-service-manager`: build just the service handler for the current kind
-* `task contracts:build-trigger-simple`: build just the mock trigger (this is re-used for all kinds of tests)
+* `task contracts:build-trigger-simple`: build just the simple trigger (this is re-used for all kinds of tests)
 
 
 #### Components
@@ -84,7 +84,7 @@ Some more contract building commands:
 task components:build-all
 ```
 
-These components are the same regardless of whether we're targetting mock contracts, testnet chain, etc.
+These components are the same regardless of which contract kind or chain we're targeting.
 
 Some more component building commands:
 
@@ -103,7 +103,7 @@ Some more component building commands:
 ```bash
 # Test the currently configured CONTRACT_KIND
 task test:contracts-off-chain
-# Test all contract kinds (mock, bls, ecdsa, etc.)
+# Test all contract kinds (ecdsa, bls, mirror)
 task test:all-off-chain
 ```
 
@@ -210,6 +210,55 @@ task cli:service-manager-get-service-uri ADDR={value}
 task cli:service-handler-get-manager ADDR={value}
 ```
 
+## Deploying
+
+For the docker-based deploy story, see [docs/USAGE.md](docs/USAGE.md). The notes below summarize what the v0.3.0 ECDSA / BLS / Mirror flows expect.
+
+### ECDSA and BLS — explicit owner/admin at instantiate
+
+ECDSA and BLS service-managers split the operator-set role (OWNER) from the operational-config role (ADMIN); both addresses are required at instantiate. An admin-key compromise cannot reshape the operator set, and vice versa.
+
+```bash
+# ECDSA
+docker run ... ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager instantiate-ecdsa \
+    --code-id <CODE_ID> \
+    --owner <OWNER_ADDR> \
+    --admin <ADMIN_ADDR> \
+    [--quorum-numerator <N>] [--quorum-denominator <D>]   # default 2/3
+
+# BLS (same shape)
+docker run ... ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager instantiate-bls \
+    --code-id <CODE_ID> \
+    --owner <OWNER_ADDR> \
+    --admin <ADMIN_ADDR>
+```
+
+Ownership and admin transfers on ECDSA / BLS are **two-step** (`TransferOwnership` → `AcceptOwnership`, `SetAdmin` → `AcceptAdmin`). The Pause / Unpause messages are owner-only; while paused, weight-mutating writes and validation queries reject.
+
+### Mirror — post-deploy ownership handoff (audit C-5)
+
+The Mirror flavor uses sync-handlers (`mirror-operator-sync-handler`, `mirror-quorum-sync-handler`) to bridge an EVM-side operator set onto the Cosmos chain. Because these handlers are deployed *after* the stake-registry and service-manager, the deploy flow ends with two handoff steps that transfer control to the handlers:
+
+```bash
+# After uploading + instantiating stake-registry, service-manager, and both sync-handlers:
+
+# Hand the stake-registry OWNER role to the operator-sync-handler
+docker run ... ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    registry transfer-ownership \
+    --address <STAKE_REGISTRY_ADDR> \
+    --new-owner <OPERATOR_SYNC_HANDLER_ADDR>
+
+# Hand the service-manager ADMIN role to the quorum-sync-handler
+docker run ... ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager set-mirror-admin \
+    --address <SERVICE_MANAGER_ADDR> \
+    --new-admin <QUORUM_SYNC_HANDLER_ADDR>
+```
+
+Mirror uses **single-step** TransferOwnership / SetAdmin (no accept) because the typical handoff target is a contract address that can't sign an `accept` message. Without these two steps, the sync-handlers cannot authorize their downstream calls.
+
 ### Architecture
 
 #### SDK
@@ -220,7 +269,7 @@ These clients are feature-gated so that they work in wasm, binaries, multi-test,
 
 The sdk provides structs that wrap the client with whatever functionlity is needed. These structs generally form a hierarchy, where helper methods make their way through at each level.
 
-So, for example, at the root level theres structs for WAVS ServiceHandler/ServiceManager, which wrap Query and/or Execute clients. Then at deeper levels there's structs for BLS/ECDSA/Mock contracts that extend these. Yet, at each level, `.querier()` will return the core querier client.
+So, for example, at the root level theres structs for WAVS ServiceHandler/ServiceManager, which wrap Query and/or Execute clients. Then at deeper levels there's structs for BLS/ECDSA/Mirror contracts that extend these. Yet, at each level, `.querier()` will return the core querier client.
 
 #### Implementations
 

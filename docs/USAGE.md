@@ -6,6 +6,8 @@ All required contracts are pre-built and available in the image's `/wasm/built-i
 
 > _Tip:_ This package does not include any backend services or component tooling; it focuses purely on middleware functionality. See the [README.md](../README.md) for how to start a chain for on-chain testing.
 
+> _v0.3.0 note:_ The Mock contract family has been removed. ECDSA and BLS service-managers now require explicit `--owner` and `--admin` at instantiate, and Mirror deploys end with two ownership-handoff calls (see [Mirror ownership handoff](#mirror-ownership-handoff) at the bottom of this doc).
+
 Using the middleware usually consists of:
 
 1. mounting a volume containing your `wavs.toml` and setting the corresponding guest path as `WAVS_HOME` in the ENV
@@ -201,6 +203,76 @@ docker run --rm \
     --signing-key <SIGNING_KEY_EVM_ADDR> \
     --weight <WEIGHT>
 ```
+
+### Instantiate an ECDSA service manager
+
+ECDSA and BLS service-managers split the operator-set role (`--owner`) from the operational-config role (`--admin`). Both are required at instantiate. An admin-key compromise cannot reshape the operator set, and vice versa. Optional `--quorum-numerator` / `--quorum-denominator` override the 2/3 default.
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager instantiate-ecdsa \
+    --code-id <CODE_ID> \
+    --owner <OWNER_ADDR> \
+    --admin <ADMIN_ADDR>
+```
+
+### Instantiate a BLS service manager
+
+Same shape as ECDSA; the on-chain crypto uses BLS12-381 aggregate signatures via cosmwasm-crypto host calls.
+
+```bash
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager instantiate-bls \
+    --code-id <CODE_ID> \
+    --owner <OWNER_ADDR> \
+    --admin <ADMIN_ADDR>
+```
+
+Ownership and admin transfers on ECDSA / BLS are **two-step** (`TransferOwnership` → `AcceptOwnership`, `SetAdmin` → `AcceptAdmin`) — the new key must explicitly accept before the role rotates. Owner-only `Pause` / `Unpause` block weight-mutating writes and validation queries while paused.
+
+### Trigger with pusher allowlist (audit M-1)
+
+The simple trigger defaults to a public message bus (any sender can `Push`). To restrict pushes to a known address set, pass `allowed_pushers` at instantiate. Either drive instantiate through the docker CLI / SDK with an explicit `InstantiateMsg`, or pre-bake the JSON:
+
+```json
+{
+  "allowed_pushers": ["wavs1...", "wavs1..."]
+}
+```
+
+`allowed_pushers: null` (the default) preserves legacy public-bus behavior; the field can only be set at instantiate.
+
+## Mirror ownership handoff
+
+The Mirror flavor uses two sync-handlers — `mirror-operator-sync-handler` and `mirror-quorum-sync-handler` — to bridge an EVM-side operator set onto the Cosmos chain. Because the sync-handlers are deployed *after* the stake-registry and service-manager, the deploy flow must end by transferring control to them. Without these two calls, the sync-handlers cannot authorize their downstream `SetOperatorDetails` and `SetQuorumThreshold` messages (audit C-5).
+
+```bash
+# Hand the stake-registry OWNER role to the operator-sync-handler
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    registry transfer-ownership \
+    --address <STAKE_REGISTRY_ADDR> \
+    --new-owner <OPERATOR_SYNC_HANDLER_ADDR>
+
+# Hand the service-manager ADMIN role to the quorum-sync-handler
+docker run --rm \
+    -v $(pwd)/backend/wavs-home:/wavs-home:ro \
+    --env-file .docker.env \
+    ghcr.io/lay3rlabs/cw-middleware:{TAG} \
+    service-manager set-mirror-admin \
+    --address <SERVICE_MANAGER_ADDR> \
+    --new-admin <QUORUM_SYNC_HANDLER_ADDR>
+```
+
+Mirror handoff is **single-step** (no accept) because the target is a contract address that can't sign an `accept` message.
 
 # Local docker builds
 

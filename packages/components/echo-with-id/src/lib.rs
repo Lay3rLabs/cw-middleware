@@ -1,5 +1,6 @@
 mod entry;
 mod error;
+mod message_with_id;
 
 #[cfg(test)]
 mod test {

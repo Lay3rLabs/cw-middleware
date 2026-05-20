@@ -11,6 +11,10 @@ pub struct InstantiateMsg {
 #[cw_serde]
 #[schemaifier(mute_warnings)]
 pub enum ExecuteMsg {
+    /// Set the admin to a new address (current admin only). Single-step
+    /// because the typical post-deploy target is the
+    /// mirror-quorum-sync-handler contract address. Audit C-5 / H-6 fix.
+    SetAdmin { new_admin: String },
     #[serde(untagged)]
     Wavs(ServiceManagerExecuteMessages),
 }

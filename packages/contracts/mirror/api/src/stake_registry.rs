@@ -25,6 +25,11 @@ pub enum ExecuteMsg {
         signing_keys: Vec<EvmAddr>,
         weights: Vec<Uint256>,
     },
+    /// Transfer ownership to a new owner (current owner only). Single-step
+    /// transfer because the typical post-deploy target is the
+    /// mirror-operator-sync-handler contract address, which can't sign an
+    /// AcceptOwnership message on its own. Audit C-5 / H-6 fix.
+    TransferOwnership { new_owner: String },
 }
 
 #[cw_serde]

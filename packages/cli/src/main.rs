@@ -92,34 +92,14 @@ async fn main() {
                     .await
                     .unwrap();
             }
-            ServiceManagerCommand::InstantiateMock { code_id, args: _ } => {
-                let client = ctx.signing_client().await.unwrap();
-
-                let (address, tx_resp) = client
-                    .contract_instantiate(
-                        None,
-                        code_id,
-                        "Mock Service Manager",
-                        &cw_wavs_mock_api::service_manager::InstantiateMsg {},
-                        Vec::new(),
-                        None,
-                    )
-                    .await
-                    .unwrap();
-
-                println!("Mock Service Manager instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash);
-
-                ctx.output
-                    .write(output::OutputData::ServiceManagerInstantiate {
-                        contract_kind: ServiceManagerContractKind::Mock,
-                        address: address.to_string(),
-                        tx_hash: tx_resp.txhash,
-                    })
-                    .await
-                    .unwrap();
-            }
-            ServiceManagerCommand::InstantiateEcdsa { code_id, args: _ } => {
+            ServiceManagerCommand::InstantiateEcdsa {
+                code_id,
+                owner,
+                admin,
+                quorum_numerator,
+                quorum_denominator,
+                args: _,
+            } => {
                 let client = ctx.signing_client().await.unwrap();
 
                 let (address, tx_resp) = client
@@ -127,7 +107,14 @@ async fn main() {
                         None,
                         code_id,
                         "ECDSA Service Manager",
-                        &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {},
+                        &cw_wavs_ecdsa_api::service_manager::InstantiateMsg {
+                            owner,
+                            admin,
+                            quorum_numerator: quorum_numerator
+                                .map(|s| s.parse().expect("invalid numerator")),
+                            quorum_denominator: quorum_denominator
+                                .map(|s| s.parse().expect("invalid denominator")),
+                        },
                         Vec::new(),
                         None,
                     )
@@ -146,7 +133,14 @@ async fn main() {
                     .await
                     .unwrap();
             }
-            ServiceManagerCommand::InstantiateBls { code_id, args: _ } => {
+            ServiceManagerCommand::InstantiateBls {
+                code_id,
+                owner,
+                admin,
+                quorum_numerator,
+                quorum_denominator,
+                args: _,
+            } => {
                 let client = ctx.signing_client().await.unwrap();
 
                 let (address, tx_resp) = client
@@ -154,7 +148,14 @@ async fn main() {
                         None,
                         code_id,
                         "BLS Service Manager",
-                        &cw_wavs_bls_api::service_manager::InstantiateMsg {},
+                        &cw_wavs_bls_api::service_manager::InstantiateMsg {
+                            owner,
+                            admin,
+                            quorum_numerator: quorum_numerator
+                                .map(|s| s.parse().expect("invalid numerator")),
+                            quorum_denominator: quorum_denominator
+                                .map(|s| s.parse().expect("invalid denominator")),
+                        },
                         Vec::new(),
                         None,
                     )
@@ -240,6 +241,24 @@ async fn main() {
                     resp.unchecked_into_tx_response().txhash
                 );
             }
+            ServiceManagerCommand::SetMirrorAdmin {
+                address,
+                new_admin,
+                args: _,
+            } => {
+                let client = ctx.signing_client().await.unwrap();
+                let address = ctx.parse_address(&address).await.unwrap();
+                let resp = client
+                    .contract_execute(
+                        &address,
+                        &cw_wavs_mirror_api::service_manager::ExecuteMsg::SetAdmin { new_admin },
+                        Vec::new(),
+                        None,
+                    )
+                    .await
+                    .unwrap();
+                println!("Mirror SetAdmin TX hash: {}", resp.txhash);
+            }
         },
 
         Command::ServiceHandler { command } => match command {
@@ -264,36 +283,6 @@ async fn main() {
                     .write(output::OutputData::ServiceHandlerUpload {
                         contract_kind,
                         code_id,
-                        tx_hash: tx_resp.txhash,
-                    })
-                    .await
-                    .unwrap();
-            }
-            ServiceHandlerCommand::InstantiateMock {
-                code_id,
-                service_manager,
-                args: _,
-            } => {
-                let client = ctx.signing_client().await.unwrap();
-
-                let (address, tx_resp) = client
-                    .contract_instantiate(
-                        None,
-                        code_id,
-                        "Mock Service Handler",
-                        &cw_wavs_mock_api::service_handler::InstantiateMsg { service_manager },
-                        Vec::new(),
-                        None,
-                    )
-                    .await
-                    .unwrap();
-                println!("Mock Service Handler instantiated at: {address}");
-                println!("Tx Hash: {}", tx_resp.txhash);
-
-                ctx.output
-                    .write(output::OutputData::ServiceHandlerInstantiate {
-                        contract_kind: ServiceHandlerContractKind::Mock,
-                        address: address.to_string(),
                         tx_hash: tx_resp.txhash,
                     })
                     .await
@@ -528,6 +517,29 @@ async fn main() {
                     println!(
                         "Transaction Hash: {}",
                         tx_resp.unchecked_into_tx_response().txhash
+                    );
+                }
+                RegistryCommand::TransferOwnership {
+                    address,
+                    new_owner,
+                    args: _,
+                } => {
+                    let client = ctx.signing_client().await.unwrap();
+                    let address = ctx.parse_address(&address).await.unwrap();
+                    let resp = client
+                        .contract_execute(
+                            &address,
+                            &cw_wavs_mirror_api::stake_registry::ExecuteMsg::TransferOwnership {
+                                new_owner,
+                            },
+                            Vec::new(),
+                            None,
+                        )
+                        .await
+                        .unwrap();
+                    println!(
+                        "Mirror stake-registry TransferOwnership TX hash: {}",
+                        resp.txhash
                     );
                 }
             }

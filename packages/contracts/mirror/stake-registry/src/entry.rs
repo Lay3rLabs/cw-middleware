@@ -50,7 +50,7 @@ pub fn instantiate(
         }
     }
     OWNER.save(deps.storage, &info.sender)?;
-    TOTAL_WEIGHT.save(deps.storage, &Uint256::zero())?;
+    TOTAL_WEIGHT.save(deps.storage, &Uint256::zero(), env.block.height)?;
 
     Ok(Response::new()
         .add_attribute("method", "instantiate")
@@ -75,7 +75,30 @@ pub fn execute(
             signing_keys,
             weights,
         } => execute_batch_set_operator_details(deps, _env, info, operators, signing_keys, weights),
+        ExecuteMsg::TransferOwnership { new_owner } => {
+            execute_transfer_ownership(deps, info, new_owner)
+        }
     }
+}
+
+fn execute_transfer_ownership(
+    deps: DepsMut,
+    info: MessageInfo,
+    new_owner: String,
+) -> Result<Response, ContractError> {
+    let owner = OWNER.load(deps.storage)?;
+    if info.sender != owner {
+        return Err(ContractError::Unauthorized {});
+    }
+    let new_owner_addr = deps
+        .api
+        .addr_validate(&new_owner)
+        .map_err(|_| ContractError::Std(StdError::msg("Invalid new_owner address")))?;
+    OWNER.save(deps.storage, &new_owner_addr)?;
+    Ok(Response::new()
+        .add_attribute("method", "transfer_ownership")
+        .add_attribute("old_owner", owner)
+        .add_attribute("new_owner", new_owner_addr))
 }
 
 #[entry_point]
@@ -192,10 +215,15 @@ fn set_operator_details_at(
     // Update operator weight with block height
     OPERATOR_WEIGHTS.save(deps.storage, operator_key.clone(), &weight, snapshot_height)?;
 
-    // Update total weight
+    // Update total weight (audit H-3 fix: use checked arithmetic so a
+    // corrupted current_weight > total_weight cannot panic the contract).
     let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
-    let new_total_weight = total_weight - current_weight + weight;
-    TOTAL_WEIGHT.save(deps.storage, &new_total_weight)?;
+    let new_total_weight = total_weight
+        .checked_sub(current_weight)
+        .map_err(|e| ContractError::Std(StdError::msg(format!("total weight underflow: {e}"))))?
+        .checked_add(weight)
+        .map_err(|e| ContractError::Std(StdError::msg(format!("total weight overflow: {e}"))))?;
+    TOTAL_WEIGHT.save(deps.storage, &new_total_weight, snapshot_height)?;
 
     // Update signing key mappings
     let current_signing_key =
@@ -249,7 +277,10 @@ fn query_validate_signature(
     envelope: WavsEnvelope,
     signature_data: WavsSignatureData,
 ) -> StdResult<ValidationResult> {
-    let total_weight = TOTAL_WEIGHT.load(deps.storage)?;
+    let reference_block = signature_data.reference_block as u64;
+    let total_weight = TOTAL_WEIGHT
+        .may_load_at_height(deps.storage, reference_block)?
+        .unwrap_or_default();
     let mut voting_power_signed = Uint256::zero();
 
     // Basic sanity checks to avoid panics and invalid data
@@ -282,22 +313,20 @@ fn query_validate_signature(
             )));
         }
 
-        // Get operator for this signing key as of reference_block (snapshot)
+        // Get operator for this signing key as of reference_block (snapshot).
+        // Audit H-2 fix: NO fall-back to latest. If a signing key was not
+        // registered at reference_block, the signer is rejected. Falling
+        // back to latest let an operator registered AFTER reference_block
+        // contribute weight to a signature evaluated against the historical
+        // operator set.
         let signing_key_str = signing_key.to_string();
-        // Prefer snapshot at reference block; fall back to latest if no snapshot exists
-        let operator = match SIGNING_KEY_TO_OPERATOR.may_load_at_height(
-            deps.storage,
-            signing_key_str.clone(),
-            signature_data.reference_block as u64,
-        )? {
-            Some(op) => op,
-            None => match SIGNING_KEY_TO_OPERATOR.may_load(deps.storage, signing_key_str)? {
-                Some(op) => op,
-                None => {
-                    return Err(StdError::msg("Signer not registered"));
-                }
-            },
-        };
+        let operator = SIGNING_KEY_TO_OPERATOR
+            .may_load_at_height(deps.storage, signing_key_str.clone(), reference_block)?
+            .ok_or_else(|| {
+                StdError::msg(format!(
+                    "Signer not registered at reference_block: {signing_key}"
+                ))
+            })?;
 
         // Verify signature using the signing key (safe index: len equality checked above)
         let signature = &signature_data.signatures[i];
@@ -307,20 +336,14 @@ fn query_validate_signature(
             )));
         }
 
-        // Add operator's weight to voting power (snapshot at reference block)
+        // Add operator's weight to voting power (snapshot at reference block).
+        // Audit H-2 fix: NO fall-back to latest, mirroring the
+        // SIGNING_KEY_TO_OPERATOR lookup above. Without this, an operator
+        // whose weight changed AFTER reference_block could contribute their
+        // post-snapshot weight to a historical envelope.
         let operator_key = operator.to_string();
-        let operator_weight_snapshot = OPERATOR_WEIGHTS.may_load_at_height(
-            deps.storage,
-            operator_key.clone(),
-            signature_data.reference_block as u64,
-        )?;
-        let operator_weight = operator_weight_snapshot
-            .or_else(|| {
-                OPERATOR_WEIGHTS
-                    .may_load(deps.storage, operator_key)
-                    .ok()
-                    .flatten()
-            })
+        let operator_weight = OPERATOR_WEIGHTS
+            .may_load_at_height(deps.storage, operator_key, reference_block)?
             .unwrap_or_default();
         if operator_weight.is_zero() {
             return Err(StdError::msg(format!(
@@ -401,8 +424,12 @@ pub fn ethereum_address_raw(pubkey: &[u8]) -> StdResult<[u8; 20]> {
         return Err(StdError::msg("Public key must be 65 bytes long"));
     }
 
+    // Audit L-3 fix: use ? instead of unwrap so future refactors that change
+    // the input contract don't panic the contract on an unexpected length.
     let hash = Keccak256::digest(data);
-    Ok(hash[hash.len() - 20..].try_into().unwrap())
+    hash[hash.len() - 20..]
+        .try_into()
+        .map_err(|_| StdError::msg("keccak digest tail not 20 bytes"))
 }
 
 fn query_operator_weight(deps: Deps, operator: EvmAddr) -> StdResult<Uint256> {

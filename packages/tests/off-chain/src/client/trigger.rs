@@ -26,9 +26,9 @@ impl SimpleTriggerTestClient {
             .instantiate_contract(
                 code_id,
                 admin.clone(),
-                &cw_wavs_bls_api::service_manager::InstantiateMsg {},
+                &cw_wavs_trigger_api::simple::InstantiateMsg::default(),
                 &[],
-                "BLS Service Manager",
+                "Simple Trigger",
                 None,
             )
             .unwrap();

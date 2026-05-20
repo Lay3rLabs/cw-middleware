@@ -19,6 +19,17 @@ pub fn save_envelope(
     let envelope = envelope.decode()?;
     let message_with_id = MessageWithId::from_bytes(&envelope.payload)?;
 
+    // Audit H-4 fix: reject duplicate trigger_id rather than silently
+    // overwriting. Two different signed envelopes that happen to share a
+    // trigger_id (operator-quorum signs both -- accidentally or
+    // maliciously) used to silently clobber each other.
+    if TRIGGER_MESSAGE.has(storage, message_with_id.trigger_id) {
+        return Err(cosmwasm_std::StdError::msg(format!(
+            "trigger_id {} already persisted",
+            message_with_id.trigger_id
+        )));
+    }
+
     TRIGGER_MESSAGE.save(
         storage,
         message_with_id.trigger_id,

@@ -1,7 +1,6 @@
 pub mod bls;
 pub mod ecdsa;
 pub mod mirror;
-pub mod mock;
 pub mod trigger;
 
 use cw_wavs_sdk::client::{WavsExecutor, WavsQuerier};

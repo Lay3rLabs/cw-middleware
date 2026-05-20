@@ -35,7 +35,12 @@ impl BlsTestClient {
             .instantiate_contract(
                 code_id,
                 admin.clone(),
-                &cw_wavs_bls_api::service_manager::InstantiateMsg {},
+                &cw_wavs_bls_api::service_manager::InstantiateMsg {
+                    owner: admin.to_string(),
+                    admin: admin.to_string(),
+                    quorum_numerator: None,
+                    quorum_denominator: None,
+                },
                 &[],
                 "BLS Service Manager",
                 None,

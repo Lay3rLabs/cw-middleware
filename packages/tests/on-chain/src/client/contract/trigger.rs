@@ -19,7 +19,7 @@ impl SimpleTriggerTestClient {
                 None,
                 CodeId::new_cw_wavs_trigger_simple().await,
                 "Simple Trigger",
-                &cw_wavs_trigger_api::simple::InstantiateMsg {},
+                &cw_wavs_trigger_api::simple::InstantiateMsg::default(),
                 vec![],
                 None,
             )

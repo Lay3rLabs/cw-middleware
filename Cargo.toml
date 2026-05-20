@@ -2,9 +2,6 @@
 members = [
   "packages/sdk",
   "packages/utils",
-  "packages/contracts/mock/api",
-  "packages/contracts/mock/service-handler",
-  "packages/contracts/mock/service-manager",
   "packages/contracts/trigger/api",
   "packages/contracts/trigger/simple",
   "packages/contracts/ecdsa/api",
@@ -32,7 +29,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.2.0-alpha.15"
+version = "0.3.0"
 license = "GPL-3.0-or-later"
 authors = ["Layer Labs (Cayman)"]
 repository = "https://github.com/Lay3rLabs/cw-middleware"
@@ -41,15 +38,12 @@ rust-version = "1.88.0"
 [workspace.dependencies]
 # Local
 cw-wavs-sdk = { path = "packages/sdk" }
-cw-wavs-mock-api = { path = "packages/contracts/mock/api" }
 cw-wavs-ecdsa-api = { path = "packages/contracts/ecdsa/api" }
 cw-wavs-bls-api = { path = "packages/contracts/bls/api" }
 cw-wavs-trigger-api = { path = "packages/contracts/trigger/api" }
 cw-wavs-mirror-api = { path = "packages/contracts/mirror/api" }
 cw-wavs-mirror-service-handler = { path = "packages/contracts/mirror/service-handler" }
 cw-wavs-mirror-service-manager = { path = "packages/contracts/mirror/service-manager" }
-cw-wavs-mock-service-handler = { path = "packages/contracts/mock/service-handler" }
-cw-wavs-mock-service-manager = { path = "packages/contracts/mock/service-manager" }
 cw-wavs-trigger-simple = { path = "packages/contracts/trigger/simple" }
 cw-wavs-ecdsa-service-handler = { path = "packages/contracts/ecdsa/service-handler" }
 cw-wavs-ecdsa-service-manager = { path = "packages/contracts/ecdsa/service-manager" }
