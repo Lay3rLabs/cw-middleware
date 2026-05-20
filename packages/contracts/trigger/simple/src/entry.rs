@@ -56,7 +56,8 @@ pub fn execute(
             let trigger_id: u64 = state::TRIGGER_MESSAGE_COUNT
                 .may_load(deps.storage)?
                 .unwrap_or_default()
-                + 1;
+                .checked_add(1)
+                .ok_or_else(|| StdError::msg("trigger_id counter exhausted"))?;
 
             state::TRIGGER_MESSAGE_COUNT.save(deps.storage, &trigger_id)?;
 
@@ -75,5 +76,58 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<QueryResponse> {
         QueryMsg::TriggerMessage { trigger_id } => {
             to_json_binary(&state::TRIGGER_MESSAGES.load(deps.storage, trigger_id)?)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use cosmwasm_std::{
+        testing::{mock_dependencies, mock_env},
+        Addr, HexBinary, MessageInfo, Uint64,
+    };
+
+    use super::*;
+
+    #[test]
+    fn push_fails_without_state_change_when_trigger_id_counter_exhausted() {
+        let mut deps = mock_dependencies();
+
+        instantiate(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked("creator"),
+                funds: vec![],
+            },
+            InstantiateMsg::default(),
+        )
+        .unwrap();
+
+        state::TRIGGER_MESSAGE_COUNT
+            .save(deps.as_mut().storage, &u64::MAX)
+            .unwrap();
+
+        let err = execute(
+            deps.as_mut(),
+            mock_env(),
+            MessageInfo {
+                sender: Addr::unchecked("pusher"),
+                funds: vec![],
+            },
+            ExecuteMsg::Push {
+                data: HexBinary::from(vec![1, 2, 3]),
+            },
+        )
+        .unwrap_err();
+
+        assert!(err.to_string().contains("trigger_id counter exhausted"));
+        assert_eq!(
+            state::TRIGGER_MESSAGE_COUNT
+                .load(deps.as_ref().storage)
+                .unwrap(),
+            u64::MAX
+        );
+        assert!(!state::TRIGGER_MESSAGES.has(deps.as_ref().storage, Uint64::new(0)));
+        assert!(!state::TRIGGER_MESSAGES.has(deps.as_ref().storage, Uint64::new(u64::MAX)));
     }
 }
